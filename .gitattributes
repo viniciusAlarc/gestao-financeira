@@ -1,0 +1,9 @@
+# Normaliza fim de linha: LF no repositório e no checkout (projetos em Windows).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
