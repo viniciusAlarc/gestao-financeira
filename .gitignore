@@ -1,0 +1,41 @@
+# Segredos e credenciais (G13) — nunca versionar
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+*.key
+*.crt
+*.cer
+certs/
+certificados/
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Node (caso a stack mude)
+node_modules/
+dist/
+build/
+
+# Banco local
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
