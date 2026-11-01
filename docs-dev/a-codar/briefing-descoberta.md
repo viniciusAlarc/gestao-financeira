@@ -1,8 +1,9 @@
 # Briefing: app de gestão financeira pessoal
 
-> **Estado: descoberta.** Ainda não há stack escolhida nem código. Este arquivo é a memória da conversa de 01/11/2026, para a próxima sessão continuar sem repetir perguntas.
+> **Estado: descoberta.** Ainda não há stack escolhida nem código. Este arquivo guarda a **descoberta do produto** (decisão fechada e não codada, G7) para a próxima sessão não repetir perguntas.
+> **O estado do projeto não mora aqui:** o que foi feito fica em `PROGRESS.md`, o que está aberto em `PENDENCIAS.md`, e as fases em `docs-dev/painel.json`.
 > Nome `gestao-financeira` é provisório. Pasta: `C:\Users\ViniciusAlarção\Documents\Projetos\gestao-financeira`.
-> Regras de trabalho: se a sessão for pelo DSH, valem o `AGENTS.md` do workspace `default-workspace` e o `pessoal/sobre-mim.md`. Fora dele, valem os mesmos guardrails deste briefing.
+> Regras de trabalho: `AGENTS.md` na raiz deste repositório. As regras universais e o perfil do dono moram em `~/Documents/IA` (`guardrails-ia/guardrails-core.md`, `cnr/como-trabalhamos.md`, `pessoal/sobre-mim.md`), que o Claude carrega sozinho e o Zed não.
 
 ## 1. O problema, nas palavras do dono
 

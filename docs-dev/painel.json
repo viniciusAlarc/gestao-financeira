@@ -1,0 +1,28 @@
+{
+  "plano": {
+    "nome": "Fase 1 · integração Inter no sandbox",
+    "doc": "docs-dev/a-codar/briefing-descoberta.md",
+    "fases": [
+      { "nome": "Integração e certificado", "estado": "a fazer" },
+      { "nome": "Sandbox: token, saldo e extrato", "estado": "a fazer" },
+      { "nome": "Fechar stack e escopo da v1", "estado": "a fazer" }
+    ]
+  },
+  "entregas": [
+    {
+      "data": "2026-11-01",
+      "o_que": "Controle de contexto do projeto no padrão da casa",
+      "como": "AGENTS.md, PROGRESS.md, PENDENCIAS.md e docs-dev/painel.json; BRIEFING.md movido para docs-dev/a-codar/"
+    },
+    {
+      "data": "2026-11-01",
+      "o_que": "Script de diagnóstico da API do Inter (mTLS, token, saldo, extrato)",
+      "como": "scripts/teste_inter.py, credenciais por .env, ainda não executado"
+    },
+    {
+      "data": "2026-11-01",
+      "o_que": "Repositório privado com ambiente Python pronto",
+      "como": ".venv com requests e python-dotenv; .gitignore bloqueando certificado e chave"
+    }
+  ]
+}
