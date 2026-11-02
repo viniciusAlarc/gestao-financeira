@@ -27,7 +27,7 @@ O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servi
 ## Ver o que está rodando
 
 ```bash
-netstat -ano | findstr :8000
+ss -ltnp | grep :8000
 ```
 
 ## Desligar e subir de novo
@@ -41,3 +41,4 @@ netstat -ano | findstr :8000
 | `DisallowedHost` ao abrir pelo celular | IP da máquina fora do `ALLOWED_HOSTS` | acrescentar o IP no `.env` e reiniciar                        |
 | `no such table`                      | migrations não aplicadas        | `.venv/bin/python manage.py migrate`                             |
 | Login em laço, sem entrar            | nenhum usuário criado           | `.venv/bin/python manage.py createsuperuser`                     |
+| `You appear not to have the 'sqlite3' program installed` no `dbshell` | binário `sqlite3` ausente no WSL | usar o driver Python: `.venv/bin/python -c "import sqlite3, pathlib; print(pathlib.Path('db.sqlite3').stat().st_size)"` — ou qualquer leitura via ORM. Não instalar o binário sem o ok do dono |

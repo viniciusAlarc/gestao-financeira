@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block titulo %}Entrar{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Entrar</h1>
+<form method="post" class="cartao-login">
+  {% csrf_token %}
+  {% if form.errors %}
+    <p class="erro">Não foi possível entrar. Confira usuário e senha.</p>
+  {% endif %}
+  <label for="id_username">Usuário</label>
+  <input type="text" name="username" id="id_username" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" autofocus required>
+  <label for="id_password">Senha</label>
+  <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+  <button type="submit" class="botao-primario">Entrar</button>
+</form>
+{% endblock %}

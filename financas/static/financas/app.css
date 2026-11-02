@@ -1,0 +1,110 @@
+/* Tela inicial e login (fase 2 do plano) — mobile-first.
+   Estilo decidido com o dono em 2026-11-02: neutro claro, cor só no número.
+   Anti-patterns evitados (G19): sem faixa colorida colada em aresta, sem
+   gradiente em card, sem chip de ícone. Contorno inteiro neutro nos cards. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f4f4f5;
+  color: #18181b;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.4;
+}
+
+.container {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 2.5rem;
+}
+
+.titulo-pagina {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.painel {
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  padding: 1rem 1.125rem;
+}
+
+.rotulo {
+  margin: 0 0 0.375rem;
+  font-size: 0.8125rem;
+  color: #71717a;
+}
+
+.numero {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.numero-saldo-positivo {
+  color: #15803d;
+}
+
+.numero-saldo-negativo {
+  color: #b91c1c;
+}
+
+.numero-gasto {
+  color: #b91c1c;
+}
+
+.numero-previsto {
+  color: #52525b;
+}
+
+.cartao-login {
+  display: grid;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.cartao-login label {
+  font-size: 0.875rem;
+  color: #3f3f46;
+}
+
+.cartao-login input {
+  margin-bottom: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #d4d4d8;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-size: 1rem; /* evita zoom automático do iOS no foco */
+}
+
+.botao-primario {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #18181b;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+}
+
+.erro {
+  margin: 0 0 0.5rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+}

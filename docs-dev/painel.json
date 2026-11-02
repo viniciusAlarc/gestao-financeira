@@ -5,7 +5,7 @@
     "fases": [
       { "nome": "Decisões e stack", "estado": "feito" },
       { "nome": "Esqueleto e modelo", "estado": "feito" },
-      { "nome": "Tela inicial", "estado": "a fazer" },
+      { "nome": "Tela inicial", "estado": "andamento" },
       { "nome": "Lançamento rápido", "estado": "a fazer" },
       { "nome": "Gastos previstos", "estado": "a fazer" },
       { "nome": "Relatório por categoria", "estado": "a fazer" },
@@ -14,6 +14,11 @@
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-02",
+      "o_que": "Tela inicial com os três números e login, pronta para verificação visual",
+      "como": "financas/views.py, financas/urls.py, templates/, filtro dinheiro, +11 testes"
+    },
     {
       "data": "2026-11-01",
       "o_que": "Modelo de dado aplicado, com suíte de 8 testes",

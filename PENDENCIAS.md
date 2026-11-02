@@ -13,7 +13,8 @@
 | Banco            | `db.sqlite3` (fora do git) | 4 tabelas de `financas` criadas |
 | Modelo de dado   | `financas/models.py`       | pronto                          |
 | Suíte de testes  | `financas/tests.py`        | 8 testes, todos passando        |
-| Tela / PWA       | `financas/`, `templates/`  | não existe                      |
+| Tela inicial     | `financas/views.py`, `templates/` | pronta, falta verificação visual |
+| PWA              | —                                | não existe (fase 6)              |
 | Integração Inter | `scripts/teste_inter.py`   | nunca executado, **pausado**    |
 
 ## P1 — Crítico (bloqueia uso ou expõe dado)
@@ -38,7 +39,7 @@
 | ---- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | P3-3 | 👤   | **D6 — onde o backend roda.** Só rede local, túnel ou VPS. Se houver custo recorrente, entra o G20 (custo estimado antes de criar).                      | 2026-11-01 |
 | P3-4 | 👤   | Criar o primeiro superusuário, que só o dono pode fazer por causa da senha: `.venv/bin/python manage.py createsuperuser`. Sem ele, o admin não abre. | 2026-11-01 |
-| P3-5 | 👤   | Banco local do WSL ainda não existe (o `db.sqlite3` do Windows não veio no clone). Criar com `.venv/bin/python manage.py migrate` quando o dono autorizar (G3); depois o P3-4. | 2026-11-01 |
+| P3-6 | 👤   | **Verificação visual da fase 2 (tela inicial).** Abrir no navegador a 375px de largura e conferir que saldo, gasto do mês e previsto em aberto batem com o que foi lançado. Depende do P3-4 (superusuário) e dos dados de exemplo pelo admin. | 2026-11-02 |
 
 ## P4 — Baixo / melhoria
 

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load financas_extra %}
+
+{% block titulo %}Início{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Início</h1>
+<dl class="painel">
+  <div class="card">
+    <dt class="rotulo">Saldo</dt>
+    <dd class="numero {% if saldo < 0 %}numero-saldo-negativo{% else %}numero-saldo-positivo{% endif %}">{{ saldo|dinheiro }}</dd>
+  </div>
+  <div class="card">
+    <dt class="rotulo">Gasto do mês</dt>
+    <dd class="numero numero-gasto">{{ gasto_mes|dinheiro }}</dd>
+  </div>
+  <div class="card">
+    <dt class="rotulo">Previsto em aberto</dt>
+    <dd class="numero numero-previsto">{{ previsto_aberto|dinheiro }}</dd>
+  </div>
+</dl>
+{% endblock %}

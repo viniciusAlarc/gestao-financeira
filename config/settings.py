@@ -118,12 +118,13 @@ STATIC_URL = "static/"
 
 
 # Entrada do app é a tela inicial, e ela exige login (D5: duas pessoas).
+# Nomes com namespace `financas:` desde 2026-11-02, quando o app ganhou urls.py.
 
-LOGIN_URL = "login"
+LOGIN_URL = "financas:login"
 
-LOGIN_REDIRECT_URL = "inicio"
+LOGIN_REDIRECT_URL = "financas:inicio"
 
-LOGOUT_REDIRECT_URL = "login"
+LOGOUT_REDIRECT_URL = "financas:login"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

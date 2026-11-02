@@ -3,6 +3,38 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-02 — Banco local do WSL criado (P3-5 fechado)
+
+**O que mudou:** com o "pode" do dono (G3), o `migrate` criou o `db.sqlite3` local e aplicou
+as 18 migrations (17 do Django + `financas.0001_initial`), incluindo as 4 tabelas do app.
+Descoberto no caminho: o binário `sqlite3` não existe no WSL, então `manage.py dbshell` falha;
+o app não é afetado (o Django usa o driver Python embutido) e nada foi instalado.
+**Arquivos:** `PENDENCIAS.md` (P3-5 removido, P3-6 atualizado),
+`docs-dev/guias/OPERACAO.md` (nota sobre o `dbshell`; comando "ver o que está rodando"
+ainda era o do Windows, `findstr` → `ss`).
+**Testes:** não se aplica, só ação de banco autorizada.
+
+## 2026-11-02 — Tela inicial (fase 2 do plano) com os três números
+
+**O que mudou:** a raiz do site virou a tela inicial, protegida por login: saldo, gasto do mês
+e previsto em aberto, mobile-first. Leituras fechadas nesta sessão (registradas para a fase 4
+não chutar): saldo = saldos iniciais + receitas − despesas de **todas as contas** (regra do
+plano); gasto do mês = despesas do mês corrente; previsto em aberto = **só despesas** abertas
+(decisão do dono). Estilo com cor só no número (saldo verde quando positivo, vermelho quando
+negativo; gasto em vermelho; previsto em cinza), decidido com o dono — o projeto não tem doc
+de design (G19). Login usa o `LoginView` do Django com rótulos e erro em pt-BR fixos no
+template, porque o WSL não tem o locale pt_BR instalado. Os nomes de URL ganharam namespace
+`financas:` (settings atualizado). Ficou de fora o logout: não está na spec da fase e volta
+na fase 6.
+**Arquivos:** `financas/views.py` (view `inicio`), `financas/urls.py` (novo), `config/urls.py`
+(include do app), `templates/base.html`, `templates/inicio.html`, `templates/login.html`,
+`financas/static/financas/app.css`, `financas/templatetags/financas_extra.py` (filtro
+`dinheiro`), `financas/tests.py` (+11 testes), `PENDENCIAS.md` (P3-6),
+`docs-dev/painel.json` (fase em andamento).
+**Testes:** `.venv/bin/python manage.py test` → 19 testes, **OK** (8 da linha de base + 11 novos).
+**Aberto:** verificação visual da fase (P3-6), que depende do banco local (P3-5) e do
+superusuário (P3-4).
+
 ## 2026-11-01 — Projeto passa a rodar só no WSL, pelo Dev Valley com o DeepSeek
 
 **O que mudou:** o dono decidiu trazer o projeto para o WSL e codar pelo Dev Valley, com o DeepSeek
