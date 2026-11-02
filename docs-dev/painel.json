@@ -1,14 +1,34 @@
 {
   "plano": {
-    "nome": "Fase 1 · integração Inter no sandbox",
-    "doc": "docs-dev/a-codar/briefing-descoberta.md",
+    "nome": "Desenvolvimento v1 · manual antes do Inter",
+    "doc": "docs-dev/a-codar/01-plano-desenvolvimento.md",
     "fases": [
-      { "nome": "Integração e certificado", "estado": "a fazer" },
-      { "nome": "Sandbox: token, saldo e extrato", "estado": "a fazer" },
-      { "nome": "Fechar stack e escopo da v1", "estado": "a fazer" }
+      { "nome": "Decisões e stack", "estado": "feito" },
+      { "nome": "Esqueleto e modelo", "estado": "feito" },
+      { "nome": "Tela inicial", "estado": "a fazer" },
+      { "nome": "Lançamento rápido", "estado": "a fazer" },
+      { "nome": "Gastos previstos", "estado": "a fazer" },
+      { "nome": "Relatório por categoria", "estado": "a fazer" },
+      { "nome": "Dois usuários e uso real", "estado": "a fazer" },
+      { "nome": "Integração Inter", "estado": "a fazer" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-01",
+      "o_que": "Modelo de dado aplicado, com suíte de 8 testes",
+      "como": "financas/models.py, migration 0001, admin provisório, financas/tests.py"
+    },
+    {
+      "data": "2026-11-01",
+      "o_que": "Esqueleto do Django rodando, com banco e operação documentados",
+      "como": "config/settings.py com segredo fora do código, db.sqlite3, docs-dev/guias/OPERACAO.md"
+    },
+    {
+      "data": "2026-11-01",
+      "o_que": "Plano de desenvolvimento da v1, com o Inter fora do caminho crítico",
+      "como": "docs-dev/a-codar/01-plano-desenvolvimento.md, 8 fases com verificação por fase"
+    },
     {
       "data": "2026-11-01",
       "o_que": "Controle de contexto do projeto no padrão da casa",

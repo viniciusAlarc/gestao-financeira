@@ -1,7 +1,7 @@
 # gestao-financeira — Instruções do projeto
 
-**Stack:** não fechada (decisão D1 em aberto). Hoje: Python 3.12 + `requests` + `python-dotenv`,
-rodando no `.venv` do projeto. Sem banco, sem front, sem servidor.
+**Stack:** Django 5.2 · SQLite · templates + HTMX · PWA. Decidida em 2026-11-01 (D1).
+Python 3.12 no `.venv` do projeto, no Windows. Plano e fases em `docs-dev/a-codar/01-plano-desenvolvimento.md`.
 
 > **Fonte das regras.** As regras universais e o perfil do dono moram em `~/Documents/IA`
 > (do Windows: `\\wsl.localhost\Ubuntu-24.04\home\vinicius\Documents\IA`), em
@@ -19,18 +19,22 @@ responsivo (PWA), sem publicar em loja.
 
 ## Estado atual
 
-Fase 1: provar a integração com a API do Inter (mTLS, token, saldo, extrato) no **sandbox**.
-Nada de tela e nada de banco antes disso. O que foi feito fica em `PROGRESS.md`; o que está
-aberto, em `PENDENCIAS.md`.
+Desenvolvimento da v1 por fases (8 no plano). O esqueleto do Django roda, o modelo de dado está
+pronto (`Conta`, `Categoria`, `Movimento`, `Previsto`) e a suíte tem 8 testes passando. Próxima fase:
+a tela inicial com saldo, gasto do mês e previsto em aberto. A integração com o Inter saiu do caminho
+crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que foi feito fica em
+`PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
-| Documento                                 | Quando consultar                                                |
-| ----------------------------------------- | --------------------------------------------------------------- |
-| `PENDENCIAS.md`                           | **Antes de codar** — rastreador único do que está aberto (G6)   |
-| `PROGRESS.md`                             | Memória oficial: o que foi feito e quando (G5)                  |
-| `docs-dev/a-codar/briefing-descoberta.md` | Descoberta do produto, decisões D1–D6, perguntas em aberto (G7) |
-| `docs-dev/painel.json`                    | Fases e entregas do plano em andamento (G14)                    |
+| Documento                                      | Quando consultar                                                |
+| ---------------------------------------------- | --------------------------------------------------------------- |
+| `PENDENCIAS.md`                                | **Antes de codar** — rastreador único do que está aberto (G6)   |
+| `PROGRESS.md`                                  | Memória oficial: o que foi feito e quando (G5)                  |
+| `docs-dev/a-codar/01-plano-desenvolvimento.md` | O plano e as fases da v1                                        |
+| `docs-dev/a-codar/briefing-descoberta.md`      | Descoberta do produto, decisões D1–D6, perguntas em aberto (G7) |
+| `docs-dev/guias/OPERACAO.md`                   | Como subir, derrubar e o que olhar quando não sobe (G14)        |
+| `docs-dev/painel.json`                         | Fases e entregas do plano em andamento (G14)                    |
 
 ## Regras técnicas deste projeto — invioláveis
 
@@ -46,8 +50,9 @@ aberto, em `PENDENCIAS.md`.
    (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`) vieram da documentação
    pública e **nunca foram conferidos no ambiente real**. Rota ou campo fora da doc oficial é
    retrabalho, não iniciativa.
-5. **Testes (G4).** Ainda não existe suíte. Linha de base hoje = `scripts/teste_inter.py` contra
-   o sandbox. Sem suíte possível, dizer antes de mexer, não no fim.
+5. **Testes (G4).** Rodar `.venv/Scripts/python manage.py test` antes e depois de mexer no modelo.
+   Linha de base em 2026-11-01: 8 testes, todos passando. `scripts/teste_inter.py` não é teste,
+   é diagnóstico da fase 7.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
@@ -55,12 +60,25 @@ aberto, em `PENDENCIAS.md`.
 
 ```bash
 # na raiz do repositório, com o .venv do projeto
-.venv/Scripts/python scripts/teste_inter.py     # Windows (situação atual)
-.venv/bin/python scripts/teste_inter.py         # se o repositório migrar para o WSL
+.venv/Scripts/python manage.py migrate
+.venv/Scripts/python manage.py runserver 0.0.0.0:8000
+.venv/Scripts/python manage.py createsuperuser     # uma vez, para o primeiro login
+.venv/Scripts/python manage.py test               # suíte do modelo
+```
+
+Porta, `ALLOWED_HOSTS` e erros conhecidos: `docs-dev/guias/OPERACAO.md`. A `SECRET_KEY` vem do
+`.env` (`DJANGO_SECRET_KEY`) ou de `.django-secret`, gerado no primeiro start e ignorado pelo git.
+Nunca escrever chave no código (G13).
+
+### Diagnóstico da API do Inter (fase 7, pausado)
+
+```bash
+.venv/Scripts/python scripts/teste_inter.py
 ```
 
 O script exige `.env` preenchido a partir de `.env.example`. Sem certificado baixado ele para
-pedindo as variáveis: isso é o esperado, não defeito.
+pedindo as variáveis: isso é o esperado, não defeito. O host de sandbox que ele usa hoje **não
+existe** (ver P2-7 em `PENDENCIAS.md`).
 
 ## Onde este projeto roda (decidido em 2026-11-01)
 

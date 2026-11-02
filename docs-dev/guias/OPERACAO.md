@@ -1,0 +1,43 @@
+# Operação local — subir, derrubar e reiniciar
+
+> Como o app sobe nesta máquina: Windows, sem WSL (decisão de 2026-11-01). A tabela abaixo é lida
+> pela Fábrica de agentes (G14, `~/Documents/IA/guardrails-ia/operacao.md`); o resto é para gente.
+
+## Subir (lido pela Fábrica de agentes)
+
+| Lado  | Pasta | Comando                                                 | Porta |
+| ----- | ----- | ------------------------------------------------------- | ----- |
+| back  | `.`   | `.venv/Scripts/python manage.py runserver 0.0.0.0:8000` | 8000  |
+| front |       |                                                         |       |
+
+O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servidor só responde em
+`localhost` e o celular não alcança.
+
+## Pré-requisitos
+
+- `.venv` na raiz com `requirements.txt` instalado:
+  `.venv/Scripts/python -m pip install -r requirements.txt`.
+- Para o app não é obrigatório nenhum segredo: a `SECRET_KEY` sai do `.env` (`DJANGO_SECRET_KEY`) ou
+  do arquivo `.django-secret`, gerado no primeiro start e ignorado pelo git. Nenhum valor de segredo
+  aparece neste documento (G13).
+- `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` no `.env`; sem ela vale `localhost,127.0.0.1`.
+  Para abrir no celular, incluir o IP da máquina na rede: `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`.
+- `.env` com as variáveis do Inter só é necessário na fase 7.
+
+## Ver o que está rodando
+
+```bash
+netstat -ano | findstr :8000
+```
+
+## Desligar e subir de novo
+
+`Ctrl+C` no terminal do servidor e rodar o comando da tabela outra vez.
+
+## Quando alguma coisa não sobe
+
+| Sintoma                              | Causa provável                  | O que resolve                                                        |
+| ------------------------------------ | ------------------------------- | -------------------------------------------------------------------- |
+| `DisallowedHost` ao abrir pelo celular | IP da máquina fora do `ALLOWED_HOSTS` | acrescentar o IP no `.env` e reiniciar                        |
+| `no such table`                      | migrations não aplicadas        | `.venv/Scripts/python manage.py migrate`                             |
+| Login em laço, sem entrar            | nenhum usuário criado           | `.venv/Scripts/python manage.py createsuperuser`                     |
