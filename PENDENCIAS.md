@@ -37,7 +37,8 @@
 | ID   | Dono | Item                                                                                                                                                     | Aberto em  |
 | ---- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | P3-3 | 👤   | **D6 — onde o backend roda.** Só rede local, túnel ou VPS. Se houver custo recorrente, entra o G20 (custo estimado antes de criar).                      | 2026-11-01 |
-| P3-4 | 👤   | Criar o primeiro superusuário, que só o dono pode fazer por causa da senha: `.venv/Scripts/python manage.py createsuperuser`. Sem ele, o admin não abre. | 2026-11-01 |
+| P3-4 | 👤   | Criar o primeiro superusuário, que só o dono pode fazer por causa da senha: `.venv/bin/python manage.py createsuperuser`. Sem ele, o admin não abre. | 2026-11-01 |
+| P3-5 | 👤   | Banco local do WSL ainda não existe (o `db.sqlite3` do Windows não veio no clone). Criar com `.venv/bin/python manage.py migrate` quando o dono autorizar (G3); depois o P3-4. | 2026-11-01 |
 
 ## P4 — Baixo / melhoria
 

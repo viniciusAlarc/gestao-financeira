@@ -1,4 +1,4 @@
-"""Linha de base da suíte (G4). Roda com `.venv/Scripts/python manage.py test`.
+"""Linha de base da suíte (G4). Roda com `.venv/bin/python manage.py test`.
 
 Cobre o que o modelo promete: saldo calculado, unicidade de categoria e a regra de que
 previsto pago sempre tem movimento.

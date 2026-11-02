@@ -3,6 +3,22 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-01 — Projeto passa a rodar só no WSL, pelo Dev Valley com o DeepSeek
+
+**O que mudou:** o dono decidiu trazer o projeto para o WSL e codar pelo Dev Valley, com o DeepSeek
+(perfil pessoal do Claude Code, para não usar a licença do trabalho). Revoga a decisão "Zed no Windows"
+(entrada abaixo). Clonado em `~/Documents/Projetos-pessoais/gestao-financeira`; `.venv` de Linux criado
+sem pip (o WSL não tem `python3-venv`; dependência entra com `pip3 --python .venv/bin/python`). Novo
+`CLAUDE.md` que importa o `AGENTS.md`; auditor de referências instalado (`scripts/auditar-referencias.py`,
+`.claude/auditoria-regras.txt`). Regra 2 ganhou: o assistente lê e escreve código, nunca dado real
+(`db.sqlite3`, extrato, `.env`).
+**Arquivos:** `AGENTS.md` (ambiente, comandos, regras 2 e 5, fonte das regras), `CLAUDE.md` (novo),
+`docs-dev/guias/OPERACAO.md` (WSL e `.venv/bin/python`), `PENDENCIAS.md` (comando do P3-4),
+`financas/tests.py` e `scripts/teste_inter.py` (comando no comentário).
+**Testes:** `.venv/bin/python manage.py test` → 8 testes, **OK** (no WSL).
+**Aberto:** o banco local do WSL não existe ainda (`migrate` espera o dono, G3); ajustar `ALVOS`/`RAIZES`
+do auditor e rodá-lo.
+
 ## 2026-11-01 — Modelo de dado e linha de base de testes
 
 **O que mudou:** D2, D3 e D5 fechadas como propostas no plano, e o modelo da fase 1 escrito e aplicado.

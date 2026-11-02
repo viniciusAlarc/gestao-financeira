@@ -1,13 +1,13 @@
 # gestao-financeira — Instruções do projeto
 
 **Stack:** Django 5.2 · SQLite · templates + HTMX · PWA. Decidida em 2026-11-01 (D1).
-Python 3.12 no `.venv` do projeto, no Windows. Plano e fases em `docs-dev/a-codar/01-plano-desenvolvimento.md`.
+Python 3.12 no `.venv` do projeto, no WSL (Ubuntu 24.04). Plano e fases em `docs-dev/a-codar/01-plano-desenvolvimento.md`.
 
 > **Fonte das regras.** As regras universais e o perfil do dono moram em `~/Documents/IA`
-> (do Windows: `\\wsl.localhost\Ubuntu-24.04\home\vinicius\Documents\IA`), em
-> `guardrails-ia/guardrails-core.md`, `cnr/como-trabalhamos.md` e `pessoal/sobre-mim.md`.
-> O Claude carrega isso sozinho por `~/.claude/CLAUDE.md`; **o Zed não**. Por isso o que incide
-> neste projeto está resumido abaixo, e este arquivo vence em conflito.
+> (`guardrails-ia/guardrails-core.md`, `cnr/como-trabalhamos.md` e `pessoal/sobre-mim.md`). A sessão
+> aberta pelo Dev Valley carrega isso sozinha (perfil pessoal, `~/.claude-pessoal/CLAUDE.md`, que roda
+> com o DeepSeek); o `CLAUDE.md` daqui só importa este arquivo. O que incide neste projeto está resumido
+> abaixo, e este arquivo vence em conflito.
 
 ## O que este sistema é
 
@@ -43,6 +43,9 @@ crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que f
    terminal, log, print ou resposta: referenciar o nome da variável.
 2. **Dado financeiro é dado pessoal.** Extrato, saldo e transação não vão para serviço externo,
    IA de terceiro ou web sem decisão explícita do dono (G20).
+   **O assistente (DeepSeek, Claude) lê e escreve o código, nunca o dado real:** não abrir
+   `db.sqlite3`, extrato, `.env` nem dump do banco, nem colar dado real em teste (decisão do dono,
+   2026-11-01). Teste usa dado inventado.
 3. **Ação irreversível espera o dono (G3).** Baixar e ativar certificado, criar integração no
    Internet Banking, trocar `INTER_AMBIENTE` para `producao`, mexer em servidor ou em banco:
    mostrar o comando e o efeito, e esperar o "pode".
@@ -50,7 +53,7 @@ crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que f
    (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`) vieram da documentação
    pública e **nunca foram conferidos no ambiente real**. Rota ou campo fora da doc oficial é
    retrabalho, não iniciativa.
-5. **Testes (G4).** Rodar `.venv/Scripts/python manage.py test` antes e depois de mexer no modelo.
+5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
    Linha de base em 2026-11-01: 8 testes, todos passando. `scripts/teste_inter.py` não é teste,
    é diagnóstico da fase 7.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
@@ -60,10 +63,10 @@ crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que f
 
 ```bash
 # na raiz do repositório, com o .venv do projeto
-.venv/Scripts/python manage.py migrate
-.venv/Scripts/python manage.py runserver 0.0.0.0:8000
-.venv/Scripts/python manage.py createsuperuser     # uma vez, para o primeiro login
-.venv/Scripts/python manage.py test               # suíte do modelo
+.venv/bin/python manage.py migrate
+.venv/bin/python manage.py runserver 0.0.0.0:8000
+.venv/bin/python manage.py createsuperuser     # uma vez, para o primeiro login
+.venv/bin/python manage.py test               # suíte do modelo
 ```
 
 Porta, `ALLOWED_HOSTS` e erros conhecidos: `docs-dev/guias/OPERACAO.md`. A `SECRET_KEY` vem do
@@ -73,22 +76,20 @@ Nunca escrever chave no código (G13).
 ### Diagnóstico da API do Inter (fase 7, pausado)
 
 ```bash
-.venv/Scripts/python scripts/teste_inter.py
+.venv/bin/python scripts/teste_inter.py
 ```
 
 O script exige `.env` preenchido a partir de `.env.example`. Sem certificado baixado ele para
 pedindo as variáveis: isso é o esperado, não defeito. O host de sandbox que ele usa hoje **não
 existe** (ver P2-7 em `PENDENCIAS.md`).
 
-## Onde este projeto roda (decidido em 2026-11-01)
+## Onde este projeto roda (decidido em 2026-11-01, revisto no mesmo dia)
 
-- **Zed + Windows é o ambiente dos projetos pessoais.** Este repositório fica em
-  `C:\Users\ViniciusAlarção\Documents\Projetos\gestao-financeira`, com `.venv` de Windows.
-  Não é divergência nem dívida: é a escolha do dono.
-- **WSL (Ubuntu 24.04) existe para o trabalho e para o Claude Code**, onde ficam os projetos da
-  CNR e as regras de `~/Documents/IA`. Comando escrito para bash/WSL não roda aqui sem conferir
-  o interpretador, e o inverso também não.
-- Consequência prática: comando de Python neste projeto é `.venv/Scripts/python ...`.
+- **Só no WSL (Ubuntu 24.04)**, em `~/Documents/Projetos-pessoais/gestao-financeira`, codado pelo
+  Dev Valley com o DeepSeek (perfil pessoal do Claude Code). A cópia antiga no Windows não é mais usada.
+- O `.venv` é de Linux: comando de Python neste projeto é `.venv/bin/python ...`.
+- O `.venv` foi criado sem pip (o WSL não tem o pacote `python3-venv`). Instalar dependência:
+  `pip3 --python .venv/bin/python install -r requirements.txt`.
 
 ## Regras de processo
 

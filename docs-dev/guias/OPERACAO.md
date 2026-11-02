@@ -1,13 +1,13 @@
 # Operação local — subir, derrubar e reiniciar
 
-> Como o app sobe nesta máquina: Windows, sem WSL (decisão de 2026-11-01). A tabela abaixo é lida
+> Como o app sobe nesta máquina: WSL (Ubuntu 24.04), só ele (decisão de 2026-11-01). A tabela abaixo é lida
 > pela Fábrica de agentes (G14, `~/Documents/IA/guardrails-ia/operacao.md`); o resto é para gente.
 
 ## Subir (lido pela Fábrica de agentes)
 
 | Lado  | Pasta | Comando                                                 | Porta |
 | ----- | ----- | ------------------------------------------------------- | ----- |
-| back  | `.`   | `.venv/Scripts/python manage.py runserver 0.0.0.0:8000` | 8000  |
+| back  | `.`   | `.venv/bin/python manage.py runserver 0.0.0.0:8000` | 8000  |
 | front |       |                                                         |       |
 
 O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servidor só responde em
@@ -16,7 +16,7 @@ O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servi
 ## Pré-requisitos
 
 - `.venv` na raiz com `requirements.txt` instalado:
-  `.venv/Scripts/python -m pip install -r requirements.txt`.
+  `pip3 --python .venv/bin/python install -r requirements.txt` (o `.venv` não tem pip próprio).
 - Para o app não é obrigatório nenhum segredo: a `SECRET_KEY` sai do `.env` (`DJANGO_SECRET_KEY`) ou
   do arquivo `.django-secret`, gerado no primeiro start e ignorado pelo git. Nenhum valor de segredo
   aparece neste documento (G13).
@@ -39,5 +39,5 @@ netstat -ano | findstr :8000
 | Sintoma                              | Causa provável                  | O que resolve                                                        |
 | ------------------------------------ | ------------------------------- | -------------------------------------------------------------------- |
 | `DisallowedHost` ao abrir pelo celular | IP da máquina fora do `ALLOWED_HOSTS` | acrescentar o IP no `.env` e reiniciar                        |
-| `no such table`                      | migrations não aplicadas        | `.venv/Scripts/python manage.py migrate`                             |
-| Login em laço, sem entrar            | nenhum usuário criado           | `.venv/Scripts/python manage.py createsuperuser`                     |
+| `no such table`                      | migrations não aplicadas        | `.venv/bin/python manage.py migrate`                             |
+| Login em laço, sem entrar            | nenhum usuário criado           | `.venv/bin/python manage.py createsuperuser`                     |

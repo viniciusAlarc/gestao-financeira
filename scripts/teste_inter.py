@@ -5,7 +5,7 @@ Objetivo: provar, no sandbox, que (1) o certificado mTLS é aceito,
 e não imprime segredo nenhum.
 
 Uso:
-    .venv/Scripts/python scripts/teste_inter.py
+    .venv/bin/python scripts/teste_inter.py
 
 Credenciais vêm de .env — nunca do código.
 """
