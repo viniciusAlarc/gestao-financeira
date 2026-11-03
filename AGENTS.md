@@ -14,16 +14,20 @@ Python 3.12 no `.venv` do projeto, no WSL (Ubuntu 24.04). Plano e fases em `docs
 Controle financeiro pessoal, privado, de duas pessoas (o dono e a esposa). Não é produto.
 O problema não é registrar gasto, é **ver** para onde o dinheiro foi: responder sem esforço
 "para onde foi o dinheiro deste mês" e "o que já está comprometido à frente".
-Tela inicial: saldo, gasto atual, gastos previstos. Uso principal no celular, como web app
-responsivo (PWA), sem publicar em loja.
+Tela inicial: saldo, gasto atual, gastos previstos. As duas contas de login veem todos os dados
+(conta conjunta); cada lançamento registra quem lançou em `criado_por`. Uso principal no celular,
+como web app responsivo (PWA), sem publicar em loja.
 
 ## Estado atual
 
 Desenvolvimento da v1 por fases (8 no plano). O esqueleto do Django roda, o modelo de dado está
-pronto (`Conta`, `Categoria`, `Movimento`, `Previsto`) e a suíte tem 8 testes passando. Próxima fase:
-a tela inicial com saldo, gasto do mês e previsto em aberto. A integração com o Inter saiu do caminho
-crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que foi feito fica em
-`PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
+pronto (`Conta`, `Categoria`, `Movimento`, `Previsto`) e a tela inicial com saldo, gasto do mês e
+previsto em aberto está pronta e verificada a 375px. As fases 4 e 5 estão concluídas e validadas
+por testes: gastos previstos com botão "paguei" e relatório do mês por categoria. A fase 6 está
+implementada: as duas contas veem tudo, o lançamento registra a autoria, há logout e o PWA tem
+manifest e ícones; falta a verificação de uso real (P3-9). A fase 7 (Inter) foi iniciada: o host
+do sandbox foi corrigido para o domínio oficial e o script aguarda `.env` e certificado. A suíte
+tem 62 testes passando. O que foi feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
@@ -54,7 +58,7 @@ crítico e virou a fase 7, alimentando dados em vez de bloquear o resto. O que f
    pública e **nunca foram conferidos no ambiente real**. Rota ou campo fora da doc oficial é
    retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-01: 8 testes, todos passando. `scripts/teste_inter.py` não é teste,
+   Linha de base em 2026-11-03: 62 testes, todos passando. `scripts/teste_inter.py` não é teste,
    é diagnóstico da fase 7.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
@@ -73,15 +77,16 @@ Porta, `ALLOWED_HOSTS` e erros conhecidos: `docs-dev/guias/OPERACAO.md`. A `SECR
 `.env` (`DJANGO_SECRET_KEY`) ou de `.django-secret`, gerado no primeiro start e ignorado pelo git.
 Nunca escrever chave no código (G13).
 
-### Diagnóstico da API do Inter (fase 7, pausado)
+### Diagnóstico da API do Inter (fase 7, em andamento)
 
 ```bash
 .venv/bin/python scripts/teste_inter.py
 ```
 
 O script exige `.env` preenchido a partir de `.env.example`. Sem certificado baixado ele para
-pedindo as variáveis: isso é o esperado, não defeito. O host de sandbox que ele usa hoje **não
-existe** (ver P2-7 em `PENDENCIAS.md`).
+pedindo as variáveis: isso é o esperado, não defeito. O host do sandbox é
+`https://cdpj-sandbox.partners.uatinter.co`, conferido no portal em 2026-11-03; os caminhos de
+token, saldo e extrato ainda precisam ser exercitados com credencial real (P2-3).
 
 ## Onde este projeto roda (decidido em 2026-11-01, revisto no mesmo dia)
 

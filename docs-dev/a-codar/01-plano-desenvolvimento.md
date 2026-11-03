@@ -80,12 +80,13 @@ Cada fase entrega algo que você consegue **usar e olhar**, não uma camada de c
 - **Verificação:** uma semana de uso real, com os dois lançando.
 - **Decisão que volta aqui:** escopo por pessoa (cada um vê tudo?) precisa de resposta antes.
 
-### Fase 7 — Inter (depois, bloqueada por fora)
+### Fase 7 — Inter (em andamento desde 2026-11-03)
 
-- Corrigir o host do sandbox (P2-7), criar a integração no portal, baixar o certificado.
+- Host do sandbox confirmado em `cdpj-sandbox.partners.uatinter.co`; criar a integração no portal e
+  baixar o certificado (P2-1/P2-2).
 - Importar extrato como `Movimento` com `origem = inter`, sem duplicar.
 - **Verificação:** um extrato importado duas vezes não gera movimento repetido.
-- **Não começa** enquanto o portal do Inter estiver fora da janela ou sem o host confirmado.
+- **Começa** quando o portal estiver na janela e a integração/certificado estiverem prontos.
 
 ### Fase 8 — Sair de casa (opcional, tem custo)
 

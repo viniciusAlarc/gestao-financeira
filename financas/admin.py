@@ -10,8 +10,15 @@ from .models import Categoria, Conta, Movimento, Previsto
 
 @admin.register(Conta)
 class ContaAdmin(admin.ModelAdmin):
-    list_display = ("nome", "tipo", "saldo_inicial", "ativa", "saldo_calculado")
-    list_filter = ("tipo", "ativa")
+    list_display = (
+        "nome",
+        "tipo",
+        "saldo_inicial",
+        "ativa",
+        "padrao",
+        "saldo_calculado",
+    )
+    list_filter = ("tipo", "ativa", "padrao")
 
     @admin.display(description="saldo calculado")
     def saldo_calculado(self, obj: Conta):

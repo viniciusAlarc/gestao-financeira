@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load financas_extra %}
+
+{% block titulo %}Relatório{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Relatório do mês</h1>
+<p class="mes-relatorio">{{ hoje|date:"m/Y" }}</p>
+
+<section class="lista-mes">
+  {% if linhas %}
+    <ul class="movimentos">
+      {% for linha in linhas %}
+      <li class="movimento">
+        <span class="movimento-descricao">{{ linha.nome }}</span>
+        <span class="movimento-percentual">{{ linha.percentual|porcentagem }}</span>
+        <span class="movimento-valor valor-despesa">{{ linha.total|dinheiro }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="vazio">Nenhuma despesa neste mês.</p>
+  {% endif %}
+  <p class="total-mes"><span>Total de despesas do mês</span> <strong>{{ total_despesas|dinheiro }}</strong></p>
+</section>
+{% endblock %}

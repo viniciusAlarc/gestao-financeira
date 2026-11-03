@@ -24,6 +24,16 @@ O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servi
   Para abrir no celular, incluir o IP da máquina na rede: `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`.
 - `.env` com as variáveis do Inter só é necessário na fase 7.
 
+## Instalar o PWA no celular
+
+O app está preparado com `manifest.webmanifest` e ícones em `financas/static/financas/`.
+
+- Android/Chrome: menu de três pontos → "Instalar aplicativo" (ou "Adicionar à tela inicial").
+- iPhone/Safari: Compartilhar → "Adicionar à Tela de Início".
+
+Em rede local por HTTP, alguns navegadores só oferecem a instalação com HTTPS. Se o celular não
+mostrar a opção, isso é limitação do navegador/rede, não defeito do app; HTTPS entra na fase 8.
+
 ## Ver o que está rodando
 
 ```bash

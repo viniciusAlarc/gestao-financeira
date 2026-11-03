@@ -12,10 +12,14 @@
 | Backend Django   | `manage.py`, `config/`     | rodando, com os 4 modelos       |
 | Banco            | `db.sqlite3` (fora do git) | 4 tabelas de `financas` criadas |
 | Modelo de dado   | `financas/models.py`       | pronto                          |
-| Suíte de testes  | `financas/tests.py`        | 8 testes, todos passando        |
-| Tela inicial     | `financas/views.py`, `templates/` | pronta, falta verificação visual |
-| PWA              | —                                | não existe (fase 6)              |
-| Integração Inter | `scripts/teste_inter.py`   | nunca executado, **pausado**    |
+| Suíte de testes  | `financas/tests.py`        | 62 testes, todos passando       |
+| Tela inicial     | `financas/views.py`, `templates/` | pronta e verificada a 375px |
+| Lançamentos      | `financas/views.py`, `templates/lancamentos.html` | implementado e verificado |
+| Gastos previstos | `financas/views.py`, `templates/previstos.html` | implementado e validado por testes |
+| Relatório        | `financas/views.py`, `templates/relatorio.html` | implementado e validado por testes |
+| Segundo login    | admin do Django            | a criar pelo dono (P3-9)        |
+| PWA              | `financas/static/financas/` | manifest e ícones prontos; instalação no celular pendente (P3-9) |
+| Integração Inter | `scripts/teste_inter.py`   | host corrigido; aguardando `.env` e certificado |
 
 ## P1 — Crítico (bloqueia uso ou expõe dado)
 
@@ -29,21 +33,20 @@
 | ---- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | P2-1 | 👤   | Criar a integração no **portal Sandbox** e baixar e ativar certificado e chaves. O sandbox se cria ali, com **login da Comunidade Inter**. O portal só responde das **8h às 20h, de segunda a sexta**. **Pausado** até a fase 7 do plano.                                    | 2026-11-01 |
 | P2-2 | 👤   | Converter para PEM se o arquivo vier em `.pfx`, e preencher o `.env` a partir do `.env.example`. Os valores ficam fora do git (G13).                                                                                                                                         | 2026-11-01 |
-| P2-3 | 💻   | Rodar `scripts/teste_inter.py` contra o sandbox e conferir os três caminhos (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`). Vieram da doc pública e nunca foram verificados. **Pausado** até a fase 7 do plano.                                             | 2026-11-01 |
+| P2-3 | 💻   | Rodar `scripts/teste_inter.py` contra o sandbox e conferir os três caminhos (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`). Vieram da doc pública e nunca foram verificados. Rodar quando `.env` e certificado estiverem prontos. | 2026-11-01 |
 | P2-6 | 👤   | **D4 — escopo da integração.** A API de Empresas cobre a PJ. Conta PF, cartão e boleto de outra titularidade podem exigir Open Finance: não prometer "tudo" antes de confirmar.                                                                                              | 2026-11-01 |
-| P2-7 | 💻   | **Host do sandbox não existe.** `cdpj-sandbox.partners.bancointer.com.br`, usado em `scripts/teste_inter.py`, não resolve em DNS (NXDOMAIN em 01/11/2026). O candidato é `cdpj-sandbox.partners.uatinter.co`, que resolve, mas **não foi confirmado** na página Referências. | 2026-11-01 |
+| P2-8 | 👤   | **Mapeamento da importação do Inter.** Confirmar se a conta é PJ, qual `Conta` do app recebe os movimentos, quais categorias usar e qual chave evita duplicação. | 2026-11-03 |
 
 ## P3 — Médio
 
 | ID   | Dono | Item                                                                                                                                                     | Aberto em  |
 | ---- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | P3-3 | 👤   | **D6 — onde o backend roda.** Só rede local, túnel ou VPS. Se houver custo recorrente, entra o G20 (custo estimado antes de criar).                      | 2026-11-01 |
-| P3-4 | 👤   | Criar o primeiro superusuário, que só o dono pode fazer por causa da senha: `.venv/bin/python manage.py createsuperuser`. Sem ele, o admin não abre. | 2026-11-01 |
-| P3-6 | 👤   | **Verificação visual da fase 2 (tela inicial).** Abrir no navegador a 375px de largura e conferir que saldo, gasto do mês e previsto em aberto batem com o que foi lançado. Depende do P3-4 (superusuário) e dos dados de exemplo pelo admin. | 2026-11-02 |
+| P3-9 | 👤   | **Verificação da fase 6.** Criar o segundo usuário no admin, instalar o PWA no celular e usar por uma semana com as duas pessoas lançando. | 2026-11-03 |
 
 ## P4 — Baixo / melhoria
 
 | ID   | Dono | Item                                                                                                                                               | Aberto em  |
 | ---- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | P4-2 | 💻   | Instalar `scripts/auditar-referencias.py` (G12/G16) e ajustar `ALVOS`/`RAIZES` a este repositório. Faz sentido quando a pasta `docs-dev/` crescer. | 2026-11-01 |
-| P4-3 | 💻   | `RETRABALHO.md` (G17) só nasce quando houver retrabalho a registrar.                                                                               | 2026-11-01 |
+| P4-4 | 👤   | Conferência visual das telas `/previstos/` e `/relatorio/` a 375px no navegador. O comportamento já está coberto por testes; é só a conferência de layout. | 2026-11-03 |

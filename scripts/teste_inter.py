@@ -1,4 +1,4 @@
-"""Teste de conexão com a API do Inter (fase 1 do projeto).
+"""Teste de conexão com a API do Inter (fase 7 do projeto).
 
 Objetivo: provar, no sandbox, que (1) o certificado mTLS é aceito,
 (2) o token sai e (3) extrato e saldo voltam. Não grava nada em disco
@@ -25,7 +25,8 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 BASE_URLS = {
-    "sandbox": "https://cdpj-sandbox.partners.bancointer.com.br",
+    # Host do sandbox conferido no portal do desenvolvedor do Inter em 2026-11-03.
+    "sandbox": "https://cdpj-sandbox.partners.uatinter.co",
     "producao": "https://cdpj.partners.bancointer.com.br",
 }
 
@@ -35,7 +36,8 @@ CAMINHO_EXTRATO = "/banking/v2/extrato"
 ESCOPO = "extrato.read"
 
 # Endpoints acima seguem a documentação pública do Inter Empresas.
-# Ainda não conferidos no ambiente real: se der 404, o corpo da resposta
+# O host do sandbox foi conferido no portal em 2026-11-03; os caminhos ainda
+# não foram exercitados com credencial real. Se der 404, o corpo da resposta
 # aparece no terminal e é o primeiro lugar a olhar.
 
 

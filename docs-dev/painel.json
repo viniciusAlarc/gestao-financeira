@@ -5,15 +5,45 @@
     "fases": [
       { "nome": "Decisões e stack", "estado": "feito" },
       { "nome": "Esqueleto e modelo", "estado": "feito" },
-      { "nome": "Tela inicial", "estado": "andamento" },
-      { "nome": "Lançamento rápido", "estado": "a fazer" },
-      { "nome": "Gastos previstos", "estado": "a fazer" },
-      { "nome": "Relatório por categoria", "estado": "a fazer" },
-      { "nome": "Dois usuários e uso real", "estado": "a fazer" },
-      { "nome": "Integração Inter", "estado": "a fazer" }
+      { "nome": "Tela inicial", "estado": "feito" },
+      { "nome": "Lançamento rápido", "estado": "feito" },
+      { "nome": "Gastos previstos", "estado": "feito" },
+      { "nome": "Relatório por categoria", "estado": "feito" },
+      { "nome": "Dois usuários e uso real", "estado": "andamento" },
+      { "nome": "Integração Inter", "estado": "andamento" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 7 iniciada: host do sandbox do Inter corrigido para o domínio oficial",
+      "como": "scripts/teste_inter.py aponta para cdpj-sandbox.partners.uatinter.co; .env e certificado ainda faltam"
+    },
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 6 implementada: logout, autoria do lançamento e PWA com manifest e ícones; falta o uso real",
+      "como": "duas contas veem tudo, criado_por registra quem lançou, 62 testes passando"
+    },
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 5 fechada: relatório do mês por categoria, com total, percentual e ordem decrescente",
+      "como": "tela /relatorio/, filtro porcentagem, soma das categorias conferida por teste e 55 testes passando"
+    },
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 4 fechada: gastos previstos com descrição, vencimento, valor, categoria de despesa e botão \"paguei\"",
+      "como": "tela /previstos/, movimento criado na data de hoje, previsto pago sai do total em aberto e 49 testes passam"
+    },
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 3 verificada: 5 gastos reais lançados pela tela nova, sem admin; fase fechada",
+      "como": "tela /lancamentos/ com conta padrão, lista por dia e total de despesas conferidos"
+    },
+    {
+      "data": "2026-11-03",
+      "o_que": "Fase 2 verificada visualmente a 375px pelo dono; fase fechada",
+      "como": "conferência no navegador com dados de exemplo; P3-4 e P3-6 fechados"
+    },
     {
       "data": "2026-11-02",
       "o_que": "Tela inicial com os três números e login, pronta para verificação visual",

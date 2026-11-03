@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load financas_extra %}
+
+{% block titulo %}Gastos previstos{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Gastos previstos</h1>
+
+{% if not conta_padrao %}
+  <p class="aviso">Nenhuma conta está marcada como padrão e ativa. Marque uma no <a href="{% url 'admin:financas_conta_changelist' %}">admin</a> para poder adicionar previsto.</p>
+{% elif not tem_categoria_despesa_ativa %}
+  <p class="aviso">Nenhuma categoria de despesa ativa. Cadastre uma no <a href="{% url 'admin:financas_categoria_changelist' %}">admin</a>.</p>
+{% else %}
+<form method="post" class="formulario-rapido">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erro">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+  {{ form.descricao }}
+  {% if form.descricao.errors %}<p class="erro">{{ form.descricao.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.vencimento.id_for_label }}">{{ form.vencimento.label }}</label>
+  {{ form.vencimento }}
+  {% if form.vencimento.errors %}<p class="erro">{{ form.vencimento.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+  {{ form.valor }}
+  {% if form.valor.errors %}<p class="erro">{{ form.valor.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+  {{ form.categoria }}
+  {% if form.categoria.errors %}<p class="erro">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  <button type="submit" class="botao-primario">Adicionar previsto</button>
+</form>
+{% endif %}
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Abertos</h2>
+  {% for previsto in previstos %}
+    <div class="dia">
+      <p class="dia-cabecalho">Vence {{ previsto.vencimento|date:"d/m/Y" }}</p>
+      <ul class="movimentos">
+        <li class="movimento">
+          <span class="movimento-descricao">{{ previsto.descricao }}</span>
+          <div class="movimento-valor">
+            <span>{{ previsto.valor|dinheiro }}</span>
+            <form method="post" action="{% url 'financas:pagar_previsto' previsto.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="botao-primario">Paguei</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </div>
+  {% empty %}
+    <p class="vazio">Nenhum gasto previsto em aberto.</p>
+  {% endfor %}
+</section>
+{% endblock %}

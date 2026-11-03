@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% load financas_extra %}
+
+{% block titulo %}Lançamentos{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Lançamentos</h1>
+
+{% if not conta_padrao %}
+  <p class="aviso">Nenhuma conta está marcada como padrão e ativa. Marque uma no <a href="{% url 'admin:financas_conta_changelist' %}">admin</a> para poder lançar.</p>
+{% elif not tem_categoria_ativa %}
+  <p class="aviso">Nenhuma categoria ativa. Cadastre uma no <a href="{% url 'admin:financas_categoria_changelist' %}">admin</a>.</p>
+{% else %}
+<form method="post" class="formulario-rapido">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erro">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+  {{ form.valor }}
+  {% if form.valor.errors %}<p class="erro">{{ form.valor.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+  {{ form.categoria }}
+  {% if form.categoria.errors %}<p class="erro">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  <button type="submit" class="botao-primario">Salvar</button>
+</form>
+{% endif %}
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Este mês</h2>
+  {% for dia, movimentos in dias %}
+    <div class="dia">
+      <p class="dia-cabecalho">{{ dia|date:"d/m" }}</p>
+      <ul class="movimentos">
+        {% for m in movimentos %}
+        <li class="movimento">
+          <span class="movimento-descricao">{{ m.descricao|default:m.categoria.nome }}</span>
+          <span class="movimento-valor {% if m.tipo == 'despesa' %}valor-despesa{% else %}valor-receita{% endif %}">{% if m.tipo == 'despesa' %}-{% endif %}{{ m.valor|dinheiro }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% empty %}
+    <p class="vazio">Nenhum lançamento neste mês.</p>
+  {% endfor %}
+  <p class="total-mes"><span>Total de despesas do mês</span> <strong>{{ total_despesas|dinheiro }}</strong></p>
+</section>
+{% endblock %}

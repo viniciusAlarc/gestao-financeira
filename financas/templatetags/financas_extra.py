@@ -23,3 +23,13 @@ def dinheiro(valor):
     inteiro, _, centavos = f"{abs(numero):.2f}".partition(".")
     milhar = f"{int(inteiro):,}".replace(",", ".")
     return f"{sinal}R$ {milhar},{centavos}"
+
+
+@register.filter
+def porcentagem(valor):
+    """Decimal → "60,0%". Valor fora do formato vira string vazia."""
+    try:
+        numero = Decimal(valor)
+    except (InvalidOperation, TypeError, ValueError):
+        return ""
+    return f"{numero:.1f}".replace(".", ",") + "%"

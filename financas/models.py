@@ -41,14 +41,35 @@ class Conta(models.Model):
         "saldo inicial", max_digits=15, decimal_places=2, default=Decimal("0.00")
     )
     ativa = models.BooleanField("ativa", default=True)
+    padrao = models.BooleanField(
+        "padrão",
+        default=False,
+        help_text="Conta usada pelo lançamento rápido. Só uma pode ser padrão.",
+    )
 
     class Meta:
         ordering = ["nome"]
         verbose_name = "conta"
         verbose_name_plural = "contas"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["padrao"],
+                condition=Q(padrao=True),
+                name="conta_padrao_unica",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.nome
+
+    def save(self, *args, **kwargs):
+        """Marcar uma conta como padrão desmarca as outras (só uma é padrão)."""
+        if self.padrao:
+            outras = Conta.objects.filter(padrao=True)
+            if self.pk:
+                outras = outras.exclude(pk=self.pk)
+            outras.update(padrao=False)
+        super().save(*args, **kwargs)
 
     @property
     def saldo(self) -> Decimal:
