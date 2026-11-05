@@ -82,6 +82,29 @@ class CategoriaTests(BaseFinancas):
         Categoria.objects.create(nome="Mercado", tipo=TipoValor.RECEITA)
         self.assertEqual(Categoria.objects.filter(nome="Mercado").count(), 2)
 
+    def test_categoria_nasce_entrando_no_gasto(self):
+        self.assertTrue(self.categoria_despesa.entra_no_gasto)
+
+
+class IdExternoTests(BaseFinancas):
+    """A chave antiduplicidade da importação (decisão de 2026-11-05)."""
+
+    def test_id_externo_repetido_na_mesma_conta_e_recusado(self):
+        self.lancar(TipoValor.DESPESA, "10.00", id_externo="tx-1")
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            self.lancar(TipoValor.DESPESA, "20.00", id_externo="tx-1")
+
+    def test_mesmo_id_externo_em_outra_conta_e_permitido(self):
+        outra = Conta.objects.create(nome="Banco", saldo_inicial=Decimal("0.00"))
+        self.lancar(TipoValor.DESPESA, "10.00", id_externo="tx-1")
+        self.lancar(TipoValor.DESPESA, "20.00", id_externo="tx-1", conta=outra)
+        self.assertEqual(Movimento.objects.filter(id_externo="tx-1").count(), 2)
+
+    def test_varios_movimentos_sem_id_externo_sao_permitidos(self):
+        self.lancar(TipoValor.DESPESA, "10.00")
+        self.lancar(TipoValor.DESPESA, "20.00")
+        self.assertEqual(Movimento.objects.filter(id_externo__isnull=True).count(), 2)
+
 
 class PrevistoTests(BaseFinancas):
     def test_previsto_pago_exige_movimento(self):
@@ -699,7 +722,44 @@ class RelatorioTests(BaseFinancas):
         resposta = self._abrir()
         self.assertEqual(resposta.context["linhas"], [])
         self.assertEqual(resposta.context["total_despesas"], Decimal("0.00"))
-        self.assertContains(resposta, "Nenhuma despesa neste mês")
+        self.assertContains(resposta, "Nenhum gasto neste mês")
+
+
+class ForaDoGastoTests(BaseFinancas):
+    """Categoria marcada como fora do gasto (ex.: Investimento), decisão de 2026-11-05."""
+
+    def setUp(self):
+        super().setUp()
+        self.hoje = timezone.localdate()
+        self.investimento = Categoria.objects.create(
+            nome="Investimento", tipo=TipoValor.DESPESA, entra_no_gasto=False
+        )
+        self.client.login(username="teste", password="senha-de-teste")
+
+    def _lancar_mes(self):
+        self.lancar(TipoValor.DESPESA, "80.00", data=self.hoje)
+        self.lancar(
+            TipoValor.DESPESA,
+            "500.00",
+            data=self.hoje,
+            categoria=self.investimento,
+        )
+
+    def test_gasto_do_mes_ignora_categoria_fora_do_gasto(self):
+        self._lancar_mes()
+        resposta = self.client.get(reverse("financas:inicio"))
+        self.assertEqual(resposta.context["gasto_mes"], Decimal("80.00"))
+        # Saldo continua somando tudo: investimento é dinheiro que saiu.
+        self.assertEqual(resposta.context["saldo"], Decimal("-480.00"))
+
+    def test_relatorio_ignora_categoria_fora_do_gasto(self):
+        self._lancar_mes()
+        resposta = self.client.get(reverse("financas:relatorio"))
+        self.assertEqual(resposta.context["total_despesas"], Decimal("80.00"))
+        self.assertEqual(
+            [linha["nome"] for linha in resposta.context["linhas"]], ["Mercado"]
+        )
+        self.assertNotContains(resposta, "Investimento")
 
 
 class LogoutTests(BaseFinancas):

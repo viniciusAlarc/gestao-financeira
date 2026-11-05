@@ -15,6 +15,16 @@
   },
   "entregas": [
     {
+      "data": "2026-11-05",
+      "o_que": "P2-10 fechado: migration 0003 aplicada no banco real e categorias padrão criadas",
+      "como": "manage.py migrate OK; Não categorizado (despesa e receita) e Investimento (fora do gasto); 68 testes"
+    },
+    {
+      "data": "2026-11-05",
+      "o_que": "Fase 7 destravada na decisão: D4 e P2-8 fechados, com o modelo preparado para a importação",
+      "como": "04-decisao-d4-p2-8-importacao.md; id_externo com unicidade por conta, categoria fora do gasto, migration 0003 escrita e 68 testes"
+    },
+    {
       "data": "2026-11-03",
       "o_que": "Fase 7 iniciada: host do sandbox do Inter corrigido para o domínio oficial",
       "como": "scripts/teste_inter.py aponta para cdpj-sandbox.partners.uatinter.co; .env e certificado ainda faltam"

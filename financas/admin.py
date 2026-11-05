@@ -27,8 +27,8 @@ class ContaAdmin(admin.ModelAdmin):
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
-    list_display = ("nome", "tipo", "ativa")
-    list_filter = ("tipo", "ativa")
+    list_display = ("nome", "tipo", "ativa", "entra_no_gasto")
+    list_filter = ("tipo", "ativa", "entra_no_gasto")
     search_fields = ("nome",)
 
 
@@ -45,7 +45,7 @@ class MovimentoAdmin(admin.ModelAdmin):
     )
     list_filter = ("tipo", "origem", "conta", "categoria")
     date_hierarchy = "data"
-    exclude = ("criado_por",)
+    exclude = ("criado_por", "id_externo")
 
     def save_model(self, request, obj, form, change):
         # Quem lançou sai da sessão, nunca de um campo digitado (D5).

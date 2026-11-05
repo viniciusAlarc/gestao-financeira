@@ -29,7 +29,8 @@ def inicio(request):
 
     Leituras decididas em 2026-11-02, registradas no PROGRESS.md:
     - Saldo: todas as contas, pela regra do plano (saldos iniciais + receitas − despesas).
-    - Gasto do mês: despesas do mês corrente, de todas as contas.
+    - Gasto do mês: despesas do mês corrente, de todas as contas, menos as
+      categorias marcadas como fora do gasto (ex.: Investimento).
     - Previsto em aberto: só despesas abertas (decisão do dono).
     """
     hoje = timezone.localdate()
@@ -46,6 +47,7 @@ def inicio(request):
             tipo=TipoValor.DESPESA,
             data__year=hoje.year,
             data__month=hoje.month,
+            categoria__entra_no_gasto=True,
         ).aggregate(total=Sum("valor"))["total"]
         or ZERO
     )
@@ -212,15 +214,17 @@ def pagar_previsto(request, pk):
 def relatorio(request):
     """Fase 5: para onde foi o dinheiro do mês, por categoria.
 
-    Só despesas do mês corrente, em ordem decrescente de total. O percentual é
-    calculado sobre o total de despesas do mês. A soma das categorias é o mesmo
-    total; a verificação do plano é coberta pela suíte.
+    Só despesas do mês corrente, em ordem decrescente de total, fora as
+    categorias marcadas como fora do gasto. O percentual é calculado sobre o
+    total de despesas do mês. A soma das categorias é o mesmo total; a
+    verificação do plano é coberta pela suíte.
     """
     hoje = timezone.localdate()
     despesas = Movimento.objects.filter(
         tipo=TipoValor.DESPESA,
         data__year=hoje.year,
         data__month=hoje.month,
+        categoria__entra_no_gasto=True,
     )
     total_despesas = despesas.aggregate(total=Sum("valor"))["total"] or ZERO
     por_categoria = (

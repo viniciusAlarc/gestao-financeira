@@ -91,6 +91,14 @@ class Categoria(models.Model):
     nome = models.CharField("nome", max_length=60)
     tipo = models.CharField("tipo", max_length=10, choices=TipoValor.choices)
     ativa = models.BooleanField("ativa", default=True)
+    entra_no_gasto = models.BooleanField(
+        "entra no gasto",
+        default=True,
+        help_text=(
+            "Desligado, a categoria continua no saldo, mas fica fora do "
+            "\"gasto do mês\" e do relatório (ex.: Investimento)."
+        ),
+    )
 
     class Meta:
         ordering = ["tipo", "nome"]
@@ -140,6 +148,16 @@ class Movimento(models.Model):
         related_name="movimentos",
         verbose_name="criado por",
     )
+    id_externo = models.CharField(
+        "id externo",
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text=(
+            "Id da transação na origem (ex.: idTransacao do Inter). "
+            "Vazio em lançamento manual."
+        ),
+    )
     criado_em = models.DateTimeField("criado em", auto_now_add=True)
 
     class Meta:
@@ -149,6 +167,13 @@ class Movimento(models.Model):
         indexes = [
             models.Index(fields=["data"], name="movimento_data_idx"),
             models.Index(fields=["tipo", "data"], name="movimento_tipo_data_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["conta", "id_externo"],
+                condition=Q(id_externo__isnull=False),
+                name="movimento_id_externo_unico_por_conta",
+            )
         ]
 
     def __str__(self) -> str:

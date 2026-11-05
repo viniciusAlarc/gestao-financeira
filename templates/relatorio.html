@@ -19,8 +19,8 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p class="vazio">Nenhuma despesa neste mês.</p>
+    <p class="vazio">Nenhum gasto neste mês.</p>
   {% endif %}
-  <p class="total-mes"><span>Total de despesas do mês</span> <strong>{{ total_despesas|dinheiro }}</strong></p>
+  <p class="total-mes"><span>Total de gastos do mês</span> <strong>{{ total_despesas|dinheiro }}</strong></p>
 </section>
 {% endblock %}

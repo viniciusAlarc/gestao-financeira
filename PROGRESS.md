@@ -3,6 +3,70 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-05 — P2-10 fechado: migration 0003 aplicada e categorias padrão criadas
+
+**O que mudou:** o dono autorizou a aplicação da migration `0003` no banco real. Ela adicionou
+`Categoria.entra_no_gasto` e `Movimento.id_externo`, mais a restrição única
+`(conta, id_externo)`. Depois, foram criadas as categorias padrão da importação: "Não
+categorizado" (despesa), "Não categorizado" (receita) e "Investimento" (despesa, com
+`entra_no_gasto=False`). Nenhum dado existente foi alterado: os movimentos antigos ficaram com
+`id_externo` vazio e as categorias antigas com `entra_no_gasto=True`.
+**Comando:** `.venv/bin/python manage.py migrate` → `financas.0003... OK`. As categorias foram
+criadas por ORM (`get_or_create`), com o resultado `criada=True` nas três.
+**Verificação:** `showmigrations` mostra `0003` como aplicada; `manage.py check` sem problemas;
+`.venv/bin/python manage.py test` → **68 testes, OK**. O app no banco real voltou a responder com
+o código novo.
+**Arquivos:** nenhum de código nesta entrada; `PENDENCIAS.md` (P2-10 fechado) e
+`docs-dev/rodada-2026-11-05-b/00-briefing.md` (T0 marcado como concluído).
+**Aberto:** P2-1/P2-2 (integração e certificado), P2-3 (diagnóstico no sandbox). A rodada
+paralela de 5 sessões parte de 68 testes verdes.
+
+## 2026-11-05 — D4 e P2-8 fechados; modelo pronto para a importação do Inter
+
+**Decisões do dono:** **D4** — a v1 lê só a conta **PJ (MEI)**: saldo e extrato. PF, cartão,
+boleto de terceiro, posição de investimentos, pagamentos/Pix e Open Finance ficam fora, porque a
+API direta não alcança. **P2-8** — importação na conta existente `69 450 604 Vinicius Di Franca
+Alarc`; data `dataTransacao` (reserva `dataInclusao`); categoria "Não categorizado" e classificação
+manual depois; `idTransacao` em `Movimento.id_externo` como chave antiduplicidade; autoria do
+usuário técnico `Inter`; investimento, estorno e cashback importados com categoria própria, e
+"Investimento" fora do gasto; a primeira importação começa na data da execução, para não duplicar
+os Pix manuais que já estão na conta. Documento completo em
+`docs-dev/a-codar/04-decisao-d4-p2-8-importacao.md`.
+**O que mudou no código:** `Movimento` ganhou `id_externo` (nulo no lançamento manual) com
+restrição única `(conta, id_externo)`; `Categoria` ganhou `entra_no_gasto` (padrão `True`). A tela
+inicial e o relatório passaram a filtrar `categoria__entra_no_gasto=True`; o rodapé do relatório
+virou "Total de gastos do mês", porque "despesas" ficaria impreciso com investimento fora. O admin
+expõe a flag e esconde o id externo do formulário.
+**Arquivos:** `financas/models.py`, `financas/views.py`, `financas/admin.py`,
+`templates/relatorio.html`, `financas/tests.py` (+6 testes),
+`financas/migrations/0003_categoria_entra_no_gasto_movimento_id_externo_and_more.py`,
+`PENDENCIAS.md`, `docs-dev/a-codar/04-decisao-d4-p2-8-importacao.md`.
+**Testes:** `.venv/bin/python manage.py test` → **68 testes, OK** (62 + 6). `manage.py check` sem
+problemas; `makemigrations --check` sem drift.
+**Não aplicado:** a migration `0003` está escrita e testada no banco de teste, mas não roda no
+banco real sem o "pode" do dono (G3) — item P2-10. As categorias padrão também dependem disso.
+**Aberto:** P2-1/P2-2 (criar integração e certificado), P2-3 (diagnóstico no sandbox), P2-10
+(aplicar migration e criar categorias). O importador só começa depois desses.
+
+## 2026-11-05 — P4-5 fechado: alvos de toque de 44px
+
+**O que mudou:** os controles que a conferência visual a 375px (s2 do P4-4) apontou como pequenos
+passaram ao alvo de 44×44: `.botao-primario` ganhou `min-height` (o "Paguei" compacto ia a 36px de
+altura); os links da navegação e o "Sair" viraram `inline-flex` com `min-width`/`min-height` de
+44px. O espaçamento entre os links da navegação caiu de 1rem para 0.5rem para os cinco alvos
+continuarem numa linha só a 375px e a 360px. Nenhum template mudou; a aparência do texto é a mesma,
+só a área clicável cresceu.
+**Arquivos:** `financas/static/financas/app.css`.
+**Testes:** `.venv/bin/python manage.py test` → 62 testes, **OK** antes e depois. `manage.py check`
+sem problemas.
+**Verificação:** medição por CDP com viewport real de 375px e cache do navegador desabilitado, nas
+quatro telas autenticadas (`/`, `/lancamentos/`, `/previstos/`, `/relatorio/`). Antes, `/previstos/`
+tinha 12 alvos pequenos: "Início" 35×28, "Lançamentos" 84×28, "Previstos" 57×30, "Relatório" 57×28,
+"Sair" 24×20 e seis "Paguei" 67×36. Depois: **zero** alvos abaixo de 44×44 nas quatro telas, sem
+rolagem horizontal (`scrollWidth = 375`) e sem elemento passando da borda. A 360px, também zero.
+Evidência em `/tmp/gestao-visual/depois-{inicio,lancamentos,previstos,relatorio}.png` (fora do git).
+**Fechado:** P4-5. A remoção do descartável da conferência continua em P4-6, aguardando autorização.
+
 ## 2026-11-05 — Rodada paralela (5 sessões)
 
 Cinco itens do `PENDENCIAS.md` trabalhados em sessões paralelas no mesmo repositório, sem commit.
