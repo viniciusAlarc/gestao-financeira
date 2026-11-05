@@ -20,13 +20,15 @@ TUDO = '--tudo' in sys.argv
 
 ALVOS = [('skill', '.claude/commands/*.md'), ('skill', '.claude/skills/*/SKILL.md'),
          ('hook', '.claude/hooks/*.sh'), ('instrucao', 'CLAUDE.md'), ('instrucao', 'AGENTS.md')]
-ALVOS_DOC = [('doc', 'docs-dev/*.md'), ('doc', 'docs-dev/context/*.md'), ('doc', 'docs-dev/a-codar/*.md')]
+ALVOS_DOC = [('doc', 'docs-dev/*.md'), ('doc', 'docs-dev/context/*.md'), ('doc', 'docs-dev/a-codar/*.md'),
+             ('doc', 'docs-dev/guias/*.md')]
 ALVOS_IA = [('guardrail', f'{IA}/guardrails-ia/*.md'), ('perfil', f'{IA}/cnr/*.md')]
 INSTRUEM = ('skill', 'hook', 'instrucao', 'guardrail')
 
-RAIZES = ['', 'backend/src/main/java/com/gestaoterc', 'backend/src/test/java/com/gestaoterc',
-          'backend/src/main/resources', 'frontend/src', 'frontend/src/app', 'frontend', 'docs-dev',
-          'docs-dev/guias', 'docs-dev/context', 'docs-dev/crm', 'docs-dev/almoxarifado', 'backend']
+# Bases para resolver caminho relativo citado num documento. Só diretório que existe neste repo.
+RAIZES = ['', 'financas', 'financas/migrations', 'financas/static', 'financas/static/financas',
+          'financas/templatetags', 'config', 'templates', 'scripts', 'docs-dev',
+          'docs-dev/a-codar', 'docs-dev/guias', '.claude']
 EXTS = ('.md', '.java', '.ts', '.html', '.scss', '.css', '.sql', '.yml', '.yaml', '.json',
         '.sh', '.py', '.webmanifest', '.xml', '.txt', '.png', '.svg')
 
@@ -37,6 +39,10 @@ RE_HISTORICA = re.compile(r'não existe|nunca existiu|apagad|removid|deletad|nã
                           r'descontinuad|aposentad|saiu de|deixou de|foi extint|era anterior|'
                           r'movid|renomead|virou|era o |era a |não recriar|não usar', re.I)
 RE_SIMBOLO = re.compile(r'`([A-Z][a-z0-9]+(?:[A-Z][a-z0-9]+){1,5})`')
+# Um caminho relativo pode vir ancorado numa base externa citada junto:
+# "moram em `~/Documents/IA` (`guardrails-ia/guardrails-core.md`, ...)". A frase pode quebrar
+# em duas linhas, então a base é procurada na mesma janela de contexto usada pelo RE_HISTORICA.
+RE_BASE_LOCAL = re.compile(r'`(~/[^`\s]+)`')
 
 def alvos():
     out = []
@@ -60,11 +66,12 @@ def indice_simbolos():
 
 SIMB = indice_simbolos() if os.path.isdir(os.path.join(RAIZ, 'backend/src')) else set()
 
-def caminho_existe(c):
+def caminho_existe(c, bases_extras=()):
     c = c.lstrip('./').rstrip('/')
     if c.startswith('~'):
         return os.path.exists(os.path.expanduser(c))
-    return any(os.path.exists(os.path.join(RAIZ, r, c)) for r in RAIZES)
+    bases = [os.path.join(RAIZ, r) for r in RAIZES] + list(bases_extras)
+    return any(os.path.exists(os.path.join(b, c)) for b in bases)
 
 def caminho_auditavel(c):
     if not (c.endswith('/') or c.endswith(EXTS)):
@@ -96,9 +103,10 @@ for tipo, arq in alvos():
         c = m.group(1)
         if tipo in ('guardrail', 'perfil') and not c.startswith('~'):
             continue                                    # guardrail cita caminho genérico de propósito
-        if caminho_auditavel(c) and not caminho_existe(c):
-            ini = texto.rfind('\n', 0, texto.rfind('\n', 0, m.start())) + 1
-            fim = texto.find('\n', m.end());  fim = fim if fim > 0 else len(texto)
+        ini = texto.rfind('\n', 0, texto.rfind('\n', 0, m.start())) + 1
+        fim = texto.find('\n', m.end());  fim = fim if fim > 0 else len(texto)
+        bases_extras = [os.path.expanduser(b) for b in RE_BASE_LOCAL.findall(texto[ini:fim])]
+        if caminho_auditavel(c) and not caminho_existe(c, bases_extras):
             if RE_HISTORICA.search(texto[ini:fim]):
                 continue                               # citada como história, não como instrução
             achados.append((tipo, rel, texto[:m.start()].count('\n') + 1, 'caminho', c, ''))

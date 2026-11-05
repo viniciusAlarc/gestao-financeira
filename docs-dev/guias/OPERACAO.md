@@ -13,6 +13,26 @@
 O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servidor só responde em
 `localhost` e o celular não alcança.
 
+## O que digitar no celular
+
+Escutar em `0.0.0.0` não basta: no celular, `localhost` é o próprio celular. O endereço é
+`http://<ip-da-máquina>:8000`.
+
+1. Descobrir o IP da máquina, no WSL: `hostname -I` (usar o primeiro valor IPv4). Esta máquina está
+   em **rede espelhada** (`networkingMode=mirrored` no `.wslconfig` do Windows), então esse IP é o
+   mesmo que o Windows usa na rede de casa; não precisa de encaminhamento de porta.
+2. Esse IP precisa estar em `DJANGO_ALLOWED_HOSTS`, senão o Django responde `DisallowedHost`. Em
+   05/11/2026 o `.env` ainda não existe: criar a partir de `.env.example` e acrescentar a linha,
+   trocando o exemplo pelo IP do passo 1:
+   `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`
+3. Subir com o comando da tabela e abrir no celular o endereço do passo 1 com a porta 8000.
+4. Celular e máquina na mesma rede Wi-Fi.
+
+Se o celular não abrir com o `ALLOWED_HOSTS` certo, o suspeito é o **firewall do Windows**, que fica
+na frente do que roda no WSL: na primeira vez que o servidor sobe, o Windows pergunta se permite o
+Python na rede privada (responder que sim). Se a pergunta não apareceu, conferir a permissão é ação
+do dono no Windows.
+
 ## Pré-requisitos
 
 - `.venv` na raiz com `requirements.txt` instalado:
@@ -21,7 +41,7 @@ O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servi
   do arquivo `.django-secret`, gerado no primeiro start e ignorado pelo git. Nenhum valor de segredo
   aparece neste documento (G13).
 - `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` no `.env`; sem ela vale `localhost,127.0.0.1`.
-  Para abrir no celular, incluir o IP da máquina na rede: `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`.
+  Para o celular alcançar, o passo a passo está em "O que digitar no celular".
 - `.env` com as variáveis do Inter só é necessário na fase 7.
 
 ## Instalar o PWA no celular

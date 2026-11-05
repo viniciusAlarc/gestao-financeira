@@ -3,6 +3,53 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-05 — Rodada paralela (5 sessões)
+
+Cinco itens do `PENDENCIAS.md` trabalhados em sessões paralelas no mesmo repositório, sem commit.
+Cada sessão deixou o rastro em `docs-dev/rodada-2026-11-05/`; esta entrada consolida.
+
+**s1 · P4-2 (auditor de referências).** `scripts/auditar-referencias.py` passou a auditar este
+repositório: `RAIZES` com os 12 diretórios reais, `docs-dev/guias/*.md` acrescentado ao `ALVOS_DOC`
+e correção do falso positivo em que um caminho relativo está ancorado numa base `~/...` citada na
+mesma frase (os 3 caminhos do `AGENTS.md` e 3 do briefing). Modo padrão: exit 0, limpo. `--tudo`:
+1 achado informativo (`regras/templates/` no briefing, linha 70), menção histórica que a regex não
+pega — reportado, não corrigido. `indice_simbolos()` segue vazio (só indexa Java/TS; indexar Python
+de `financas/` é melhoria futura). **Arquivos:** `scripts/auditar-referencias.py`. **Testes:** 62 → 62, OK.
+
+**s2 · P4-4 (conferência visual a 375px).** `/previstos/` e `/relatorio/` conferidas a 375px com
+SQLite descartável em `/tmp` e dado inventado (o `db.sqlite3` real não foi aberto): `scrollWidth =
+375` nas duas, nenhum elemento passando da borda, contraste do valor de despesa 6,5:1 — **ok**, sem
+defeito. Nenhum template/CSS alterado. **Arquivos:** `config/settings_visual.py` (novo, descartável,
+pode ser removido), screenshots em `/tmp/gestao-visual/`. **Testes:** 62 → 62, OK. **Achado:** alvos
+de toque abaixo de 44px ("Paguei" 67×36, nav 28–30px, "Sair" 24×20) — virou P4-5.
+
+**s3 · P3-9 (segundo usuário e PWA, parte técnica).** Entrega HTTP do PWA conferida com o cliente de
+teste: `/login/` 200, `/` anônimo 302, manifest 200 `application/manifest+json` com `display:
+standalone`, `start_url` e `scope` `/`, ícones 200 medidos em 192×192 e 512×512. Segunda conta criada
+com autorização do dono na sessão: usuário `Kethlen` (id 2, ativo, sem admin), **senha ainda não
+definida** — ninguém entra até o dono definir. `OPERACAO.md` ganhou o que faltava para o celular
+alcançar: IP em vez de localhost, `DJANGO_ALLOWED_HOSTS` no `.env` (hoje não existe `.env`, então o
+celular leva `DisallowedHost`) e o firewall do Windows. Checklist de uma semana pronto. **Arquivos:**
+`docs-dev/guias/OPERACAO.md`. **Testes:** 62 → 62, OK.
+
+**s4 · P3-3 (dossiê da decisão D6).** Dossiê com 5 opções de exposição (rede de casa, Tailscale,
+Cloudflare Tunnel, ngrok, VPS), com os três números do G20 e links datados; recomendação: rede de
+casa na v1, Tailscale se quiser sair de casa agora, Cloudflare como plano B, VPS só se o PC não
+puder ficar ligado. Nada criado. **Arquivo:** `docs-dev/a-codar/02-decisao-d6-onde-roda.md`.
+
+**s5 · P2-6 (dossiê da decisão D4).** Delimitação com 17 fontes oficiais datadas: a API Banking é
+exclusiva de PJ; cobre saldo, extrato (90 dias por consulta), extrato enriquecido, PDF e pagamentos;
+ficam de fora conta PF, cartão de crédito, boleto de outra titularidade, investimentos e contas a
+pagar; Open Finance não é caminho para app pessoal. A importação preenche `data`, `valor`, `tipo`,
+`descricao` e `origem=inter`, mas não `categoria` (obrigatória), `criado_por` nem chave
+antiduplicidade; o modelo não tem campo para id externo (próxima rodada). 10 perguntas do dono e 6
+pontos só confirmáveis no sandbox. **Arquivo:** `docs-dev/a-codar/03-decisao-d4-escopo-inter.md`.
+
+**Ficou aberto:** P4-4 aguarda o "conferi" do dono; P3-9 aguarda senha da `Kethlen`, `.env` com
+`DJANGO_ALLOWED_HOSTS` (P2-9), instalação no celular e uma semana de uso; P3-3 e P2-6 aguardam
+decisão do dono com os dossiês na mesa; novos itens P4-5 (alvos de toque) e P4-6 (remover o
+descartável). Nada foi commitado.
+
 ## 2026-11-03 — Fase 7 iniciada: host do sandbox corrigido
 
 **O que mudou:** `scripts/teste_inter.py` passou a usar o host oficial do sandbox,
