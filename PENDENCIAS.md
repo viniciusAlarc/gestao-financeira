@@ -10,13 +10,15 @@
 | Peça             | Onde está                  | Estado                          |
 | ---------------- | -------------------------- | ------------------------------- |
 | Backend Django   | `manage.py`, `config/`     | rodando, com os 4 modelos       |
-| Banco            | `db.sqlite3` (fora do git) | 4 tabelas de `financas` criadas; migration 0003 aplicada |
+| Banco            | `db.sqlite3` (fora do git) | 5 tabelas de `financas` criadas; migrations 0001 a 0005 aplicadas |
 | Modelo de dado   | `financas/models.py`       | pronto, com `id_externo` e `entra_no_gasto` |
-| Suíte de testes  | `financas/tests.py`        | 68 testes, todos passando       |
-| Tela inicial     | `financas/views.py`, `templates/` | pronta e verificada a 375px |
-| Lançamentos      | `financas/views.py`, `templates/lancamentos.html` | implementado e verificado |
-| Gastos previstos | `financas/views.py`, `templates/previstos.html` | implementado e validado por testes |
-| Relatório        | `financas/views.py`, `templates/relatorio.html` | implementado e validado por testes |
+| Suíte de testes  | `financas/tests.py` + arquivos por assunto | 179 testes, todos passando |
+| Tela inicial     | `financas/views.py`, `templates/` | pronta; visual revisto em 08/11 (375/360/768/1280) |
+| Lançamentos      | `financas/views.py`, `templates/lancamentos.html` | implementado; data editável, editar/desfazer e navegação de mês (08/11) |
+| Gastos previstos | `financas/views.py`, `templates/previstos.html` | cadastro fixo mensal que gera o previsto do mês; avulso secundário (08/11) |
+| Relatório        | `financas/views.py`, `templates/relatorio.html` | implementado; navegação de mês (08/11) |
+| Categorias       | `financas/views.py`, `templates/categorias.html` | criar, editar e desativar; tipo fixo e "fora do gasto" (08/11) |
+| UI/UX            | `financas/static/financas/app.css`, `templates/base.html` | revisão de 08/11: navegação responsiva, layout espaçado, mensagens por tipo |
 | Segundo login    | admin do Django            | conta `Kethlen` criada; falta a senha (P3-9) |
 | PWA              | `financas/static/financas/` | manifest e ícones conferidos na entrega HTTP; instalação no celular pendente (P3-9) |
 | Integração Inter | `scripts/teste_inter.py`   | escopo e mapeamento fechados; aguardando certificado e diagnóstico |

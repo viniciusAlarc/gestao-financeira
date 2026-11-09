@@ -21,10 +21,10 @@ Escutar em `0.0.0.0` não basta: no celular, `localhost` é o próprio celular. 
 1. Descobrir o IP da máquina, no WSL: `hostname -I` (usar o primeiro valor IPv4). Esta máquina está
    em **rede espelhada** (`networkingMode=mirrored` no `.wslconfig` do Windows), então esse IP é o
    mesmo que o Windows usa na rede de casa; não precisa de encaminhamento de porta.
-2. Esse IP precisa estar em `DJANGO_ALLOWED_HOSTS`, senão o Django responde `DisallowedHost`. Em
-   05/11/2026 o `.env` ainda não existe: criar a partir de `.env.example` e acrescentar a linha,
-   trocando o exemplo pelo IP do passo 1:
-   `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`
+2. Esse IP precisa estar em `DJANGO_ALLOWED_HOSTS`, senão o Django responde `DisallowedHost`. O
+   script da seção "Preparar o `.env` pelo celular" faz isso e mostra o IP: rode
+   `scripts/preparar_acesso_celular.sh --aplicar`. Manualmente, é acrescentar ao `.env` a linha
+   `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.x.x`, trocando o exemplo pelo IP do passo 1.
 3. Subir com o comando da tabela e abrir no celular o endereço do passo 1 com a porta 8000.
 4. Celular e máquina na mesma rede Wi-Fi.
 
@@ -32,6 +32,47 @@ Se o celular não abrir com o `ALLOWED_HOSTS` certo, o suspeito é o **firewall 
 na frente do que roda no WSL: na primeira vez que o servidor sobe, o Windows pergunta se permite o
 Python na rede privada (responder que sim). Se a pergunta não apareceu, conferir a permissão é ação
 do dono no Windows.
+
+## Preparar o `.env` pelo celular (um comando)
+
+O `.env` é **do dono**: fica fora do git (`.gitignore`) e é onde os segredos do Inter vão morar na
+fase 7. O script abaixo só cuida da linha do celular: **não cria nem imprime segredo** e não mostra
+nenhum outro valor do arquivo (G13).
+
+Na raiz do projeto:
+
+```bash
+scripts/preparar_acesso_celular.sh            # só mostra o IP e o bloco para colar
+scripts/preparar_acesso_celular.sh --aplicar  # grava ou atualiza a linha no .env
+```
+
+O que ele faz:
+
+1. descobre o primeiro IPv4 com `hostname -I` e mostra o endereço `http://<ip>:8000`;
+2. mostra o bloco `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,<ip>`;
+3. avisa se o `.env` ainda não existe;
+4. com `--aplicar`, acrescenta a linha sem apagar as outras variáveis. Se o `.env` não existir, cria
+   um novo só com essa linha (sem segredo, permissão 600). Rodar de novo não duplica nada: se o IP
+   já está lá, ele não mexe no arquivo.
+
+Depois de aplicar, **reinicie o servidor** (`Ctrl+C` e subir de novo): o Django lê o `.env` no start.
+
+> Em rede espelhada o `hostname -I` também lista as pontes de container do Docker (`172.x`). O script
+> usa o primeiro IPv4 e mostra os outros; se o celular não abrir, confira se o IP gravado é o da rede
+> de casa (o mesmo que o Windows usa) e, se preciso, edite a linha do `.env` à mão.
+
+## Checklist de 5 minutos no primeiro celular
+
+1. Na raiz do projeto: `scripts/preparar_acesso_celular.sh --aplicar`.
+2. Subir o servidor com o comando da tabela do topo (`0.0.0.0:8000`).
+3. No Windows, responder **sim** ao aviso do firewall para o Python na rede privada (só na primeira
+   vez que o servidor sobe).
+4. No celular, na mesma rede Wi-Fi, abrir `http://<ip>:8000` (o script imprime o endereço).
+5. Entrar com uma das duas contas e conferir a tela **Início** com saldo, gasto do mês e previsto em
+   aberto.
+6. Opcional: instalar o PWA (seção abaixo).
+
+Se algo falhar no caminho, a tabela "Quando alguma coisa não sobe" tem os sintomas.
 
 ## Pré-requisitos
 
@@ -41,7 +82,8 @@ do dono no Windows.
   do arquivo `.django-secret`, gerado no primeiro start e ignorado pelo git. Nenhum valor de segredo
   aparece neste documento (G13).
 - `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` no `.env`; sem ela vale `localhost,127.0.0.1`.
-  Para o celular alcançar, o passo a passo está em "O que digitar no celular".
+  Para o celular alcançar, o script e o passo a passo estão em "Preparar o `.env` pelo celular" e
+  "Checklist de 5 minutos no primeiro celular".
 - `.env` com as variáveis do Inter só é necessário na fase 7.
 
 ## Instalar o PWA no celular
@@ -68,7 +110,7 @@ ss -ltnp | grep :8000
 
 | Sintoma                              | Causa provável                  | O que resolve                                                        |
 | ------------------------------------ | ------------------------------- | -------------------------------------------------------------------- |
-| `DisallowedHost` ao abrir pelo celular | IP da máquina fora do `ALLOWED_HOSTS` | acrescentar o IP no `.env` e reiniciar                        |
+| `DisallowedHost` ao abrir pelo celular | IP da máquina fora do `ALLOWED_HOSTS` (ou `.env` ausente) | `scripts/preparar_acesso_celular.sh --aplicar` e reiniciar o servidor |
 | `no such table`                      | migrations não aplicadas        | `.venv/bin/python manage.py migrate`                             |
 | Login em laço, sem entrar            | nenhum usuário criado           | `.venv/bin/python manage.py createsuperuser`                     |
 | `You appear not to have the 'sqlite3' program installed` no `dbshell` | binário `sqlite3` ausente no WSL | usar o driver Python: `.venv/bin/python -c "import sqlite3, pathlib; print(pathlib.Path('db.sqlite3').stat().st_size)"` — ou qualquer leitura via ORM. Não instalar o binário sem o ok do dono |

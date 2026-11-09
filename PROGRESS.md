@@ -3,6 +3,174 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-08 — UI/UX revista: layout espaçado, navegação responsiva e leitura mais clara
+
+**Decisão do dono (2026-11-08):** o sistema inteiro ganha uma revisão visual mantendo claro,
+simples e neutro: mais respiro, hierarquia tipográfica, cartões com sombra discreta e uma navegação
+que funciona no celular (barra inferior) e no desktop (topo). A regra de 2026-11-02 ("neutro claro,
+cor só no número") continua valendo; a cor fica no dinheiro (verde/vermelho) e no ponto da marca.
+
+**O que mudou:**
+- `app.css` reescrito com tokens (`:root`) de cor, raio, sombra e espaçamento; tipografia com escala
+  e rótulos em caixa alta pequena; listas em cartões com divisórias neutras.
+- `base.html`: cabeçalho com marca (ponto + "Finanças") e Sair; no celular a navegação vira barra
+  inferior fixa com o item ativo marcado por ponto; no desktop fica no topo, com fundo neutro no
+  item ativo (sem filete colorido, G19).
+- Tela inicial: saldo em destaque e gasto/previsto lado a lado no desktop; no celular, empilhados.
+- Formulários: campos de 44px, botão de largura cheia no celular e largura natural no desktop;
+  checkbox com o rótulo como alvo de 44px.
+- Mensagens agora têm cor por tipo (`success`, `error`, `info`, `warning`) em vez de tudo verde.
+- Estados vazios com contorno tracejado neutro; login centralizado; tema do PWA acompanha o fundo
+  claro (`#f6f7f9` no meta e no manifesto).
+- Anti-patterns conferidos (G19): sem faixa colorida em aresta, sem gradiente, sem chip de ícone,
+  sem pílula grande, sombra discreta em lista.
+
+**Arquivos:** `financas/static/financas/app.css` (reescrito), `templates/base.html`,
+`templates/login.html`, `templates/previstos.html` (classe da nota do avulso),
+`templates/editar_categoria.html` (classe do tipo), `financas/static/financas/manifest.webmanifest`.
+
+**Testes:** `.venv/bin/python manage.py test` → **179 testes, OK** (sem teste novo; a revisão é
+visual). `check` limpo; sem migration.
+
+**Verificação visual (375, 360, 768 e 1280, banco descartável e login no servidor real):** sem
+rolagem horizontal em nenhuma largura; navegação inferior no celular e topo no desktop; o alvo da
+marca foi corrigido (estava com 26px; agora 44px); os únicos alvos medidos abaixo de 44px são os
+checkboxes de 18-20px, cujo rótulo é o alvo real. O login foi conferido nas duas larguras. O
+servidor real precisou ser reiniciado para largar o template antigo em cache; o dado não é afetado.
+
+**Aberto:** nada desta entrega.
+
+## 2026-11-08 — Tela de categorias: criar, editar e desativar sem admin
+
+**Decisão do dono (2026-11-08):** a categoria é criada com nome, tipo, "entra no gasto do mês" e
+ativa; na edição mudam nome, ativa e "entra no gasto"; o **tipo fica fixo** depois de criada, porque
+mudar receita/despesa desalinharia os lançamentos antigos. Categoria não se apaga: desativa (sai dos
+formulários, mantém o histórico).
+
+**O que mudou:**
+- Tela `/categorias/` com formulário de criação e listas separadas de despesas e receitas, mostrando
+  "fora do gasto" e "inativa"; `/categorias/<pk>/editar/` edita nome, ativa e a flag.
+- `CategoriaForm` e `CategoriaEdicaoForm`; a edição exclui o tipo e faz a checagem de nome duplicado
+  no mesmo tipo (a restrição do banco continua como última defesa).
+- Link "Categorias" na navegação; os avisos de "sem categoria" em Lançamentos e Previstos passam a
+  apontar para a tela, não para o admin.
+- Sem migration: o modelo `Categoria` já existia.
+
+**Arquivos:** `financas/forms.py`, `financas/views.py`, `financas/urls.py`,
+`templates/categorias.html` (novo), `templates/editar_categoria.html` (novo), `templates/base.html`,
+`templates/lancamentos.html`, `templates/previstos.html`, `financas/test_categorias.py` (novo, 13
+testes), `PENDENCIAS.md`, `docs-dev/painel.json`, `AGENTS.md`.
+
+**Testes:** `.venv/bin/python manage.py test` → **179 testes, OK** (166 + 13 novos).
+
+**Verificação visual (375px e 360px, banco descartável):** sem rolagem horizontal; navegação com o
+link novo (a barra passa a ocupar duas linhas, com "Sair" na segunda, sem estouro); telas de
+categorias e edição conferidas. Os únicos alvos medidos abaixo de 44px são os checkboxes de 20px,
+cujo rótulo de 44px é o alvo real.
+
+**Aberto:** nada desta entrega.
+
+## 2026-11-08 — Gastos previstos viram gastos fixos mensais (cadastro + mês gerado)
+
+**Decisões do dono (2026-11-08):** o previsto deixa de ser evento único. O gasto fixo é cadastrado
+uma vez (descrição, valor, dia do vencimento, categoria) e cada mês gera o previsto daquele mês.
+Editar o cadastro atualiza o previsto do mês corrente **se ele ainda estiver aberto**; mês pago ou
+ignorado não muda; os próximos meses nascem com o valor novo. Desativar para de gerar os seguintes
+(o mês corrente continua na lista até pagar ou ignorar). O previsto avulso continua como opção
+secundária, porque evento único raro é lançado direto em Lançamentos.
+
+**O que mudou:**
+- `GastoFixo`: descrição, valor, dia do vencimento (1 a 31, com queda para o último dia do mês),
+  categoria, conta, ativo e criado em. `PROTECT` em categoria/conta e no vínculo com o previsto;
+  nada é apagado, desativa-se.
+- `Previsto` ganhou `fixo` (nulo no avulso) e `competencia` (primeiro dia do mês gerado), com a
+  restrição única `(fixo, competencia)`.
+- `financas/gastos_fixos.py`: `garantir_previstos_do_mes()` (idempotente, cria o mês de referência
+  para cada cadastro ativo) e `atualizar_previsto_do_mes()` (mês corrente aberto acompanha a
+  edição). A home e a tela de previstos chamam a geração; a edição atualiza o mês aberto.
+- Tela de previstos: seção "Gastos fixos" com formulário e lista (com Editar), "Abertos" com
+  Paguei/Ignorar, "Ignorados" com Reabrir e o "Previsto avulso" dentro de um bloco recolhido.
+- Admin: `GastoFixo` registrado; `Previsto` mostra o vínculo.
+
+**Arquivos:** `financas/models.py`, `financas/gastos_fixos.py` (novo), `financas/forms.py`,
+`financas/views.py`, `financas/urls.py`, `financas/admin.py`,
+`financas/migrations/0005_previsto_competencia_gastofixo_previsto_fixo_and_more.py`,
+`templates/previstos.html`, `templates/editar_gasto_fixo.html` (novo),
+`financas/static/financas/app.css`, `financas/test_gastos_fixos.py` (novo, 16 testes),
+`docs-dev/a-codar/01-plano-desenvolvimento.md`, `AGENTS.md`, `PENDENCIAS.md`,
+`docs-dev/painel.json`.
+
+**Testes:** `.venv/bin/python manage.py test` → **166 testes, OK** (150 + 16 novos). `check` limpo.
+
+**Verificação visual (375px e 360px, banco descartável `/tmp/gestao-visual/db.sqlite3`):** sem
+rolagem horizontal; foco visível; telas: previstos (formulário, lista fixa, abertos, ignorados e o
+avulso recolhido) e edição do gasto fixo. A única medida abaixo de 44px é o próprio checkbox
+(20×20), cujo alvo real é o rótulo de 44px que o envolve.
+
+**Migration `0005` aplicada no banco real** (autorização do dono em 2026-11-08):
+`.venv/bin/python manage.py migrate` → `financas.0005... OK`; `showmigrations` marca `[X] 0005`;
+`financas_gastofixo` existe e `financas_previsto` tem `fixo_id` e `competencia`; `check` sem
+problemas; nenhum dado apagado (a tabela de previstos estava vazia). O mês é gerado quando o app é
+aberto; se um mês passar sem abrir, ele não é recriado para trás (um lançamento manual cobre o
+caso). A geração é do mês corrente, não preenche meses futuros.
+
+## 2026-11-08 — Uso diário: editar e desfazer lançamento, ignorar/reabrir previsto e navegar meses
+
+**Decisões do dono (2026-11-08):** o desfazer de lançamento é **cancelar e relançar** e também
+**editar direto** (data, valor e categoria); previsto ignorado **volta** para aberto pelo botão
+`Reabrir`. A máquina de estados ficou: `Movimento` ativo → cancelado (com quem/quando; o desfazer
+não se desfaz; corrigir é desfazer e lançar de novo); `Previsto` aberto → pago (um movimento;
+desfazer o movimento reabre) ou aberto → ignorado (sem movimento; reabrir volta). Lançamento
+importado do Inter não se edita nem se desfaz: o banco é a fonte. Lançamento vindo de previsto pago
+não se edita, para não desalinhar `Previsto.valor` do `Movimento.valor`; o caminho é desfazer o
+pagamento e lançar de novo.
+
+**O que mudou:**
+- `Movimento` ganhou `cancelado`, `cancelado_em` e `cancelado_por`, com a restrição
+  `movimento_cancelado_tem_quem_e_quando`; `Conta.saldo` e todos os totais (tela inicial, gasto do
+  mês, listas e relatório) ignoram movimento cancelado. O admin mostra o estado e não edita os
+  campos de cancelamento.
+- Lançamento rápido ganhou **Data** (nasce hoje, editável); o form aceita data vazia e a view
+  completa com hoje, preservando a suíte antiga.
+- **Editar** lançamento manual em tela própria (`/lancamentos/<pk>/editar/`), com data, valor e
+  categoria; o tipo acompanha a categoria. **Desfazer** (`POST /lancamentos/<pk>/desfazer/`) é
+  lógico e idempotente; se o lançamento veio de "Paguei", o previsto volta para aberto.
+- **Ignorar** (`POST /previstos/<pk>/ignorar/`) tira o previsto do total em aberto sem criar
+  movimento; **Reabrir** (`POST .../reabrir/`) devolve, com lista de ignorados na tela.
+- Lançamentos e relatório aceitam `?mes=AAAA-MM` com navegação ‹ › e mês por extenso; mês inválido
+  cai no corrente. Movimento desfeito não aparece na lista.
+- Ações na tela seguem o alvo de toque de 44px; o CSS usa o mesmo vocabulário neutro da fase 2.
+- `ValorBrasileiroField.prepare_value` exibe Decimal com vírgula no formulário de edição.
+- A auto-revisão pegou um caso de borda: limpar a data na edição zerava o campo no ModelForm; a
+  data original passou a ser guardada antes da validação, com teste próprio.
+
+**Arquivos:** `financas/models.py`, `financas/forms.py`, `financas/views.py`, `financas/urls.py`,
+`financas/admin.py`,
+`financas/migrations/0004_movimento_cancelado_movimento_cancelado_em_and_more.py`,
+`templates/lancamentos.html`, `templates/previstos.html`, `templates/relatorio.html`,
+`templates/editar_movimento.html` (novo), `financas/static/financas/app.css`,
+`financas/test_uso_diario.py` (novo, 25 testes), `PENDENCIAS.md`, `docs-dev/painel.json`.
+
+**Testes:** `.venv/bin/python manage.py test` → **150 testes, OK** (125 da linha de base pós-rodada
++ 25 novos). `manage.py check` sem problemas.
+
+**Verificação visual (375px e 360px, banco descartável `/tmp/gestao-visual/db.sqlite3`):** sem
+rolagem horizontal (`scrollWidth = clientWidth`), nenhum alvo pequeno nas telas conferidas, foco
+visível em todos os controles; telas: início, lançamentos, previstos (com ignorados), relatório
+(com navegação), lançamentos de outro mês e edição. Dois defeitos achados e corrigidos: "Editar"
+com 38,3px de largura e "Voltar para lançamentos" com 19px de altura.
+
+**Migration `0004` aplicada no banco real** (autorização do dono em 2026-11-08):
+`.venv/bin/python manage.py migrate` → `financas.0004... OK`; `showmigrations` marca `[X] 0004`;
+as colunas `cancelado`, `cancelado_em` e `cancelado_por_id` existem em `financas_movimento`;
+`manage.py check` sem problemas. Nenhum dado foi apagado; os movimentos existentes continuam
+ativos (`cancelado=False`).
+
+**Aberto:** nada desta entrega. A rodada paralela 2026-11-05-b estava em voo e foi encerrada antes
+desta entrega; os arquivos da matriz dela não foram tocados, e a consolidação da rodada nos três
+arquivos de rastro ainda não tinha sido feita quando escrevi esta entrada — quem consolidar depois
+encaixa em cima (G21), sem reverter.
+
 ## 2026-11-05 — P2-10 fechado: migration 0003 aplicada e categorias padrão criadas
 
 **O que mudou:** o dono autorizou a aplicação da migration `0003` no banco real. Ela adicionou

@@ -9,26 +9,59 @@
 {% if not conta_padrao %}
   <p class="aviso">Nenhuma conta está marcada como padrão e ativa. Marque uma no <a href="{% url 'admin:financas_conta_changelist' %}">admin</a> para poder adicionar previsto.</p>
 {% elif not tem_categoria_despesa_ativa %}
-  <p class="aviso">Nenhuma categoria de despesa ativa. Cadastre uma no <a href="{% url 'admin:financas_categoria_changelist' %}">admin</a>.</p>
-{% else %}
-<form method="post" class="formulario-rapido">
-  {% csrf_token %}
-  {% if form.non_field_errors %}<p class="erro">{{ form.non_field_errors|join:" " }}</p>{% endif %}
-  <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
-  {{ form.descricao }}
-  {% if form.descricao.errors %}<p class="erro">{{ form.descricao.errors|join:" " }}</p>{% endif %}
-  <label for="{{ form.vencimento.id_for_label }}">{{ form.vencimento.label }}</label>
-  {{ form.vencimento }}
-  {% if form.vencimento.errors %}<p class="erro">{{ form.vencimento.errors|join:" " }}</p>{% endif %}
-  <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
-  {{ form.valor }}
-  {% if form.valor.errors %}<p class="erro">{{ form.valor.errors|join:" " }}</p>{% endif %}
-  <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
-  {{ form.categoria }}
-  {% if form.categoria.errors %}<p class="erro">{{ form.categoria.errors|join:" " }}</p>{% endif %}
-  <button type="submit" class="botao-primario">Adicionar previsto</button>
-</form>
+  <p class="aviso">Nenhuma categoria de despesa ativa. Cadastre uma em <a href="{% url 'financas:categorias' %}">Categorias</a>.</p>
 {% endif %}
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Gastos fixos</h2>
+
+  {% if form_fixo %}
+  <form method="post" class="formulario-rapido">
+    {% csrf_token %}
+    {% if form_fixo.non_field_errors %}<p class="erro" role="alert">{{ form_fixo.non_field_errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_fixo.descricao.id_for_label }}">{{ form_fixo.descricao.label }}</label>
+    {{ form_fixo.descricao }}
+    {% if form_fixo.descricao.errors %}<p class="erro" id="{{ form_fixo.descricao.auto_id }}_error" role="alert">{{ form_fixo.descricao.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_fixo.valor.id_for_label }}">{{ form_fixo.valor.label }}</label>
+    {{ form_fixo.valor }}
+    {% if form_fixo.valor.errors %}<p class="erro" id="{{ form_fixo.valor.auto_id }}_error" role="alert">{{ form_fixo.valor.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_fixo.dia_vencimento.id_for_label }}">{{ form_fixo.dia_vencimento.label }}</label>
+    {{ form_fixo.dia_vencimento }}
+    {% if form_fixo.dia_vencimento.help_text %}<p class="ajuda">{{ form_fixo.dia_vencimento.help_text }}</p>{% endif %}
+    {% if form_fixo.dia_vencimento.errors %}<p class="erro" id="{{ form_fixo.dia_vencimento.auto_id }}_error" role="alert">{{ form_fixo.dia_vencimento.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_fixo.categoria.id_for_label }}">{{ form_fixo.categoria.label }}</label>
+    {{ form_fixo.categoria }}
+    {% if form_fixo.categoria.errors %}<p class="erro" id="{{ form_fixo.categoria.auto_id }}_error" role="alert">{{ form_fixo.categoria.errors|join:" " }}</p>{% endif %}
+    <label class="campo-checkbox" for="{{ form_fixo.ativo.id_for_label }}">
+      {{ form_fixo.ativo }}
+      <span>{{ form_fixo.ativo.label }}</span>
+    </label>
+    {% if form_fixo.ativo.errors %}<p class="erro" id="{{ form_fixo.ativo.auto_id }}_error" role="alert">{{ form_fixo.ativo.errors|join:" " }}</p>{% endif %}
+    <button type="submit" class="botao-primario">Adicionar gasto fixo</button>
+  </form>
+  {% endif %}
+
+  {% for gasto in gastos_fixos %}
+    <div class="dia">
+      <p class="dia-cabecalho">Todo dia {{ gasto.dia_vencimento }} · {{ gasto.categoria.nome }}{% if not gasto.ativo %} · inativo{% endif %}</p>
+      <ul class="movimentos">
+        <li class="movimento">
+          <div class="movimento-conteudo">
+            <div class="movimento-linha">
+              <span class="movimento-descricao">{{ gasto.descricao }}</span>
+              <span class="movimento-valor">{{ gasto.valor|dinheiro }}</span>
+            </div>
+            <div class="movimento-acoes">
+              <a class="acao" href="{% url 'financas:editar_gasto_fixo' gasto.pk %}">Editar</a>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  {% empty %}
+    <p class="vazio">Nenhum gasto fixo cadastrado.</p>
+  {% endfor %}
+</section>
 
 <section class="lista-mes">
   <h2 class="subtitulo">Abertos</h2>
@@ -42,7 +75,11 @@
             <span>{{ previsto.valor|dinheiro }}</span>
             <form method="post" action="{% url 'financas:pagar_previsto' previsto.pk %}">
               {% csrf_token %}
-              <button type="submit" class="botao-primario">Paguei</button>
+              <button type="submit" class="botao-primario" aria-label="Paguei: {{ previsto.descricao }}">Paguei</button>
+            </form>
+            <form method="post" action="{% url 'financas:ignorar_previsto' previsto.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="botao-secundario" aria-label="Ignorar: {{ previsto.descricao }}">Ignorar</button>
             </form>
           </div>
         </li>
@@ -52,4 +89,51 @@
     <p class="vazio">Nenhum gasto previsto em aberto.</p>
   {% endfor %}
 </section>
+
+{% if ignorados %}
+<section class="lista-mes">
+  <h2 class="subtitulo">Ignorados</h2>
+  {% for previsto in ignorados %}
+    <div class="dia">
+      <p class="dia-cabecalho">Vencia {{ previsto.vencimento|date:"d/m/Y" }}</p>
+      <ul class="movimentos">
+        <li class="movimento">
+          <span class="movimento-descricao">{{ previsto.descricao }}</span>
+          <div class="movimento-valor">
+            <span>{{ previsto.valor|dinheiro }}</span>
+            <form method="post" action="{% url 'financas:reabrir_previsto' previsto.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="botao-secundario" aria-label="Reabrir: {{ previsto.descricao }}">Reabrir</button>
+            </form>
+          </div>
+        </li>
+      </ul>
+    </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if form %}
+<details class="previsto-avulso">
+  <summary>Previsto avulso</summary>
+  <p class="ajuda">Para um evento único; o normal é lançar direto em Lançamentos.</p>
+  <form method="post" class="formulario-rapido">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+    {{ form.descricao }}
+    {% if form.descricao.errors %}<p class="erro" id="{{ form.descricao.auto_id }}_error" role="alert">{{ form.descricao.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.vencimento.id_for_label }}">{{ form.vencimento.label }}</label>
+    {{ form.vencimento }}
+    {% if form.vencimento.errors %}<p class="erro" id="{{ form.vencimento.auto_id }}_error" role="alert">{{ form.vencimento.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+    {{ form.valor }}
+    {% if form.valor.errors %}<p class="erro" id="{{ form.valor.auto_id }}_error" role="alert">{{ form.valor.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+    {{ form.categoria }}
+    {% if form.categoria.errors %}<p class="erro" id="{{ form.categoria.auto_id }}_error" role="alert">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+    <button type="submit" class="botao-primario">Adicionar previsto</button>
+  </form>
+</details>
+{% endif %}
 {% endblock %}

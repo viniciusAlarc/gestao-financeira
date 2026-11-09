@@ -6,13 +6,14 @@ Regras de dinheiro que valem aqui dentro:
 - `Decimal` com 2 casas, nunca `float`.
 - Valor sempre positivo, e o sinal vem do `tipo` (receita soma, despesa subtrai).
 - Saldo é **calculado** a cada leitura, nunca guardado em campo: campo de saldo à mão mente.
-- Nada de exclusão física de movimento; o histórico é o produto.
+- Nada de exclusão física de movimento; o histórico é o produto. O desfazer é lógico
+  (`cancelado` + quem/quando) e o registro sai de todos os totais, mas continua no banco.
 """
 
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q, Sum
 
@@ -73,8 +74,11 @@ class Conta(models.Model):
 
     @property
     def saldo(self) -> Decimal:
-        """Saldo inicial, mais receitas, menos despesas. Calculado, nunca guardado."""
-        totais = self.movimentos.aggregate(
+        """Saldo inicial, mais receitas, menos despesas. Calculado, nunca guardado.
+
+        Movimento desfeito não conta: o cancelamento é lógico, mas o efeito no saldo não.
+        """
+        totais = self.movimentos.filter(cancelado=False).aggregate(
             receitas=Sum("valor", filter=Q(tipo=TipoValor.RECEITA)),
             despesas=Sum("valor", filter=Q(tipo=TipoValor.DESPESA)),
         )
@@ -158,6 +162,16 @@ class Movimento(models.Model):
             "Vazio em lançamento manual."
         ),
     )
+    cancelado = models.BooleanField("cancelado", default=False)
+    cancelado_em = models.DateTimeField("cancelado em", null=True, blank=True)
+    cancelado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="movimentos_cancelados",
+        verbose_name="cancelado por",
+        null=True,
+        blank=True,
+    )
     criado_em = models.DateTimeField("criado em", auto_now_add=True)
 
     class Meta:
@@ -173,19 +187,89 @@ class Movimento(models.Model):
                 fields=["conta", "id_externo"],
                 condition=Q(id_externo__isnull=False),
                 name="movimento_id_externo_unico_por_conta",
-            )
+            ),
+            models.CheckConstraint(
+                condition=Q(cancelado=False)
+                | Q(cancelado_em__isnull=False, cancelado_por__isnull=False),
+                name="movimento_cancelado_tem_quem_e_quando",
+            ),
         ]
 
     def __str__(self) -> str:
         rotulo = self.descricao or self.categoria.nome
         return f"{self.data:%d/%m/%Y} · {rotulo} · {self.valor}"
 
+    @property
+    def pode_ser_editado(self) -> bool:
+        """Editar só lançamento manual e ativo, e nunca o que veio de um previsto pago.
+
+        Editar um pagamento desalinharia `Previsto.valor` do `Movimento.valor`; para
+        corrigir esse caso, o caminho é desfazer o pagamento e lançar de novo.
+        """
+        return (
+            self.origem == self.Origem.MANUAL
+            and not self.cancelado
+            and getattr(self, "previsto", None) is None
+        )
+
+    @property
+    def pode_ser_desfeito(self) -> bool:
+        """Só lançamento manual ativo. Importado do Inter não: o banco é a fonte."""
+        return self.origem == self.Origem.MANUAL and not self.cancelado
+
+
+class GastoFixo(models.Model):
+    """Gasto mensal fixo cadastrado uma vez (decisão de 2026-11-08).
+
+    Cada mês gera um `Previsto` a partir deste cadastro. Editar atualiza o mês
+    corrente se ele ainda estiver aberto; desativar para de gerar os seguintes.
+    O cadastro não é apagado: o histórico dos meses já gerados fica.
+    """
+
+    descricao = models.CharField("descrição", max_length=120)
+    valor = models.DecimalField(
+        "valor",
+        max_digits=15,
+        decimal_places=2,
+        validators=[MinValueValidator(VALOR_MINIMO)],
+    )
+    dia_vencimento = models.PositiveSmallIntegerField(
+        "dia do vencimento",
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+        help_text="Dia do mês (1 a 31); em mês mais curto, cai no último dia.",
+    )
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT,
+        related_name="gastos_fixos",
+        verbose_name="categoria",
+    )
+    conta = models.ForeignKey(
+        Conta,
+        on_delete=models.PROTECT,
+        related_name="gastos_fixos",
+        verbose_name="conta",
+    )
+    ativo = models.BooleanField("ativo", default=True)
+    criado_em = models.DateTimeField("criado em", auto_now_add=True)
+
+    class Meta:
+        ordering = ["descricao"]
+        verbose_name = "gasto fixo"
+        verbose_name_plural = "gastos fixos"
+
+    def __str__(self) -> str:
+        return f"{self.descricao} · todo dia {self.dia_vencimento} · {self.valor}"
+
 
 class Previsto(models.Model):
     """Conta a pagar com vencimento (D2). É o "comprometido à frente".
 
-    Máquina de estados (G10): aberto → pago (gera exatamente um movimento) ou aberto → ignorado.
-    O restrição do banco garante que "pago" sem movimento não existe.
+    Máquina de estados (G10):
+    - aberto → pago: cria exatamente um movimento; desfazer o movimento volta para aberto.
+    - aberto → ignorado: sai da lista e do total em aberto sem criar movimento; reabrir
+      volta para aberto.
+    A restrição do banco garante que "pago" sem movimento não existe.
     """
 
     class Status(models.TextChoices):
@@ -203,6 +287,21 @@ class Previsto(models.Model):
     vencimento = models.DateField("vencimento")
     tipo = models.CharField(
         "tipo", max_length=10, choices=TipoValor.choices, default=TipoValor.DESPESA
+    )
+    fixo = models.ForeignKey(
+        GastoFixo,
+        on_delete=models.PROTECT,
+        related_name="previstos",
+        verbose_name="gasto fixo",
+        null=True,
+        blank=True,
+        help_text="Preenchido quando o previsto foi gerado de um gasto fixo.",
+    )
+    competencia = models.DateField(
+        "competência",
+        null=True,
+        blank=True,
+        help_text="Primeiro dia do mês gerado; vazio no previsto avulso.",
     )
     categoria = models.ForeignKey(
         Categoria,
@@ -239,7 +338,12 @@ class Previsto(models.Model):
             models.CheckConstraint(
                 condition=Q(status="pago", movimento__isnull=False) | ~Q(status="pago"),
                 name="previsto_pago_tem_movimento",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["fixo", "competencia"],
+                condition=Q(fixo__isnull=False),
+                name="previsto_fixo_competencia_unica",
+            ),
         ]
 
     def __str__(self) -> str:

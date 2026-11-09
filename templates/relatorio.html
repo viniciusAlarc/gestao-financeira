@@ -5,7 +5,12 @@
 
 {% block conteudo %}
 <h1 class="titulo-pagina">Relatório do mês</h1>
-<p class="mes-relatorio">{{ hoje|date:"m/Y" }}</p>
+
+<nav class="navegacao-mes" aria-label="Navegação de mês">
+  <a class="botao-mes" href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">‹</a>
+  <h2 class="subtitulo mes-atual">{{ mes_atual|date:"F"|capfirst }} de {{ mes_atual|date:"Y" }}</h2>
+  <a class="botao-mes" href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Próximo mês">›</a>
+</nav>
 
 <section class="lista-mes">
   {% if linhas %}

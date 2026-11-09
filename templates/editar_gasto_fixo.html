@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block titulo %}Editar gasto fixo{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Editar gasto fixo</h1>
+
+<form method="post" class="formulario-rapido">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }}</label>
+  {{ form.descricao }}
+  {% if form.descricao.errors %}<p class="erro" id="{{ form.descricao.auto_id }}_error" role="alert">{{ form.descricao.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+  {{ form.valor }}
+  {% if form.valor.errors %}<p class="erro" id="{{ form.valor.auto_id }}_error" role="alert">{{ form.valor.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.dia_vencimento.id_for_label }}">{{ form.dia_vencimento.label }}</label>
+  {{ form.dia_vencimento }}
+  {% if form.dia_vencimento.help_text %}<p class="ajuda">{{ form.dia_vencimento.help_text }}</p>{% endif %}
+  {% if form.dia_vencimento.errors %}<p class="erro" id="{{ form.dia_vencimento.auto_id }}_error" role="alert">{{ form.dia_vencimento.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+  {{ form.categoria }}
+  {% if form.categoria.errors %}<p class="erro" id="{{ form.categoria.auto_id }}_error" role="alert">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  <label class="campo-checkbox" for="{{ form.ativo.id_for_label }}">
+    {{ form.ativo }}
+    <span>{{ form.ativo.label }}</span>
+  </label>
+  {% if form.ativo.errors %}<p class="erro" id="{{ form.ativo.auto_id }}_error" role="alert">{{ form.ativo.errors|join:" " }}</p>{% endif %}
+  <button type="submit" class="botao-primario">Salvar</button>
+</form>
+
+<p class="voltar"><a href="{% url 'financas:previstos' %}">Voltar para gastos previstos</a></p>
+{% endblock %}

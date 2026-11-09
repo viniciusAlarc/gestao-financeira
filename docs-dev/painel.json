@@ -15,6 +15,26 @@
   },
   "entregas": [
     {
+      "data": "2026-11-08",
+      "o_que": "UI/UX revista no sistema inteiro: cabeçalho e navegação responsivos, layout espaçado e mensagens por tipo",
+      "como": "tokens no app.css, barra inferior no celular e topo no desktop, saldo em destaque, login centralizado e tema do PWA claro; 179 testes e verificação a 375/360/768/1280"
+    },
+    {
+      "data": "2026-11-08",
+      "o_que": "Tela de categorias: criar, editar e desativar sem passar pelo admin",
+      "como": "lista por tipo com 'fora do gasto' e 'inativa'; tipo fixo depois de criada; nome duplicado recusado; 179 testes e verificação visual a 375/360"
+    },
+    {
+      "data": "2026-11-08",
+      "o_que": "Gastos previstos viram gastos fixos mensais: cadastro único gera o previsto de cada mês",
+      "como": "GastoFixo + Previsto.fixo/competencia; editar atualiza o mês aberto, desativar para de gerar; avulso secundário; 166 testes e verificação visual a 375/360"
+    },
+    {
+      "data": "2026-11-08",
+      "o_que": "Uso diário: editar e desfazer lançamento, ignorar/reabrir previsto e navegar entre meses",
+      "como": "cancelamento lógico com quem/quando; desfazer pagamento reabre o previsto; data editável no lançamento; ?mes=AAAA-MM em lançamentos e relatório; 150 testes e verificação visual a 375/360"
+    },
+    {
       "data": "2026-11-05",
       "o_que": "P2-10 fechado: migration 0003 aplicada no banco real e categorias padrão criadas",
       "como": "manage.py migrate OK; Não categorizado (despesa e receita) e Investimento (fora do gasto); 68 testes"

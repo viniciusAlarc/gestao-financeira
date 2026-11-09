@@ -9,31 +9,53 @@
 {% if not conta_padrao %}
   <p class="aviso">Nenhuma conta está marcada como padrão e ativa. Marque uma no <a href="{% url 'admin:financas_conta_changelist' %}">admin</a> para poder lançar.</p>
 {% elif not tem_categoria_ativa %}
-  <p class="aviso">Nenhuma categoria ativa. Cadastre uma no <a href="{% url 'admin:financas_categoria_changelist' %}">admin</a>.</p>
+  <p class="aviso">Nenhuma categoria ativa. Cadastre uma em <a href="{% url 'financas:categorias' %}">Categorias</a>.</p>
 {% else %}
 <form method="post" class="formulario-rapido">
   {% csrf_token %}
-  {% if form.non_field_errors %}<p class="erro">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.data.id_for_label }}">{{ form.data.label }}</label>
+  {{ form.data }}
+  {% if form.data.errors %}<p class="erro" id="{{ form.data.auto_id }}_error" role="alert">{{ form.data.errors|join:" " }}</p>{% endif %}
   <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
   {{ form.valor }}
-  {% if form.valor.errors %}<p class="erro">{{ form.valor.errors|join:" " }}</p>{% endif %}
+  {% if form.valor.errors %}<p class="erro" id="{{ form.valor.auto_id }}_error" role="alert">{{ form.valor.errors|join:" " }}</p>{% endif %}
   <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
   {{ form.categoria }}
-  {% if form.categoria.errors %}<p class="erro">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  {% if form.categoria.errors %}<p class="erro" id="{{ form.categoria.auto_id }}_error" role="alert">{{ form.categoria.errors|join:" " }}</p>{% endif %}
   <button type="submit" class="botao-primario">Salvar</button>
 </form>
 {% endif %}
 
 <section class="lista-mes">
-  <h2 class="subtitulo">Este mês</h2>
+  <nav class="navegacao-mes" aria-label="Navegação de mês">
+    <a class="botao-mes" href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior">‹</a>
+    <h2 class="subtitulo mes-atual">{{ mes_atual|date:"F"|capfirst }} de {{ mes_atual|date:"Y" }}</h2>
+    <a class="botao-mes" href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Próximo mês">›</a>
+  </nav>
   {% for dia, movimentos in dias %}
     <div class="dia">
       <p class="dia-cabecalho">{{ dia|date:"d/m" }}</p>
       <ul class="movimentos">
         {% for m in movimentos %}
         <li class="movimento">
-          <span class="movimento-descricao">{{ m.descricao|default:m.categoria.nome }}</span>
-          <span class="movimento-valor {% if m.tipo == 'despesa' %}valor-despesa{% else %}valor-receita{% endif %}">{% if m.tipo == 'despesa' %}-{% endif %}{{ m.valor|dinheiro }}</span>
+          <div class="movimento-conteudo">
+            <div class="movimento-linha">
+              <span class="movimento-descricao">{{ m.descricao|default:m.categoria.nome }}</span>
+              <span class="movimento-valor {% if m.tipo == 'despesa' %}valor-despesa{% else %}valor-receita{% endif %}">{% if m.tipo == 'despesa' %}-{% endif %}{{ m.valor|dinheiro }}</span>
+            </div>
+            {% if m.pode_ser_editado or m.pode_ser_desfeito %}
+            <div class="movimento-acoes">
+              {% if m.pode_ser_editado %}<a class="acao" href="{% url 'financas:editar_movimento' m.pk %}">Editar</a>{% endif %}
+              {% if m.pode_ser_desfeito %}
+              <form method="post" action="{% url 'financas:desfazer_movimento' m.pk %}" onsubmit="return confirm('Desfazer este lançamento?')">
+                {% csrf_token %}
+                <button type="submit" class="acao">Desfazer</button>
+              </form>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
         </li>
         {% endfor %}
       </ul>

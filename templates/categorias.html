@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block titulo %}Categorias{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Categorias</h1>
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Nova categoria</h2>
+  <form method="post" class="formulario-rapido">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.nome.id_for_label }}">{{ form.nome.label }}</label>
+    {{ form.nome }}
+    {% if form.nome.errors %}<p class="erro" id="{{ form.nome.auto_id }}_error" role="alert">{{ form.nome.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }}</label>
+    {{ form.tipo }}
+    {% if form.tipo.errors %}<p class="erro" id="{{ form.tipo.auto_id }}_error" role="alert">{{ form.tipo.errors|join:" " }}</p>{% endif %}
+    <label class="campo-checkbox" for="{{ form.entra_no_gasto.id_for_label }}">
+      {{ form.entra_no_gasto }}
+      <span>{{ form.entra_no_gasto.label }}</span>
+    </label>
+    {% if form.entra_no_gasto.help_text %}<p class="ajuda">{{ form.entra_no_gasto.help_text }}</p>{% endif %}
+    {% if form.entra_no_gasto.errors %}<p class="erro" id="{{ form.entra_no_gasto.auto_id }}_error" role="alert">{{ form.entra_no_gasto.errors|join:" " }}</p>{% endif %}
+    <label class="campo-checkbox" for="{{ form.ativa.id_for_label }}">
+      {{ form.ativa }}
+      <span>{{ form.ativa.label }}</span>
+    </label>
+    {% if form.ativa.errors %}<p class="erro" id="{{ form.ativa.auto_id }}_error" role="alert">{{ form.ativa.errors|join:" " }}</p>{% endif %}
+    <button type="submit" class="botao-primario">Adicionar categoria</button>
+  </form>
+</section>
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Despesas</h2>
+  <ul class="movimentos">
+    {% for categoria in categorias_despesa %}
+    <li class="movimento">
+      <div class="movimento-conteudo">
+        <div class="movimento-linha">
+          <span class="movimento-descricao">{{ categoria.nome }}{% if not categoria.entra_no_gasto %} · fora do gasto{% endif %}{% if not categoria.ativa %} · inativa{% endif %}</span>
+          <a class="acao" href="{% url 'financas:editar_categoria' categoria.pk %}" aria-label="Editar categoria {{ categoria.nome }}">Editar</a>
+        </div>
+      </div>
+    </li>
+    {% empty %}
+    <li class="movimento"><span class="vazio">Nenhuma categoria de despesa.</span></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="lista-mes">
+  <h2 class="subtitulo">Receitas</h2>
+  <ul class="movimentos">
+    {% for categoria in categorias_receita %}
+    <li class="movimento">
+      <div class="movimento-conteudo">
+        <div class="movimento-linha">
+          <span class="movimento-descricao">{{ categoria.nome }}{% if not categoria.entra_no_gasto %} · fora do gasto{% endif %}{% if not categoria.ativa %} · inativa{% endif %}</span>
+          <a class="acao" href="{% url 'financas:editar_categoria' categoria.pk %}" aria-label="Editar categoria {{ categoria.nome }}">Editar</a>
+        </div>
+      </div>
+    </li>
+    {% empty %}
+    <li class="movimento"><span class="vazio">Nenhuma categoria de receita.</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

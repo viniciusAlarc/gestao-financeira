@@ -7,29 +7,39 @@
   <link rel="manifest" href="{% static 'financas/manifest.webmanifest' %}">
   <link rel="icon" type="image/png" href="{% static 'financas/icone-192.png' %}">
   <link rel="apple-touch-icon" href="{% static 'financas/icone-192.png' %}">
-  <meta name="theme-color" content="#18181b">
+  <meta name="theme-color" content="#f6f7f9">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Finanças">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="{% static 'financas/app.css' %}">
 </head>
 <body>
-  <main class="container">
-    {% if user.is_authenticated %}
-    <nav class="navegacao" aria-label="Principal">
-      <a href="{% url 'financas:inicio' %}"{% if request.resolver_match.url_name == 'inicio' %} class="ativo"{% endif %}>Início</a>
-      <a href="{% url 'financas:lancamentos' %}"{% if request.resolver_match.url_name == 'lancamentos' %} class="ativo"{% endif %}>Lançamentos</a>
-      <a href="{% url 'financas:previstos' %}"{% if request.resolver_match.url_name == 'previstos' %} class="ativo"{% endif %}>Previstos</a>
-      <a href="{% url 'financas:relatorio' %}"{% if request.resolver_match.url_name == 'relatorio' %} class="ativo"{% endif %}>Relatório</a>
+  <header class="topo">
+    <div class="topo-conteudo">
+      <a class="marca" href="{% url 'financas:inicio' %}">
+        <span class="marca-ponto" aria-hidden="true"></span>
+        Finanças
+      </a>
+      {% if user.is_authenticated %}
+      <nav class="navegacao" aria-label="Principal">
+        <a href="{% url 'financas:inicio' %}"{% if request.resolver_match.url_name == 'inicio' %} class="ativo" aria-current="page"{% endif %}>Início</a>
+        <a href="{% url 'financas:lancamentos' %}"{% if request.resolver_match.url_name == 'lancamentos' %} class="ativo" aria-current="page"{% endif %}>Lançamentos</a>
+        <a href="{% url 'financas:previstos' %}"{% if request.resolver_match.url_name == 'previstos' %} class="ativo" aria-current="page"{% endif %}>Previstos</a>
+        <a href="{% url 'financas:relatorio' %}"{% if request.resolver_match.url_name == 'relatorio' %} class="ativo" aria-current="page"{% endif %}>Relatório</a>
+        <a href="{% url 'financas:categorias' %}"{% if request.resolver_match.url_name == 'categorias' or request.resolver_match.url_name == 'editar_categoria' %} class="ativo" aria-current="page"{% endif %}>Categorias</a>
+      </nav>
       <form method="post" action="{% url 'financas:logout' %}" class="form-sair">
         {% csrf_token %}
         <button type="submit" class="botao-sair">Sair</button>
       </form>
-    </nav>
-    {% endif %}
+      {% endif %}
+    </div>
+  </header>
+
+  <main class="container{% block classe_main %}{% endblock %}">
     {% if messages %}
-    <ul class="mensagens">
-      {% for message in messages %}<li class="mensagem">{{ message }}</li>{% endfor %}
+    <ul class="mensagens" role="status">
+      {% for message in messages %}<li class="mensagem mensagem-{{ message.tags }}">{{ message }}</li>{% endfor %}
     </ul>
     {% endif %}
     {% block conteudo %}{% endblock %}

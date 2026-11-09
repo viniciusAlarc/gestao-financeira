@@ -27,7 +27,7 @@ Nada de código antes disso, porque cada uma muda a tabela.
 | # | Decisão | Recomendação | Por quê |
 |---|---|---|---|
 | D1 | Stack | **Django 5 + SQLite + templates + HTMX + PWA** | ORM, migrations, auth e admin já vêm prontos; é Python, que é o seu forte; uma pessoa só mantém isso. Alternativas na seção 6 |
-| D2 | O que é "gasto previsto" | **Conta a pagar com vencimento**, recorrente entra depois | É o que responde "o que está comprometido à frente" com o menor modelo possível |
+| D2 | O que é "gasto previsto" | **Gasto mensal fixo**: cadastro único, cada mês gera o previsto do mês; avulso como opção secundária (revisto em 2026-11-08) | É o que responde "o que está comprometido à frente" e evita recadastrar todo mês |
 | D3 | Categorização | **Manual, lista curta e fechada** | Regra por descrição só depois de 2 meses de uso real, com dado para basear a regra |
 | D5 | Duas pessoas | **Duas contas de login, sem papéis**, as duas lançam | Sem papel, sem permissão, sem tela de admin de usuário |
 | D6 | Onde roda | **Só na rede de casa na v1** | Zero custo, zero exposição; sair de casa é fase 8 e tem decisão de custo (G20) |
@@ -63,6 +63,9 @@ Cada fase entrega algo que você consegue **usar e olhar**, não uma camada de c
 
 ### Fase 4 — Gastos previstos (média)
 
+- **Revisto em 2026-11-08:** o previsto nasce de um cadastro fixo mensal (descrição, valor, dia do
+  vencimento, categoria); cada mês gera a instância daquele mês. O previsto avulso fica secundário,
+  para evento único.
 - Criar previsto com vencimento, valor, categoria.
 - Botão "paguei": gera o movimento e marca o previsto como pago.
 - **Verificação:** um previsto pago sai do total de previstos e aparece no gasto do mês. Um
@@ -102,8 +105,9 @@ Conta        nome, tipo[carteira|corrente], saldo_inicial, ativa
 Categoria    nome, tipo[receita|despesa], ativa
 Movimento    data, valor, tipo[receita|despesa], conta, categoria,
              descricao, origem[manual|inter], criado_por
+GastoFixo    descricao, valor, dia_vencimento, categoria, conta, ativo
 Previsto     descricao, valor, vencimento, tipo, categoria, conta,
-             status[aberto|pago|ignorado], movimento(pago)
+             status[aberto|pago|ignorado], movimento(pago), fixo, competencia
 ```
 
 Regras de dinheiro: `Decimal` com 2 casas, nunca `float`. Valor sempre positivo, com o sinal vindo

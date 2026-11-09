@@ -1,0 +1,1063 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roteiro rodada B</title>
+<style>
+  :root {
+    --bg: #f6f7f6; --card: #ffffff; --texto: #1f2421; --suave: #5f6b63; --borda: #d9dedb;
+    --verde: #1B5E20; --verde-claro: #e8f5e9; --vermelho: #b3261e; --vermelho-claro: #fdecea;
+    --ambar-claro: #fff8e1; --ambar: #c79100; --code: #eef1ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141816; --card: #1d2320; --texto: #e6ebe8; --suave: #a3aea8; --borda: #34403a;
+      --verde: #81c784; --verde-claro: #1f3322; --vermelho: #f2938c; --vermelho-claro: #3a2321;
+      --ambar-claro: #3a3220; --ambar: #ffca28; --code: #27302c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--texto);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .pagina { max-width: 1100px; margin: 0 auto; padding: 0 16px 80px; }
+  h1 { font-size: 1.45rem; margin: 24px 0 8px; }
+  h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  h3 { font-size: 1rem; margin: 20px 0 8px; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+  .intro p { margin: 4px 0; color: var(--suave); }
+
+  /* Barra de progresso fixa no topo */
+  .topo { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0;
+          border-bottom: 1px solid var(--borda); margin-bottom: 16px; }
+  .topo-linha { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+  .contagem { font-weight: 600; }
+  .contagem .ok { color: var(--verde); } .contagem .falha { color: var(--vermelho); }
+  .barra { flex: 1 1 200px; height: 8px; background: var(--borda); border-radius: 4px; overflow: hidden; display: flex; }
+  .barra span { display: block; height: 100%; }
+  .barra .b-ok { background: var(--verde); } .barra .b-falha { background: var(--vermelho); }
+  .botoes { display: flex; gap: 8px; }
+  button { font: inherit; cursor: pointer; border: 1px solid var(--borda); background: var(--card);
+           color: var(--texto); border-radius: 6px; padding: 5px 12px; }
+  button:hover { border-color: var(--suave); }
+  button.primario { background: var(--verde); border-color: var(--verde); color: #fff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primario { color: #10200f; } }
+
+  /* Índice */
+  .indice { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+  .indice a { text-decoration: none; color: var(--texto); border: 1px solid var(--borda); background: var(--card);
+              border-radius: 14px; padding: 2px 10px; font-size: .85rem; white-space: nowrap; }
+  .indice a .n { color: var(--suave); margin-left: 4px; }
+  .indice a.feito { border-color: var(--verde); }
+  .indice a.tem-falha { border-color: var(--vermelho); }
+
+  /* Seção */
+  .secao { background: var(--card); border: 1px solid var(--borda); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .secao-cab { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  .secao-cab .n { color: var(--suave); font-size: .85rem; }
+  .secao p { margin: 8px 0; }
+  .nota { background: var(--ambar-claro); border: 1px solid var(--ambar); border-radius: 8px; padding: 8px 12px; margin: 10px 0; }
+  .nota p { margin: 2px 0; }
+  ul { margin: 8px 0; padding-left: 20px; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { text-align: left; font-size: .8rem; color: var(--suave); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--borda); }
+  td { padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: top; }
+  td.id { white-space: nowrap; color: var(--suave); font-variant-numeric: tabular-nums; width: 48px; }
+  tr.aviso td { background: var(--ambar-claro); }
+  tr.st-ok td { background: var(--verde-claro); }
+  tr.st-falha td { background: var(--vermelho-claro); }
+  td.acao { width: 170px; }
+  .status { display: flex; gap: 4px; }
+  .status button { padding: 3px 9px; font-size: .85rem; }
+  .status button.sel-ok { background: var(--verde); border-color: var(--verde); color: #fff; }
+  .status button.sel-falha { background: var(--vermelho); border-color: var(--vermelho); color: #fff; }
+  textarea { width: 100%; margin-top: 6px; font: inherit; font-size: .85rem; border: 1px solid var(--borda);
+             border-radius: 6px; padding: 4px 6px; background: var(--card); color: var(--texto); resize: vertical; min-height: 34px; }
+
+  /* Resultado */
+  #painel-resultado .vazio { color: var(--suave); }
+  #painel-resultado li { margin-bottom: 6px; }
+
+  @media (max-width: 640px) {
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tr { border-bottom: 1px solid var(--borda); padding: 6px 0; }
+    td { border: 0; padding: 3px 4px; }
+    td.id { width: auto; font-weight: 600; }
+    td.acao { width: auto; }
+    td[data-rotulo]::before { content: attr(data-rotulo) ": "; font-weight: 600; color: var(--suave); }
+  }
+</style>
+</head>
+<body>
+<script id="cfg">
+  // Todo o conteúdo do roteiro (preenchido por montar.mjs a partir de um JSON). As marcações ficam no navegador (localStorage).
+  const DADOS = {
+ "titulo": "Roteiro de testes: rodada 2026-11-05-b (08/11/2026)",
+ "intro": [
+  "De onde vem: relatório da rodada `docs-dev/maestro/2026-11-08-rodada-2026-11-05-b.md` e os dossiês `s1` a `s5` da mesma rodada. As telas foram conferidas no código de 08/11/2026.",
+  "Siga na ordem: a massa criada em R3 e R5 é usada até a limpeza em R11.",
+  "Este roteiro roda no app de verdade, com os seus dados. A massa de teste é pequena e identificável. **Não cole saldo nem valor real na conversa**: se um passo falhar, descreva o comportamento (\"o saldo não mudou\") sem o número.",
+  "As marcações ficam neste navegador. No fim, clique em **Copiar resultado** e cole na conversa."
+ ],
+ "secoes": [
+  {
+   "titulo": "R0. Preparar",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Tudo daqui para baixo assume o servidor local, a sua conta principal e a massa abaixo. A massa usa **três valores únicos** para a limpeza do fim ser inequívoca."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "0.1",
+       "Na raiz do projeto, rode `.venv/bin/python manage.py migrate`",
+       "`No migrations to apply` ou a linha da `financas.0004...` aplicada. É a migration do desfazer (`cancelado`), criada hoje.",
+       "[ ]"
+      ],
+      [
+       "0.2",
+       "Suba o servidor: `.venv/bin/python manage.py runserver 0.0.0.0:8000`",
+       "`Starting development server at http://0.0.0.0:8000/`, sem erro.",
+       "[ ]"
+      ],
+      [
+       "0.3",
+       "No navegador do Windows, abra `http://localhost:8000`",
+       "Tela **Entrar**, com Usuário, Senha e o botão **Entrar**.",
+       "[ ]"
+      ],
+      [
+       "0.4",
+       "Entre com a sua conta principal",
+       "Tela **Início** com **Saldo**, **Gasto do mês** e **Previsto em aberto**.",
+       "[ ]"
+      ],
+      [
+       "0.5",
+       "Force o recarregamento sem cache: `Ctrl+Shift+R`",
+       "A navegação aparece com **Início**, **Lançamentos**, **Previstos**, **Relatório** e **Sair**. O CSS mudou nesta rodada.",
+       "[ ]"
+      ],
+      [
+       "0.6",
+       "Abra uma **segunda aba** em `http://localhost:8000` e deixe parada. Ela é a referência dos três números **de antes**.",
+       "A aba mostra os mesmos três números da primeira.",
+       "[ ]"
+      ],
+      [
+       "0.7",
+       "Em **Lançamentos**, abra a lista **Categoria** e confirme que existe uma categoria de **despesa** para a massa (ex.: **Não categorizado**). Se não houver, use outra de despesa.",
+       "A lista tem pelo menos uma categoria de despesa ativa.",
+       "[ ]"
+      ],
+      [
+       "0.8",
+       "A massa deste roteiro: movimento de **R$ 0,13** (desktop), movimento de **R$ 0,34** (celular) e previsto **`[TESTE] Conta do roteiro`** de **R$ 7,77**. Não use outros valores.",
+       "Anotado.",
+       "[ ]"
+      ]
+     ]
+    },
+    {
+     "tipo": "nota",
+     "linhas": [
+      "⚠️ Não recarregue a aba de referência do 0.6 até o passo 6.1. É ela que guarda os números de antes."
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R1. Navegação e link ativo",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "A rodada fez o link da tela atual ser anunciado por leitor de tela, não só pintado de outra cor. A conferência é no `F12 → Elements`."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "1.1",
+       "Em **Início**, inspecione o `<a>` do link **Início**",
+       "Tem `class=\"ativo\"` e `aria-current=\"page\"`.",
+       "[ ]"
+      ],
+      [
+       "1.2",
+       "Clique em **Lançamentos** e inspecione os quatro links da navegação",
+       "**Só** o link **Lançamentos** tem `aria-current=\"page\"`; os outros três não têm.",
+       "[ ]"
+      ],
+      [
+       "1.3",
+       "Clique em **Previstos** e repita",
+       "**Só** o link **Previstos** tem `aria-current=\"page\"`.",
+       "[ ]"
+      ],
+      [
+       "1.4",
+       "Clique em **Relatório** e repita",
+       "**Só** o link **Relatório** tem `aria-current=\"page\"`.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R2. Lançamentos: erro de campo",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Antes da rodada, o aviso de erro era um `<p>` solto: o leitor de tela não sabia a qual campo ele pertencia. Agora cada aviso tem id e papel, e o campo aponta para ele."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "2.1",
+       "Em **Lançamentos**, digite `abc` no **Valor** e deixe a **Categoria** em **Escolha a categoria**. Clique **Salvar**.",
+       "Dois avisos: **\"Informe um número.\"** abaixo do Valor e **\"Este campo é obrigatório.\"** abaixo da Categoria. A Data (hoje) não ganha aviso.",
+       "[ ]"
+      ],
+      [
+       "2.2",
+       "Inspecione o `<input>` do **Valor**",
+       "`aria-invalid=\"true\"` e `aria-describedby=\"id_valor_error\"`.",
+       "[ ]"
+      ],
+      [
+       "2.3",
+       "Inspecione o `<p>` do aviso do **Valor**",
+       "`id=\"id_valor_error\"` e `role=\"alert\"`.",
+       "[ ]"
+      ],
+      [
+       "2.4",
+       "Inspecione o `<select>` de **Categoria** e o `<p>` do aviso dela",
+       "`aria-describedby=\"id_categoria_error\"`; o `<p>` tem `id=\"id_categoria_error\"` e `role=\"alert\"`.",
+       "[ ]"
+      ],
+      [
+       "2.5",
+       "Inspecione o campo **Data**",
+       "**Sem** `aria-invalid` e **sem** `aria-describedby`: o campo válido não é marcado.",
+       "[ ]"
+      ],
+      [
+       "2.6",
+       "Clique em **Início** e volte a **Lançamentos**",
+       "Nenhum lançamento foi criado (o formulário inválido não grava).",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R3. Lançamentos: sucesso e mensagem anunciada",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "A lista de mensagens virou uma região `role=\"status\"`, para o leitor de tela anunciar o resultado do lançamento."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "3.1",
+       "Preencha **Valor** `0,13`, escolha a categoria de despesa do 0.7 e clique **Salvar**",
+       "Volta para a lista do mês com uma mensagem no topo.",
+       "[ ]"
+      ],
+      [
+       "3.2",
+       "Leia a mensagem",
+       "**\"Lançado: <nome da categoria> · R$ 0,13\"**, com o valor formatado assim (ponto no milhar, vírgula nos centavos).",
+       "[ ]"
+      ],
+      [
+       "3.3",
+       "Inspecione o `<ul>` da mensagem",
+       "`role=\"status\"`.",
+       "[ ]"
+      ],
+      [
+       "3.4",
+       "Olhe a lista do dia de hoje",
+       "O lançamento aparece com o nome da categoria, **-R$ 0,13**, e os links **Editar** e **Desfazer** (lançamento manual).",
+       "[ ]"
+      ],
+      [
+       "3.5",
+       "Clique em **‹** e depois em **›**",
+       "O mês muda para outubro e volta para **Novembro de 2026**, com o lançamento de R$ 0,13 na lista.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R4. Previstos: erro de campo",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Mesma correção do R2, agora nos quatro campos do previsto. Aqui cada erro precisa apontar para o **seu** campo, não para um aviso único."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "4.1",
+       "Abra **Previstos**. Deixe **Descrição**, **Vencimento** e **Categoria** vazios, digite `abc` no **Valor** e clique **Adicionar previsto**.",
+       "Quatro avisos, cada um abaixo do seu campo: **\"Este campo é obrigatório.\"** em Descrição, **\"Este campo é obrigatório.\"** em Vencimento, **\"Informe um número.\"** em Valor, **\"Este campo é obrigatório.\"** em Categoria.",
+       "[ ]"
+      ],
+      [
+       "4.2",
+       "Inspecione os quatro `<p>` de aviso",
+       "Os ids são `id_descricao_error`, `id_vencimento_error`, `id_valor_error` e `id_categoria_error`; todos com `role=\"alert\"`.",
+       "[ ]"
+      ],
+      [
+       "4.3",
+       "Inspecione os quatro campos",
+       "Cada um tem `aria-invalid=\"true\"` e `aria-describedby` apontando **para o id do próprio aviso**, não para um aviso comum.",
+       "[ ]"
+      ],
+      [
+       "4.4",
+       "Confira a lista **Abertos**",
+       "Nenhum item `[TESTE]` criado: o formulário inválido não grava.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R5. Previstos: criar, ignorar, reabrir e pagar",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "A rodada também deu nome acessível a cada botão (\"Paguei\" sozinho não diz qual previsto). O par fazer/desfazer precisa ser simétrico."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "5.1",
+       "Preencha **Descrição** `[TESTE] Conta do roteiro`, **Vencimento** hoje, **Valor** `7,77`, escolha a categoria de despesa e clique **Adicionar previsto**.",
+       "Mensagem **\"Previsto: [TESTE] Conta do roteiro · R$ 7,77\"**; o item aparece em **Abertos** com **\"Vence dd/mm/aaaa\"**.",
+       "[ ]"
+      ],
+      [
+       "5.2",
+       "Inspecione o botão **Paguei** desse item",
+       "`aria-label=\"Paguei: [TESTE] Conta do roteiro\"` (o nome acessível não é só \"Paguei\").",
+       "[ ]"
+      ],
+      [
+       "5.3",
+       "Inspecione o botão **Ignorar** desse item",
+       "`aria-label=\"Ignorar: [TESTE] Conta do roteiro\"`.",
+       "[ ]"
+      ],
+      [
+       "5.4",
+       "Clique **Ignorar**",
+       "Mensagem **\"Ignorado: [TESTE] Conta do roteiro · R$ 7,77\"**; o item sai de **Abertos** e aparece em **Ignorados** com **\"Vencia dd/mm/aaaa\"** e o botão **Reabrir**.",
+       "[ ]"
+      ],
+      [
+       "5.5",
+       "Clique **Reabrir**",
+       "Mensagem **\"Reaberto: [TESTE] Conta do roteiro · R$ 7,77\"**; o item volta a **Abertos** com \"Vence\".",
+       "[ ]"
+      ],
+      [
+       "5.6",
+       "Agora clique **Paguei**",
+       "Mensagem **\"Pago: [TESTE] Conta do roteiro · R$ 7,77\"**; o item sai de **Abertos**.",
+       "[ ]"
+      ],
+      [
+       "5.7",
+       "Abra **Lançamentos** (mês atual)",
+       "O pagamento aparece como **`[TESTE] Conta do roteiro`**, **-R$ 7,77**, com **Desfazer** e **sem Editar** (lançamento vindo de previsto não é editável).",
+       "[ ]"
+      ],
+      [
+       "5.8",
+       "Clique **Desfazer** e confirme na caixa **\"Desfazer este lançamento?\"**",
+       "Mensagem **\"Desfeito: [TESTE] Conta do roteiro · R$ 7,77 O previsto voltou para aberto.\"** e o lançamento some da lista.",
+       "[ ]"
+      ],
+      [
+       "5.9",
+       "Volte a **Previstos**",
+       "**`[TESTE] Conta do roteiro`** está de novo em **Abertos**, com R$ 7,77.",
+       "[ ]"
+      ],
+      [
+       "5.10",
+       "Volte a **Lançamentos**",
+       "O lançamento de R$ 7,77 não aparece mais; o de R$ 0,13 continua.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R6. Início: os números depois da massa",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "A conta que a tela faz: saldo = saldo inicial + receitas − despesas (sem os desfeitos); gasto do mês = despesas do mês que entram no gasto; previsto em aberto = previstos de despesa ainda abertos."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "6.1",
+       "Abra **Início** numa **aba nova** (não recarregue a aba de referência do 0.6)",
+       "Os três números aparecem.",
+       "[ ]"
+      ],
+      [
+       "6.2",
+       "Compare lado a lado com a aba de referência do 0.6",
+       "**Saldo**: exatamente R$ 0,13 menor. **Gasto do mês**: exatamente R$ 0,13 maior. **Previsto em aberto**: exatamente R$ 7,77 maior. O pagamento desfeito no 5.8 não soma em nada.",
+       "[ ]"
+      ],
+      [
+       "6.3",
+       "Agora recarregue a aba de referência (F5)",
+       "Ela mostra os mesmos números da aba nova: os números são calculados na leitura, não guardados.",
+       "[ ]"
+      ],
+      [
+       "6.4",
+       "Confira os rótulos dos três cartões",
+       "**\"Saldo\"**, **\"Gasto do mês\"** e **\"Previsto em aberto\"**, com valor em R$.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R7. Relatório: regressão",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "O relatório é a tela vizinha que usa o mesmo cálculo do gasto do mês. Se ela divergir do Início, um dos dois está errado."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "7.1",
+       "Abra **Relatório**",
+       "Título **Relatório do mês** e mês **Novembro de 2026**.",
+       "[ ]"
+      ],
+      [
+       "7.2",
+       "Procure a categoria usada no R3",
+       "Ela aparece com o total somado (R$ 0,13 a mais) e um percentual com vírgula (ex.: `12,3%`).",
+       "[ ]"
+      ],
+      [
+       "7.3",
+       "Compare o rodapé com a tela Início",
+       "**Total de gastos do mês** é **igual** ao **Gasto do mês** do Início (o de R$ 7,77 desfeito não entra em nenhum dos dois).",
+       "[ ]"
+      ],
+      [
+       "7.4",
+       "Clique em **‹** e depois em **›**",
+       "O mês muda e volta a novembro; o relatório do mês anterior abre sem erro.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R8. Teclado e foco",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Esta é a parte central da t5. O anel é `outline: 2px solid #18181b` com `outline-offset: 2px`, em links, botões e campos. Use só o **Tab** e o **Enter**, sem clicar."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "8.1",
+       "Em **Início**, clique na barra de endereço e aperte **Tab** uma vez",
+       "O primeiro item é o link **Início** da navegação, com um **anel escuro de 2px** em volta, afastado 2px.",
+       "[ ]"
+      ],
+      [
+       "8.2",
+       "Continue apertando **Tab**",
+       "Todos recebem o mesmo anel: **Início** → **Lançamentos** → **Previstos** → **Relatório** → **Sair** (5 paradas).",
+       "[ ]"
+      ],
+      [
+       "8.3",
+       "Pare no link **Lançamentos** e aperte **Enter**",
+       "A tela de Lançamentos abre.",
+       "[ ]"
+      ],
+      [
+       "8.4",
+       "Aqui, percorra todos os controles com **Tab**",
+       "Data → Valor → Categoria → **Salvar** → **‹** → **›** → **Editar**/**Desfazer** dos lançamentos. Todos com o anel, inclusive o botão escuro **Salvar**.",
+       "[ ]"
+      ],
+      [
+       "8.5",
+       "Em **Previstos**, com **Tab**, chegue ao campo **Vencimento** (o de data)",
+       "O campo recebe o anel.",
+       "[ ]"
+      ],
+      [
+       "8.6",
+       "Aperte **Tab** mais uma vez, sem sair do campo de data",
+       "O anel **continua** em volta do campo: a parada interna do seletor de data do Chrome também recebe o anel. Sem a correção desta rodada, esta parada ficava sem anel.",
+       "[ ]"
+      ],
+      [
+       "8.7",
+       "Continue com **Tab** até os botões **Paguei** e **Ignorar**",
+       "Todos com anel, na ordem em que aparecem na tela.",
+       "[ ]"
+      ],
+      [
+       "8.8",
+       "Aperte **Tab** até o fim da página",
+       "O foco não some em nenhum controle visível e não pula para fora da tela.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R9. Login e permissões",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "A tela de login também ganhou o aviso ligado aos dois campos. A conta conjunta (D5) é regra do produto: as duas contas veem tudo de propósito."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "9.1",
+       "Clique em **Sair** na barra de cima",
+       "Volta para a tela **Entrar**.",
+       "[ ]"
+      ],
+      [
+       "9.2",
+       "Na tela **Entrar**, aperte **Tab**",
+       "Usuário → Senha → Entrar, todos com o anel de 2px.",
+       "[ ]"
+      ],
+      [
+       "9.3",
+       "Digite o seu usuário com a senha errada e clique **Entrar**",
+       "Mensagem **\"Não foi possível entrar. Confira usuário e senha.\"**.",
+       "[ ]"
+      ],
+      [
+       "9.4",
+       "Inspecione a mensagem e os dois campos",
+       "O `<p>` tem `id=\"erro-login\"` e `role=\"alert\"`; **Usuário** e **Senha** têm `aria-invalid=\"true\"` e `aria-describedby=\"erro-login\"`.",
+       "[ ]"
+      ],
+      [
+       "9.5",
+       "Tente um usuário que não existe (nome inventado) com qualquer senha",
+       "A **mesma** mensagem: a tela não diz se o usuário existe.",
+       "[ ]"
+      ],
+      [
+       "9.6",
+       "Entre com a conta **Kethlen**",
+       "A tela **Início** abre com os **mesmos três números** da sua conta: é a conta conjunta (D5).",
+       "[ ]"
+      ],
+      [
+       "9.7",
+       "Ainda como **Kethlen**, abra `http://localhost:8000/admin/`",
+       "O admin **não abre**: aparece a tela de login do admin com o aviso em inglês **\"Please enter the correct username and password for a staff account. Note that both fields may be case-sensitive.\"** (a tradução pt-BR dessa mensagem não está no Django). Se o texto for diferente, copie-o na anotação.",
+       "[ ]"
+      ],
+      [
+       "9.8",
+       "Volte a `http://localhost:8000`, clique **Sair** e entre com a sua conta principal",
+       "Tela **Início**.",
+       "[ ]"
+      ],
+      [
+       "9.9",
+       "Com a conta principal, abra `http://localhost:8000/admin/`",
+       "O admin abre, com Movimentos, Previstos, Contas, Categorias e Usuários.",
+       "[ ]"
+      ]
+     ]
+    },
+    {
+     "tipo": "nota",
+     "linhas": [
+      "⚠️ A senha da Kethlen ainda não foi definida (P3-9). Se ela não estiver definida, rode uma vez `.venv/bin/python manage.py changepassword Kethlen`, defina a senha e volte ao 9.6. Se preferir não mexer nisso agora, pule 9.6 a 9.8 e marque com ⚠️ na anotação."
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R10. Celular (P2-9)",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Até hoje o celular leva `DisallowedHost` porque o `.env` não existe. Esta seção é a verificação que falta para fechar o P2-9. O script só mexe na linha do celular e nunca imprime segredo."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "10.1",
+       "No terminal, na raiz do projeto: `scripts/preparar_acesso_celular.sh`",
+       "Mostra o IPv4, o endereço `http://<ip>:8000` e o bloco `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,<ip>`. Avisa se o `.env` não existe e **não** cria o arquivo.",
+       "[ ]"
+      ],
+      [
+       "10.2",
+       "Rode `scripts/preparar_acesso_celular.sh --aplicar`",
+       "Cria ou atualiza o `.env` com a linha do celular. **Nenhum segredo aparece na saída.**",
+       "[ ]"
+      ],
+      [
+       "10.3",
+       "Rode `ls -l .env`",
+       "Permissão `-rw-------` (600) quando o arquivo foi criado agora.",
+       "[ ]"
+      ],
+      [
+       "10.4",
+       "Pare o servidor com **Ctrl+C** e suba de novo com o mesmo comando do 0.2",
+       "Sobe sem erro: o Django lê o `.env` no start.",
+       "[ ]"
+      ],
+      [
+       "10.5",
+       "No WSL: `curl -s -o /dev/null -w '%{http_code}\\n' http://<ip>:8000/` (troque `<ip>` pelo do 10.1)",
+       "`302` (redireciona para o login). Se der `400`, o IP não entrou no `.env`.",
+       "[ ]"
+      ],
+      [
+       "10.6",
+       "No **celular**, na mesma rede Wi-Fi, abra `http://<ip>:8000`",
+       "Tela **Entrar**. **Não** aparece `DisallowedHost`.",
+       "[ ]"
+      ],
+      [
+       "10.7",
+       "Entre com a sua conta no celular",
+       "**Início** com os mesmos três números do desktop.",
+       "[ ]"
+      ],
+      [
+       "10.8",
+       "No celular, crie um lançamento de **R$ 0,34** na categoria de despesa do 0.7",
+       "Mensagem **\"Lançado: <nome da categoria> · R$ 0,34\"** e o lançamento na lista de hoje.",
+       "[ ]"
+      ],
+      [
+       "10.9",
+       "No celular, abra **Previstos** e olhe os botões",
+       "Os botões têm alvo grande (≥44px) e a página **não rola para os lados**.",
+       "[ ]"
+      ],
+      [
+       "10.10",
+       "Opcional: instale o PWA (menu do navegador → **Instalar aplicativo** ou **Adicionar à tela de início**)",
+       "O ícone aparece na tela inicial e abre o app.",
+       "[ ]"
+      ]
+     ]
+    },
+    {
+     "tipo": "nota",
+     "linhas": [
+      "⚠️ Se o `.env` já existia antes do 10.2, a permissão pode ser 644. É o achado B2 da t3, já aberto: não conta como falha deste roteiro.",
+      "⚠️ Se o celular não abrir nada, o suspeito é o firewall do Windows, não o app: responda **sim** ao aviso do Python na rede privada.",
+      "⚠️ Com `DEBUG` ligado (o padrão de hoje, achado A1 da t3), uma página de erro mostra a tela técnica do Django. É pendência conhecida, não falha do roteiro.",
+      "⚠️ Em HTTP na rede local, alguns navegadores não oferecem instalar o PWA. É limitação do navegador; HTTPS é a fase 8."
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "R11. Limpeza",
+   "nivel": 2,
+   "blocos": [
+    {
+     "tipo": "par",
+     "texto": "Os registros de teste saem do banco de verdade. **Apagar é irreversível**: confira descrição e valor antes de marcar. Os movimentos de R$ 0,13 e R$ 0,34 não têm descrição (o formulário rápido não tem esse campo); o valor é o identificador deles."
+    },
+    {
+     "tipo": "tabela",
+     "cab": [
+      "#",
+      "Faça",
+      "Deve ver",
+      "✔"
+     ],
+     "linhas": [
+      [
+       "11.1",
+       "Abra `/admin/` com a conta principal e entre em **Movimentos**",
+       "A lista com a hierarquia de datas no topo.",
+       "[ ]"
+      ],
+      [
+       "11.2",
+       "Clique na data de **hoje** e selecione os movimentos de **R$ 0,13**, **R$ 0,34** (se fez o 10.8) e **`[TESTE] Conta do roteiro` R$ 7,77**. Apague.",
+       "Somem da lista.",
+       "[ ]"
+      ],
+      [
+       "11.3",
+       "Vá em **Previstos** e apague **`[TESTE] Conta do roteiro`**",
+       "Some da lista.",
+       "[ ]"
+      ],
+      [
+       "11.4",
+       "Volte ao **Início**",
+       "**Saldo** R$ 0,47 maior e **Gasto do mês** R$ 0,47 menor que antes da limpeza (R$ 0,13 se você pulou o 10.8). **Previsto em aberto** R$ 7,77 menor. **Nenhum `[TESTE]`** em nenhuma tela.",
+       "[ ]"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "titulo": "Resultado",
+   "nivel": 2,
+   "blocos": []
+  },
+  {
+   "titulo": "Fora deste roteiro",
+   "nivel": 3,
+   "blocos": [
+    {
+     "tipo": "lista",
+     "itens": [
+      "**Importador do Inter (t1)**: é comando de terminal, sem tela: `importar_inter --arquivo ... --conta ... --dry-run`. Coberto por 26 testes em `financas/test_importacao.py`; a tela de importar ainda não existe.",
+      "**Checklist do Inter (t4)**: portal, certificado e `.env` do Inter são ação do dono no portal (P2-1/P2-2), guiadas por `docs-dev/guias/INTER-PASSO-A-PASSO.md`. Nada disso aparece na tela do app.",
+      "**A suíte automatizada**: 125 testes, registrados no relatório da rodada. O roteiro verifica o que só o navegador mostra.",
+      "**`DJANGO_DEBUG=0` (achado A1 da t3)**: recomendação aberta, não implementada. É decisão do dono, e liga a página técnica de erro.",
+      "**HTTPS, limite de tentativas de login e permissões 600 de `.django-secret`/`db.sqlite3`**: achados A2/M2/B1/B2 da t3; infra e fase 8, fora da tela.",
+      "**Remoção do `config/settings_visual.py` e de `/tmp/gestao-visual/` (P4-6)**: decisão do dono; este roteiro não usa o banco descartável.",
+      "**Leitor de tela real (NVDA/VoiceOver) e aparelho físico a 360px**: não verificados no WSL. O roteiro cobre teclado e foco no navegador.",
+      "**A semana de uso com as duas pessoas (P3-9)**: só o 10.7/10.8 toca nisso; a semana inteira é verificação do dono."
+     ]
+    }
+   ]
+  }
+ ]
+};
+  const CHAVE = "roteiro-rodada-2026-11-05-b-2026-11-08";
+</script>
+
+<div class="pagina">
+  <h1 id="titulo"></h1>
+  <div class="intro" id="intro"></div>
+
+  <div class="topo">
+    <div class="topo-linha">
+      <span class="contagem" id="contagem"></span>
+      <div class="barra" id="barra"><span class="b-ok"></span><span class="b-falha"></span></div>
+      <div class="botoes">
+        <button class="primario" id="copiar">Copiar resultado</button>
+        <button id="limpar">Limpar marcações</button>
+      </div>
+    </div>
+    <nav class="indice" id="indice"></nav>
+  </div>
+
+  <main id="conteudo"></main>
+</div>
+
+<script>
+(function () {
+  // ---------- estado salvo no navegador ----------
+  let estado = {};
+  try { estado = JSON.parse(localStorage.getItem(CHAVE) || '{}') || {}; } catch (e) { estado = {}; }
+  const salvar = () => { try { localStorage.setItem(CHAVE, JSON.stringify(estado)); } catch (e) {} };
+
+  // ---------- markdown simples em linha ----------
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  function inline(s) {
+    let h = esc(s);
+    h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 (<code>$2</code>)');
+    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+    h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return h;
+  }
+  const slug = t => 'sec-' + t.toLowerCase().normalize('NFD').replace(/[^\w]+/g, '-');
+
+  // ---------- montar a página ----------
+  document.getElementById('titulo').textContent = DADOS.titulo;
+  document.getElementById('intro').innerHTML = DADOS.intro.filter(Boolean).map(l => `<p>${inline(l)}</p>`).join('');
+
+  const passos = [];          // {id, secao, faca, deve}
+  const conteudo = document.getElementById('conteudo');
+  let cartao = null;          // as subseções (###) entram no cartão da seção anterior
+
+  DADOS.secoes.forEach(sec => {
+    if (sec.nivel === 2 || !cartao) {
+      cartao = document.createElement('section');
+      cartao.className = 'secao';
+      cartao.id = slug(sec.titulo);
+      cartao.dataset.titulo = sec.titulo;
+      cartao.innerHTML = `<div class="secao-cab"><h2>${inline(sec.titulo)}</h2><span class="n"></span></div>`;
+      conteudo.appendChild(cartao);
+    } else {
+      cartao.insertAdjacentHTML('beforeend', `<h3>${inline(sec.titulo)}</h3>`);
+    }
+    const tituloSecao = cartao.dataset.titulo;
+
+    sec.blocos.forEach(b => {
+      if (b.tipo === 'par') cartao.insertAdjacentHTML('beforeend', `<p>${inline(b.texto)}</p>`);
+      if (b.tipo === 'nota') cartao.insertAdjacentHTML('beforeend',
+        `<div class="nota">${b.linhas.filter(Boolean).map(l => `<p>${inline(l)}</p>`).join('')}</div>`);
+      if (b.tipo === 'lista') cartao.insertAdjacentHTML('beforeend',
+        `<ul>${b.itens.map(i => `<li>${inline(i)}</li>`).join('')}</ul>`);
+      if (b.tipo === 'tabela') {
+        const conferivel = b.cab[b.cab.length - 1] === '✔';
+        const cab = conferivel ? b.cab.slice(0, -1) : b.cab;
+        const t = document.createElement('table');
+        t.innerHTML = `<thead><tr>${cab.map(c => `<th>${inline(c)}</th>`).join('')}${conferivel ? '<th>Resultado</th>' : ''}</tr></thead>`;
+        const tb = document.createElement('tbody');
+        b.linhas.forEach(cells => {
+          const tr = document.createElement('tr');
+          const vals = conferivel ? cells.slice(0, -1) : cells;
+          vals.forEach((v, k) => {
+            const td = document.createElement('td');
+            if (k === 0 && cab[0] === '#') td.className = 'id';
+            else td.dataset.rotulo = cab[k];
+            td.innerHTML = inline(v);
+            tr.appendChild(td);
+          });
+          if (vals.join(' ').includes('⚠️')) tr.classList.add('aviso');
+          if (conferivel) {
+            const id = vals[0];
+            const iFaca = cab.indexOf('Faça'), iDeve = cab.indexOf('Deve ver');
+            passos.push({ id, secao: tituloSecao, faca: vals[iFaca] || '', deve: vals[iDeve] || '', tr, cartao });
+            const td = document.createElement('td');
+            td.className = 'acao';
+            td.innerHTML = `<div class="status">
+                <button data-v="ok" title="Bateu com o esperado">Ok</button>
+                <button data-v="falha" title="Não bateu">Falhou</button></div>
+              <textarea placeholder="Anotação" rows="1"></textarea>`;
+            const ta = td.querySelector('textarea');
+            ta.value = (estado[id] && estado[id].nota) || '';
+            td.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+              const atual = estado[id] && estado[id].st;
+              estado[id] = Object.assign({}, estado[id], { st: atual === btn.dataset.v ? null : btn.dataset.v });
+              salvar(); atualizar();
+            }));
+            ta.addEventListener('input', () => {
+              estado[id] = Object.assign({}, estado[id], { nota: ta.value }); salvar(); atualizarResultado();
+            });
+            tr.appendChild(td);
+          }
+          tb.appendChild(tr);
+        });
+        t.appendChild(tb);
+        cartao.appendChild(t);
+      }
+    });
+  });
+
+  // Painel de resultado, dentro do cartão "Resultado"
+  const cartaoResultado = [...document.querySelectorAll('.secao')].find(s => s.dataset.titulo === 'Resultado');
+  const painel = document.createElement('div');
+  painel.id = 'painel-resultado';
+  if (cartaoResultado) cartaoResultado.querySelector('.secao-cab').after(painel);
+
+  // ---------- atualizar contagens ----------
+  function atualizarResultado() {
+    const falhas = passos.filter(p => estado[p.id] && estado[p.id].st === 'falha');
+    const comNota = passos.filter(p => estado[p.id] && estado[p.id].st !== 'falha' && (estado[p.id].nota || '').trim());
+    if (!falhas.length && !comNota.length) {
+      painel.innerHTML = '<p class="vazio">Nenhuma falha marcada ainda. O que você marcar como "Falhou" aparece aqui.</p>';
+      return;
+    }
+    const item = p => `<li><strong>${esc(p.id)}</strong> (${esc(p.secao)}): ${inline(p.deve)}${
+      (estado[p.id].nota || '').trim() ? `<br><em>Anotação:</em> ${esc(estado[p.id].nota)}` : ''}</li>`;
+    painel.innerHTML = (falhas.length ? `<h3>Falhas (${falhas.length})</h3><ul>${falhas.map(item).join('')}</ul>` : '')
+      + (comNota.length ? `<h3>Anotações em passos que não falharam</h3><ul>${comNota.map(item).join('')}</ul>` : '');
+  }
+
+  function atualizar() {
+    let ok = 0, falha = 0;
+    passos.forEach(p => {
+      const st = estado[p.id] && estado[p.id].st;
+      p.tr.classList.toggle('st-ok', st === 'ok');
+      p.tr.classList.toggle('st-falha', st === 'falha');
+      p.tr.querySelectorAll('.status button').forEach(b => {
+        b.classList.toggle('sel-ok', b.dataset.v === 'ok' && st === 'ok');
+        b.classList.toggle('sel-falha', b.dataset.v === 'falha' && st === 'falha');
+      });
+      if (st === 'ok') ok++; if (st === 'falha') falha++;
+    });
+    const n = passos.length;
+    document.getElementById('contagem').innerHTML =
+      `${ok + falha} de ${n} conferidos · <span class="ok">${ok} ok</span> · <span class="falha">${falha} falharam</span>`;
+    const barra = document.getElementById('barra').children;
+    barra[0].style.width = (ok / n * 100) + '%';
+    barra[1].style.width = (falha / n * 100) + '%';
+
+    // índice com a contagem por seção
+    const ind = document.getElementById('indice');
+    ind.innerHTML = '';
+    document.querySelectorAll('.secao').forEach(c => {
+      const ps = passos.filter(p => p.cartao === c);
+      const feitos = ps.filter(p => estado[p.id] && estado[p.id].st).length;
+      const temFalha = ps.some(p => estado[p.id] && estado[p.id].st === 'falha');
+      if (ps.length) c.querySelector('.secao-cab .n').textContent = `${feitos} de ${ps.length}`;
+      const a = document.createElement('a');
+      a.href = '#' + c.id;
+      a.textContent = c.dataset.titulo.split('.')[0].split(':')[0];
+      if (ps.length) a.insertAdjacentHTML('beforeend', `<span class="n">${feitos}/${ps.length}</span>`);
+      if (ps.length && feitos === ps.length) a.classList.add('feito');
+      if (temFalha) a.classList.add('tem-falha');
+      ind.appendChild(a);
+    });
+    atualizarResultado();
+  }
+
+  // ---------- botões ----------
+  document.getElementById('copiar').addEventListener('click', () => {
+    const ok = passos.filter(p => estado[p.id] && estado[p.id].st === 'ok').length;
+    const falhas = passos.filter(p => estado[p.id] && estado[p.id].st === 'falha');
+    const notas = passos.filter(p => estado[p.id] && estado[p.id].st !== 'falha' && (estado[p.id].nota || '').trim());
+    const pend = passos.length - ok - falhas.length;
+    const limpo = s => s.replace(/\*\*|`/g, '');
+    let txt = `${DADOS.titulo}\nConferidos ${ok + falhas.length} de ${passos.length}: ${ok} ok, ${falhas.length} falharam, ${pend} sem marcar.\n`;
+    if (falhas.length) txt += '\nFalhas:\n' + falhas.map(p =>
+      `- ${p.id} (${p.secao}). Esperado: ${limpo(p.deve)}${(estado[p.id].nota || '').trim() ? `\n  Aconteceu: ${estado[p.id].nota.trim()}` : ''}`).join('\n') + '\n';
+    if (notas.length) txt += '\nAnotações:\n' + notas.map(p => `- ${p.id}: ${estado[p.id].nota.trim()}`).join('\n') + '\n';
+    const btn = document.getElementById('copiar');
+    const feito = () => { btn.textContent = 'Copiado'; setTimeout(() => btn.textContent = 'Copiar resultado', 1500); };
+    if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(feito, () => fallback(txt, feito));
+    else fallback(txt, feito);
+  });
+  function fallback(txt, feito) {
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand('copy'); feito(); } catch (e) { alert(txt); } ta.remove();
+  }
+  document.getElementById('limpar').addEventListener('click', () => {
+    if (!confirm('Apagar todas as marcações e anotações deste roteiro?')) return;
+    estado = {}; salvar();
+    document.querySelectorAll('td.acao textarea').forEach(t => t.value = '');
+    atualizar();
+  });
+
+  atualizar();
+})();
+</script>
+</body>
+</html>

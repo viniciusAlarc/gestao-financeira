@@ -10,12 +10,43 @@ app_name = "financas"
 urlpatterns = [
     path("", views.inicio, name="inicio"),
     path("lancamentos/", views.lancamentos, name="lancamentos"),
+    path(
+        "lancamentos/<int:pk>/editar/",
+        views.editar_movimento,
+        name="editar_movimento",
+    ),
+    path(
+        "lancamentos/<int:pk>/desfazer/",
+        views.desfazer_movimento,
+        name="desfazer_movimento",
+    ),
     path("previstos/", views.previstos, name="previstos"),
+    path(
+        "previstos/fixos/<int:pk>/editar/",
+        views.editar_gasto_fixo,
+        name="editar_gasto_fixo",
+    ),
     path("relatorio/", views.relatorio, name="relatorio"),
+    path("categorias/", views.categorias, name="categorias"),
+    path(
+        "categorias/<int:pk>/editar/",
+        views.editar_categoria,
+        name="editar_categoria",
+    ),
     path(
         "previstos/<int:pk>/paguei/",
         views.pagar_previsto,
         name="pagar_previsto",
+    ),
+    path(
+        "previstos/<int:pk>/ignorar/",
+        views.ignorar_previsto,
+        name="ignorar_previsto",
+    ),
+    path(
+        "previstos/<int:pk>/reabrir/",
+        views.reabrir_previsto,
+        name="reabrir_previsto",
     ),
     path(
         "login/",

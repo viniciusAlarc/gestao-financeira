@@ -21,13 +21,20 @@ como web app responsivo (PWA), sem publicar em loja.
 ## Estado atual
 
 Desenvolvimento da v1 por fases (8 no plano). O esqueleto do Django roda, o modelo de dado está
-pronto (`Conta`, `Categoria`, `Movimento`, `Previsto`) e a tela inicial com saldo, gasto do mês e
-previsto em aberto está pronta e verificada a 375px. As fases 4 e 5 estão concluídas e validadas
-por testes: gastos previstos com botão "paguei" e relatório do mês por categoria. A fase 6 está
-implementada: as duas contas veem tudo, o lançamento registra a autoria, há logout e o PWA tem
-manifest e ícones; falta a verificação de uso real (P3-9). A fase 7 (Inter) foi iniciada: o host
-do sandbox foi corrigido para o domínio oficial e o script aguarda `.env` e certificado. A suíte
-tem 62 testes passando. O que foi feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
+pronto (`Conta`, `Categoria`, `Movimento`, `GastoFixo`, `Previsto`) e a tela inicial com saldo,
+gasto do mês e previsto em aberto está pronta e verificada a 375, 360, 768 e 1280px. As fases 4 e 5 estão concluídas
+e validadas por testes: gastos fixos mensais com botão "paguei" e relatório do mês por categoria. A
+fase 6 está implementada: as duas contas veem tudo, o lançamento registra a autoria, há logout e o
+PWA tem manifest e ícones; falta a verificação de uso real (P3-9). Em 2026-11-08 entraram as funções
+de uso diário (data editável, editar/desfazer lançamento, ignorar/reabrir previsto e navegação
+entre meses), o previsto virou **gasto fixo mensal** (cadastro único que gera o previsto de cada
+mês; o avulso ficou secundário) e ganhou a **tela de categorias** (criar, editar e desativar; tipo
+fixo depois de criada). A **UI/UX foi revista** em 2026-11-08: cabeçalho com marca, barra inferior
+no celular, topo no desktop, layout mais espaçado, mensagens por tipo e tema do PWA claro. A fase 7
+(Inter) tem o importador de um JSON do extrato pronto e testado; o
+host do sandbox foi corrigido para o domínio oficial e a chamada real aguarda `.env` e certificado.
+As migrations 0001 a 0005 estão aplicadas no banco real. A suíte tem 179 testes passando. O que foi
+feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
@@ -58,8 +65,8 @@ tem 62 testes passando. O que foi feito fica em `PROGRESS.md`; o que está abert
    pública e **nunca foram conferidos no ambiente real**. Rota ou campo fora da doc oficial é
    retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes, todos passando. `scripts/teste_inter.py` não é teste,
-   é diagnóstico da fase 7.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-08 a suíte está em 179, todos passando.
+   `scripts/teste_inter.py` não é teste, é diagnóstico da fase 7.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 

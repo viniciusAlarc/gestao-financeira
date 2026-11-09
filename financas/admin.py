@@ -5,7 +5,7 @@ A tela de verdade vem nas fases 2 e 3. Até lá, é aqui que o modelo é testado
 
 from django.contrib import admin
 
-from .models import Categoria, Conta, Movimento, Previsto
+from .models import Categoria, Conta, GastoFixo, Movimento, Previsto
 
 
 @admin.register(Conta)
@@ -42,16 +42,37 @@ class MovimentoAdmin(admin.ModelAdmin):
         "conta",
         "valor",
         "origem",
+        "cancelado",
     )
-    list_filter = ("tipo", "origem", "conta", "categoria")
+    list_filter = ("tipo", "origem", "cancelado", "conta", "categoria")
     date_hierarchy = "data"
-    exclude = ("criado_por", "id_externo")
+    exclude = (
+        "criado_por",
+        "id_externo",
+        "cancelado",
+        "cancelado_em",
+        "cancelado_por",
+    )
 
     def save_model(self, request, obj, form, change):
         # Quem lançou sai da sessão, nunca de um campo digitado (D5).
         if not obj.criado_por_id:
             obj.criado_por = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(GastoFixo)
+class GastoFixoAdmin(admin.ModelAdmin):
+    list_display = (
+        "descricao",
+        "dia_vencimento",
+        "valor",
+        "categoria",
+        "conta",
+        "ativo",
+    )
+    list_filter = ("ativo", "categoria", "conta")
+    search_fields = ("descricao",)
 
 
 @admin.register(Previsto)
@@ -62,8 +83,9 @@ class PrevistoAdmin(admin.ModelAdmin):
         "valor",
         "tipo",
         "status",
+        "fixo",
         "categoria",
         "conta",
     )
-    list_filter = ("status", "tipo", "conta", "categoria")
+    list_filter = ("status", "tipo", "fixo", "conta", "categoria")
     date_hierarchy = "vencimento"

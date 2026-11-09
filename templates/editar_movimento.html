@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block titulo %}Editar lançamento{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Editar lançamento</h1>
+
+<form method="post" class="formulario-rapido">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.data.id_for_label }}">{{ form.data.label }}</label>
+  {{ form.data }}
+  {% if form.data.errors %}<p class="erro" id="{{ form.data.auto_id }}_error" role="alert">{{ form.data.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.valor.id_for_label }}">{{ form.valor.label }}</label>
+  {{ form.valor }}
+  {% if form.valor.errors %}<p class="erro" id="{{ form.valor.auto_id }}_error" role="alert">{{ form.valor.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
+  {{ form.categoria }}
+  {% if form.categoria.errors %}<p class="erro" id="{{ form.categoria.auto_id }}_error" role="alert">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  <button type="submit" class="botao-primario">Salvar</button>
+</form>
+
+<p class="voltar"><a href="{% url 'financas:lancamentos' %}?mes={{ movimento.data|date:'Y-m' }}">Voltar para lançamentos</a></p>
+{% endblock %}
