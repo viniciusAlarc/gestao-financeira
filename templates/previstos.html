@@ -12,8 +12,11 @@
   <p class="aviso">Nenhuma categoria de despesa ativa. Cadastre uma em <a href="{% url 'financas:categorias' %}">Categorias</a>.</p>
 {% endif %}
 
-<section class="lista-mes">
-  <h2 class="subtitulo">Gastos fixos</h2>
+<details class="lista-mes bloco-recolhivel"{% if form_fixo.errors %} open{% endif %}>
+  <summary>
+    <span>Gastos fixos</span>
+    {% if gastos_fixos %}<span class="resumo-detalhes">{{ total_fixos|dinheiro }} por mês</span>{% endif %}
+  </summary>
 
   {% if form_fixo %}
   <form method="post" class="formulario-rapido">
@@ -61,7 +64,8 @@
   {% empty %}
     <p class="vazio">Nenhum gasto fixo cadastrado.</p>
   {% endfor %}
-</section>
+
+</details>
 
 <section class="lista-mes">
   <h2 class="subtitulo">Abertos</h2>

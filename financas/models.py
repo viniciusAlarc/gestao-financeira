@@ -123,6 +123,8 @@ class Movimento(models.Model):
 
     class Origem(models.TextChoices):
         MANUAL = "manual", "Manual"
+        PLUGGY = "pluggy", "Pluggy"
+        # Mantido porque movimentos já importados na fase 7 podem ter este valor.
         INTER = "inter", "Inter"
 
     data = models.DateField("data")

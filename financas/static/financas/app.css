@@ -318,6 +318,12 @@ a {
   font-weight: 600;
 }
 
+/* Marca de campo opcional: fica no tom do texto de apoio, sem competir com o rótulo. */
+.formulario-rapido label .campo-opcional {
+  color: var(--texto-suave);
+  font-weight: 400;
+}
+
 .formulario-rapido .campo {
   width: 100%;
   min-height: 44px;
@@ -553,6 +559,38 @@ a {
   color: var(--negativo);
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* Bloco recolhível (2026-11-08): a lista longa fica atrás de um botão.
+   Fechado, lê-se o título e o total; aberto, o conteúdo empurra o resto.
+   O marcador nativo do <details> fica: é a pista de que a linha abre. */
+.bloco-recolhivel > summary {
+  min-height: 44px;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  box-shadow: var(--sombra);
+  color: var(--texto-medio);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bloco-recolhivel > summary:hover {
+  color: var(--texto);
+}
+
+.bloco-recolhivel > summary .resumo-detalhes {
+  float: right;
+  color: var(--texto-medio);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.bloco-recolhivel[open] > summary {
+  margin-bottom: 1rem;
 }
 
 /* Navegação de mês: setas com alvo de 44px e o mês como título. */

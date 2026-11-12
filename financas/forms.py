@@ -1,9 +1,12 @@
 """Formulários do app.
 
-O formulário rápido da fase 3 lança com **valor e categoria**. O formulário da
-fase 4 cria gastos previstos com descrição, vencimento, valor e categoria.
+O formulário rápido da fase 3 lança com **valor e categoria**; a descrição é
+opcional e serve para diferenciar lançamentos da mesma categoria (2026-11-08).
+O formulário da fase 4 cria gastos previstos com descrição, vencimento, valor e
+categoria.
 """
 
+import unicodedata
 from decimal import Decimal
 
 from django import forms
@@ -11,6 +14,27 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import Categoria, GastoFixo, Movimento, Previsto, TipoValor
+
+
+def _chave_alfabetica(categoria):
+    """Chave que ignora acento e caixa: "Água" é ordenada como "agua"."""
+    sem_acento = unicodedata.normalize("NFKD", categoria.nome)
+    sem_acento = "".join(c for c in sem_acento if not unicodedata.combining(c))
+    return (sem_acento.casefold(), categoria.tipo, categoria.pk)
+
+
+def _opcoes_de_categoria(campo, categorias):
+    """Deixa as opções do campo Categoria em ordem alfabética de verdade (2026-11-08).
+
+    A ordenação do banco (`tipo`, `nome`) não serve para achar categoria: compara
+    byte a byte, então "Água" e "Ótica" caem depois de "Z", e a lista do formulário
+    fica na ordem em que o banco devolveu, misturando despesa e receita por bloco.
+    A lista é curta, então ordenar aqui em Python custa nada.
+    """
+    campo.queryset = categorias
+    campo.empty_label = "Escolha a categoria"
+    ordenadas = sorted(categorias, key=_chave_alfabetica)
+    campo.choices = [("", campo.empty_label)] + [(c.pk, str(c)) for c in ordenadas]
 
 
 class ValorBrasileiroField(forms.DecimalField):
@@ -62,9 +86,14 @@ class MovimentoRapidoForm(forms.ModelForm):
 
     class Meta:
         model = Movimento
-        fields = ["data", "valor", "categoria"]
-        labels = {"categoria": "Categoria"}
-        widgets = {"categoria": forms.Select(attrs={"class": "campo"})}
+        # `descricao` é opcional no modelo (blank=True) e por isso não obriga
+        # nada: sem ela, a lista cai para o nome da categoria.
+        fields = ["data", "valor", "categoria", "descricao"]
+        labels = {"categoria": "Categoria", "descricao": "Descrição"}
+        widgets = {
+            "categoria": forms.Select(attrs={"class": "campo"}),
+            "descricao": forms.TextInput(attrs={"class": "campo"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,8 +104,7 @@ class MovimentoRapidoForm(forms.ModelForm):
             categorias = Categoria.objects.filter(
                 Q(ativa=True) | Q(pk=self.instance.categoria_id)
             )
-        self.fields["categoria"].queryset = categorias
-        self.fields["categoria"].empty_label = "Escolha a categoria"
+        _opcoes_de_categoria(self.fields["categoria"], categorias)
 
 
 class GastoFixoForm(forms.ModelForm):
@@ -133,8 +161,7 @@ class GastoFixoForm(forms.ModelForm):
                 Q(ativa=True, tipo=TipoValor.DESPESA)
                 | Q(pk=self.instance.categoria_id)
             )
-        self.fields["categoria"].queryset = categorias
-        self.fields["categoria"].empty_label = "Escolha a categoria"
+        _opcoes_de_categoria(self.fields["categoria"], categorias)
 
 
 AJUDA_ENTRA_NO_GASTO = (
@@ -232,7 +259,7 @@ class PrevistoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["categoria"].queryset = Categoria.objects.filter(
-            ativa=True, tipo=TipoValor.DESPESA
+        _opcoes_de_categoria(
+            self.fields["categoria"],
+            Categoria.objects.filter(ativa=True, tipo=TipoValor.DESPESA),
         )
-        self.fields["categoria"].empty_label = "Escolha a categoria"

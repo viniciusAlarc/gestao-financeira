@@ -1,6 +1,6 @@
 {
   "plano": {
-    "nome": "Desenvolvimento v1 · manual antes do Inter",
+    "nome": "Desenvolvimento v1 · manual antes da Pluggy",
     "doc": "docs-dev/a-codar/01-plano-desenvolvimento.md",
     "fases": [
       { "nome": "Decisões e stack", "estado": "feito" },
@@ -10,10 +10,30 @@
       { "nome": "Gastos previstos", "estado": "feito" },
       { "nome": "Relatório por categoria", "estado": "feito" },
       { "nome": "Dois usuários e uso real", "estado": "andamento" },
-      { "nome": "Integração Inter", "estado": "andamento" }
+      { "nome": "Integração Pluggy", "estado": "andamento" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-10",
+      "o_que": "Importação da Pluggy escrita: cliente com cursor, mapeamento para Movimento e comando importar_pluggy",
+      "como": "GET /v2/transactions por cursor; só POSTED entra; origem pluggy (migration 0006 escrita, não aplicada); importar_pluggy com --conta, --pluggy-conta, --desde, --ate e --dry-run; 50 testes novos e suíte em 213"
+    },
+    {
+      "data": "2026-11-09",
+      "o_que": "Inter descartado: a integração passa a ser Pluggy pelo Open Finance, modo pessoal gratuito",
+      "como": "pesquisa de 9 bancos (todos exigem PJ/contrato/paga); conta Itaú conectada no Meu Pluggy pelo CPF com os dados aparecendo; código do Inter removido (10 arquivos); 163 testes OK"
+    },
+    {
+      "data": "2026-11-09",
+      "o_que": "P2-3 fechado: diagnóstico do Inter com credencial no sandbox e formato do token corrigido",
+      "como": "credenciais no corpo do formulário (o sandbox recusa em cabeçalho); TLS, token, saldo e extrato OK; dry-run leu 1.237 transações com 0 erros; 230 testes"
+    },
+    {
+      "data": "2026-11-09",
+      "o_que": "Importação do Inter direto da API (--api) e conferência de saldo",
+      "como": "cliente mTLS com token em cache, /extrato/completo paginado e janelas de 90 dias; comandos importar_inter --api e conferir_saldo_inter (só leitura); 41 testes novos e suíte em 230"
+    },
     {
       "data": "2026-11-08",
       "o_que": "UI/UX revista no sistema inteiro: cabeçalho e navegação responsivos, layout espaçado e mensagens por tipo",

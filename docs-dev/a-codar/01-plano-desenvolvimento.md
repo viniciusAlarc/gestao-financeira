@@ -83,13 +83,16 @@ Cada fase entrega algo que você consegue **usar e olhar**, não uma camada de c
 - **Verificação:** uma semana de uso real, com os dois lançando.
 - **Decisão que volta aqui:** escopo por pessoa (cada um vê tudo?) precisa de resposta antes.
 
-### Fase 7 — Inter (em andamento desde 2026-11-03)
+### Fase 7 — Importação bancária pela Pluggy (em andamento desde 2026-11-03)
 
-- Host do sandbox confirmado em `cdpj-sandbox.partners.uatinter.co`; criar a integração no portal e
-  baixar o certificado (P2-1/P2-2).
-- Importar extrato como `Movimento` com `origem = inter`, sem duplicar.
+- O **Inter foi descartado em 2026-11-09**: a API dele é exclusiva de PJ e não atende MEI. O caminho
+  é a **Pluggy pelo Open Finance, modo pessoal gratuito** (Meu Pluggy + conector 200).
+- Criar a aplicação no dashboard da Pluggy e capturar `client_id`, `client_secret` e o `itemId` da
+  conexão do Itaú (P2-12, do dono).
+- Importar saldo e extrato da Pluggy como `Movimento` com `id_externo` da transação, sem duplicar
+  (P2-13), só com caminhos e campos da doc oficial (`docs.pluggy.ai`).
 - **Verificação:** um extrato importado duas vezes não gera movimento repetido.
-- **Começa** quando o portal estiver na janela e a integração/certificado estiverem prontos.
+- **Começa** quando a aplicação e as credenciais da Pluggy estiverem prontas.
 
 ### Fase 8 — Sair de casa (opcional, tem custo)
 

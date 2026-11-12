@@ -1,20 +1,33 @@
-"""Importação do extrato enriquecido do Inter para `Movimento` (fase 7, T1).
+"""Importação do extrato da Pluggy para `Movimento` (fase 7, P2-13).
 
-O mapeamento é o decidido em `docs-dev/a-codar/04-decisao-d4-p2-8-importacao.md`:
+Mapeamento decidido em 2026-11-10, sobre a documentação oficial de
+`GET /v2/transactions`:
 
-- data: `dataTransacao`; se vazia, `dataInclusao` (a que muda o fechamento do mês é a
-  primeira, então a reserva só entra quando ela falta).
-- valor: sempre positivo, em `Decimal`; o sinal vem de `tipoOperacao` (D = despesa,
-  C = receita). Qualquer outro valor é erro daquela transação, reportado, nunca ignorado.
-- chave antiduplicidade: `idTransacao` em `Movimento.id_externo`. Transação sem id é
-  recusada — não existe chave composta de reserva, porque ela geraria duplicata falsa.
-- categoria: INVESTIMENTO → "Investimento" (despesa, fora do gasto); ESTORNO e CASHBACK
-  → "Estorno"/"Cashback" do tipo da transação; o resto → "Não categorizado" do tipo.
-- autoria: usuário técnico `Inter`, sem senha utilizável e sem privilégio.
+- data: campo `date` (ISO 8601 em UTC), truncado para a data. Não há campo de
+  reserva: `createdAt` é a data de criação do registro na Pluggy, não a do
+  lançamento. A doc manda converter para GMT-3 na exibição; o truncamento foi
+  adotado porque o exemplo oficial vem como meia-noite UTC (data pura) e a
+  conversão jogaria essas transações para o dia anterior. A primeira importação
+  real confirma o formato (P2-13).
+- tipo: campo `type`; `DEBIT` é despesa e `CREDIT` é receita. Valor diferente
+  disso é erro daquela transação, reportado, nunca ignorado.
+- valor: sempre positivo, em `Decimal`, a partir de `abs(amount)`. O `amount` da
+  Pluggy já vem com sinal (saída negativa, entrada positiva); o sinal não é
+  usado porque o `type` diz a mesma coisa de forma explícita.
+- status: **só `POSTED` entra**. `PENDING` é pulado e aparece no relatório
+  (decisão do dono em 2026-11-10: pendente ainda pode mudar). Se a mesma
+  transação virar `POSTED` com o mesmo `id`, entra na importação seguinte.
+- chave antiduplicidade: campo `id` em `Movimento.id_externo`. Transação sem id
+  é recusada.
+- descrição: `description`; se vazia, `descriptionRaw`; truncada em 120.
+- categoria: `Não categorizado` do tipo da transação. O mapeamento das
+  categorias da Pluggy (campo `category`) é decisão própria e ficou para o
+  P2-15; por ora o relatório conta as categorias vistas para servir à decisão.
+- autoria: usuário técnico `Pluggy`, sem senha utilizável e sem privilégio.
+- origem: `Movimento.Origem.PLUGGY`.
 
-Nada aqui chama a API: a função recebe a lista de transações já lida do JSON.
-O sinal do `valor` e a estabilidade do `idTransacao` ainda serão confirmados no sandbox
-(P2-3); até lá, a regra é a documentada.
+Nada aqui chama a API: a função recebe a lista de transações já lida pelo
+cliente (`pluggy_api.py`). Isso permite testar o mapeamento sem rede.
 """
 
 from __future__ import annotations
@@ -28,23 +41,19 @@ from django.db import IntegrityError, transaction
 
 from .models import Categoria, Movimento, TipoValor
 
-USUARIO_TECNICO = "Inter"
+USUARIO_TECNICO = "Pluggy"
 TAMANHO_MAXIMO_DESCRICAO = 120
 CATEGORIA_PADRAO = "Não categorizado"
-CATEGORIA_INVESTIMENTO = "Investimento"
-CATEGORIAS_POR_TIPO_TRANSACAO = {
-    "ESTORNO": "Estorno",
-    "CASHBACK": "Cashback",
+TIPOS_POR_TRANSACAO = {
+    "DEBIT": TipoValor.DESPESA,
+    "CREDIT": TipoValor.RECEITA,
 }
-TIPOS_POR_OPERACAO = {
-    "D": TipoValor.DESPESA,
-    "C": TipoValor.RECEITA,
-}
+STATUS_QUE_ENTRAM = {"POSTED"}
 
 
 @dataclass(frozen=True)
 class TransacaoPulada:
-    """Transação que não entrou porque já existia (idempotência)."""
+    """Transação que não entrou porque já existia ou ainda está pendente."""
 
     id_transacao: str
     motivo: str
@@ -66,6 +75,9 @@ class RelatorioImportacao:
     criados: list[str] = field(default_factory=list)
     pulados: list[TransacaoPulada] = field(default_factory=list)
     erros: list[TransacaoComErro] = field(default_factory=list)
+    # Quantas transações de cada `category` da Pluggy vieram no payload; serve à
+    # decisão de mapeamento de categoria (P2-15), sem gravar nada.
+    categorias_vistas: dict[str, int] = field(default_factory=dict)
 
     @property
     def total(self) -> int:
@@ -73,13 +85,13 @@ class RelatorioImportacao:
         return len(self.criados) + len(self.pulados) + len(self.erros)
 
 
-def importar_extrato(transacoes, conta, usuario=None, dry_run=False):
-    """Converte as transações do `/extrato/completo` em `Movimento` da conta.
+def importar_transacoes(transacoes, conta, usuario=None, dry_run=False):
+    """Converte as transações do `/v2/transactions` em `Movimento` da conta.
 
-    `transacoes` é a lista de itens do extrato (dicionários vindos do JSON). `usuario`
-    é o autor gravado em `criado_por`; sem ele, o usuário técnico `Inter` é criado.
-    Com `dry_run=True` nada é escrito — nem movimento, nem categoria, nem usuário — e
-    o relatório mostra o que *seria* feito.
+    `transacoes` é a lista de itens devolvida pela API. `usuario` é o autor
+    gravado em `criado_por`; sem ele, o usuário técnico `Pluggy` é criado. Com
+    `dry_run=True` nada é escrito — nem movimento, nem categoria, nem usuário —
+    e o relatório mostra o que *seria* feito.
     """
     if conta is None:
         raise ValueError("Informe a conta de destino dos movimentos.")
@@ -119,17 +131,16 @@ def _importar_uma(
 ):
     if not isinstance(bruta, dict):
         relatorio.erros.append(
-            TransacaoComErro("", "item do extrato não é um objeto JSON")
+            TransacaoComErro("", "item da resposta não é um objeto JSON")
         )
         return
 
-    id_transacao = _texto(bruta.get("idTransacao"))
+    _contar_categoria(relatorio, bruta.get("category"))
+
+    id_transacao = _texto(bruta.get("id"))
     if not id_transacao:
         relatorio.erros.append(
-            TransacaoComErro(
-                "",
-                "sem idTransacao; transação recusada (não há chave composta de reserva)",
-            )
+            TransacaoComErro("", "sem id; transação recusada (não há chave de reserva)")
         )
         return
 
@@ -146,30 +157,45 @@ def _importar_uma(
         )
         return
 
-    tipo = TIPOS_POR_OPERACAO.get(_texto(bruta.get("tipoOperacao")).upper())
+    status = _texto(bruta.get("status")).upper()
+    if status not in STATUS_QUE_ENTRAM:
+        if status == "PENDING":
+            relatorio.pulados.append(
+                TransacaoPulada(
+                    id_transacao, "status PENDING; entra quando virar POSTED"
+                )
+            )
+        else:
+            relatorio.erros.append(
+                TransacaoComErro(
+                    id_transacao,
+                    f"status inesperado: {bruta.get('status')!r} "
+                    "(esperado POSTED ou PENDING)",
+                )
+            )
+        return
+
+    tipo = TIPOS_POR_TRANSACAO.get(_texto(bruta.get("type")).upper())
     if tipo is None:
         relatorio.erros.append(
             TransacaoComErro(
                 id_transacao,
-                "tipoOperacao inesperado: "
-                f"{bruta.get('tipoOperacao')!r} (esperado D ou C)",
+                f"type inesperado: {bruta.get('type')!r} (esperado DEBIT ou CREDIT)",
             )
         )
         return
 
-    data_movimento = _ler_data(bruta)
+    data_movimento = _ler_data(bruta.get("date"))
     if data_movimento is None:
         relatorio.erros.append(
-            TransacaoComErro(
-                id_transacao, "dataTransacao/dataInclusao ausente ou inválida"
-            )
+            TransacaoComErro(id_transacao, "date ausente ou inválida")
         )
         return
 
-    valor = _ler_valor(bruta.get("valor"))
+    valor = _ler_valor(bruta.get("amount"))
     if valor is None:
         relatorio.erros.append(
-            TransacaoComErro(id_transacao, f"valor inválido: {bruta.get('valor')!r}")
+            TransacaoComErro(id_transacao, f"amount inválido: {bruta.get('amount')!r}")
         )
         return
 
@@ -177,11 +203,8 @@ def _importar_uma(
         relatorio.criados.append(id_transacao)
         return
 
-    nome_categoria, tipo_categoria, entra_no_gasto = _categoria_da_transacao(
-        bruta.get("tipoTransacao"), tipo
-    )
     categoria = _garantir_categoria(
-        cache_categorias, nome_categoria, tipo_categoria, entra_no_gasto
+        cache_categorias, CATEGORIA_PADRAO, tipo, entra_no_gasto=True
     )
 
     # A checagem acima já descarta o caso comum; o `atomic` existe para uma corrida
@@ -195,7 +218,7 @@ def _importar_uma(
                 conta=conta,
                 categoria=categoria,
                 descricao=_montar_descricao(bruta),
-                origem=Movimento.Origem.INTER,
+                origem=Movimento.Origem.PLUGGY,
                 criado_por=autor,
                 id_externo=id_transacao,
             )
@@ -208,19 +231,9 @@ def _importar_uma(
     relatorio.criados.append(id_transacao)
 
 
-def _categoria_da_transacao(tipo_transacao, tipo):
-    """(nome, tipo da categoria, entra_no_gasto) conforme a decisão do P2-8.
-
-    "Investimento" é a categoria de despesa criada fora do gasto; mesmo um
-    INVESTIMENTO com `tipoOperacao=C` (resgate) usa essa categoria, como escrito na
-    decisão. O sandbox (P2-3) ainda vai dizer se esse caso aparece.
-    """
-    nome = _texto(tipo_transacao).upper()
-    if nome == "INVESTIMENTO":
-        return CATEGORIA_INVESTIMENTO, TipoValor.DESPESA, False
-    if nome in CATEGORIAS_POR_TIPO_TRANSACAO:
-        return CATEGORIAS_POR_TIPO_TRANSACAO[nome], tipo, True
-    return CATEGORIA_PADRAO, tipo, True
+def _contar_categoria(relatorio, categoria):
+    nome = _texto(categoria) or "(sem categoria)"
+    relatorio.categorias_vistas[nome] = relatorio.categorias_vistas.get(nome, 0) + 1
 
 
 def _garantir_categoria(cache, nome, tipo, entra_no_gasto):
@@ -240,35 +253,29 @@ def _texto(valor) -> str:
 
 
 def _ler_data(bruta) -> date | None:
-    """`dataTransacao` e, se ela estiver vazia, `dataInclusao`.
-
-    Data presente mas inválida também é erro: cair para o outro campo mascararia
-    um formato inesperado da API.
-    """
-    for campo in ("dataTransacao", "dataInclusao"):
-        texto = _texto(bruta.get(campo))
-        if not texto:
-            continue
-        try:
-            return date.fromisoformat(texto[:10])
-        except ValueError:
-            return None
-    return None
+    """`date` ISO 8601 (`2026-11-05T00:00:00.000Z`) vira `date`; inválida é erro."""
+    texto = _texto(bruta)
+    if not texto:
+        return None
+    try:
+        return date.fromisoformat(texto[:10])
+    except ValueError:
+        return None
 
 
 def _ler_valor(bruto) -> Decimal | None:
     """Valor positivo com 2 casas, ou None quando o conteúdo não é um valor válido.
 
-    Aceita vírgula decimal e separador de milhar no formato brasileiro, porque o
-    formato exato que a API devolve ainda não foi visto (P2-3).
+    A Pluggy devolve número JSON (float) em `amount`; a conversão passa por `str`
+    para não herdar o erro de representação binária. Texto também é aceito.
     """
+    if bruto is None or isinstance(bruto, bool):
+        return None
+    if isinstance(bruto, (int, float)):
+        bruto = str(bruto)
     texto = _texto(bruto)
     if not texto:
         return None
-    if "," in texto and "." in texto:
-        texto = texto.replace(".", "").replace(",", ".")
-    else:
-        texto = texto.replace(",", ".")
     try:
         valor = Decimal(texto)
     except InvalidOperation:
@@ -282,5 +289,5 @@ def _ler_valor(bruto) -> Decimal | None:
 
 
 def _montar_descricao(bruta) -> str:
-    partes = [_texto(bruta.get("titulo")), _texto(bruta.get("descricao"))]
-    return " ".join(parte for parte in partes if parte)[:TAMANHO_MAXIMO_DESCRICAO]
+    texto = _texto(bruta.get("description")) or _texto(bruta.get("descriptionRaw"))
+    return texto[:TAMANHO_MAXIMO_DESCRICAO]

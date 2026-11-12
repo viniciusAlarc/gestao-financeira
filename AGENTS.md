@@ -31,9 +31,12 @@ entre meses), o previsto virou **gasto fixo mensal** (cadastro único que gera o
 mês; o avulso ficou secundário) e ganhou a **tela de categorias** (criar, editar e desativar; tipo
 fixo depois de criada). A **UI/UX foi revista** em 2026-11-08: cabeçalho com marca, barra inferior
 no celular, topo no desktop, layout mais espaçado, mensagens por tipo e tema do PWA claro. A fase 7
-(Inter) tem o importador de um JSON do extrato pronto e testado; o
-host do sandbox foi corrigido para o domínio oficial e a chamada real aguarda `.env` e certificado.
-As migrations 0001 a 0005 estão aplicadas no banco real. A suíte tem 179 testes passando. O que foi
+(integrar o banco) mudou de caminho em 2026-11-09: **o Inter foi descartado** (a API é exclusiva de
+PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso pessoal gratuito**
+(Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; o mapeamento
+da API da Pluggy é o próximo passo (P2-12/P2-13). As migrations 0001 a 0005 estão aplicadas no
+banco real. A suíte tem 163 testes passando. O lançamento
+rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. O que foi
 feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
@@ -53,20 +56,19 @@ feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
    e `client_secret` vivem só no `.env`, que o `.gitignore` bloqueia. Não imprimir valor em
    terminal, log, print ou resposta: referenciar o nome da variável.
 2. **Dado financeiro é dado pessoal.** Extrato, saldo e transação não vão para serviço externo,
-   IA de terceiro ou web sem decisão explícita do dono (G20).
+   IA de terceiro ou web sem decisão explícita do dono (G20). **Decisão do dono em 2026-11-09:** a
+   Pluggy (Open Finance) é o provedor escolhido, em modo pessoal gratuito, somente leitura.
    **O assistente (DeepSeek, Claude) lê e escreve o código, nunca o dado real:** não abrir
    `db.sqlite3`, extrato, `.env` nem dump do banco, nem colar dado real em teste (decisão do dono,
    2026-11-01). Teste usa dado inventado.
 3. **Ação irreversível espera o dono (G3).** Baixar e ativar certificado, criar integração no
-   Internet Banking, trocar `INTER_AMBIENTE` para `producao`, mexer em servidor ou em banco:
+   Internet Banking, conectar conta no provedor de Open Finance, mexer em servidor ou em banco:
    mostrar o comando e o efeito, e esperar o "pode".
-4. **Não inventar endpoint nem campo (G1).** Os caminhos usados em `scripts/teste_inter.py`
-   (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`) vieram da documentação
-   pública e **nunca foram conferidos no ambiente real**. Rota ou campo fora da doc oficial é
-   retrabalho, não iniciativa.
+4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
+   oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; em 2026-11-08 a suíte está em 179, todos passando.
-   `scripts/teste_inter.py` não é teste, é diagnóstico da fase 7.
+   Linha de base em 2026-11-03: 62 testes; depois da limpeza do Inter, em 2026-11-09 a suíte está
+   em 163, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
@@ -84,16 +86,16 @@ Porta, `ALLOWED_HOSTS` e erros conhecidos: `docs-dev/guias/OPERACAO.md`. A `SECR
 `.env` (`DJANGO_SECRET_KEY`) ou de `.django-secret`, gerado no primeiro start e ignorado pelo git.
 Nunca escrever chave no código (G13).
 
-### Diagnóstico da API do Inter (fase 7, em andamento)
+### Integração com o banco (fase 7)
 
-```bash
-.venv/bin/python scripts/teste_inter.py
-```
+O caminho é o **Pluggy em modo pessoal gratuito** (Meu Pluggy + conector 200), decidido em
+2026-11-09. O mapeamento da API e os comandos de importação serão escritos na P2-13; até lá, não há
+comando de importação no projeto.
 
-O script exige `.env` preenchido a partir de `.env.example`. Sem certificado baixado ele para
-pedindo as variáveis: isso é o esperado, não defeito. O host do sandbox é
-`https://cdpj-sandbox.partners.uatinter.co`, conferido no portal em 2026-11-03; os caminhos de
-token, saldo e extrato ainda precisam ser exercitados com credencial real (P2-3).
+### Importação (fase 7)
+
+O mapeamento da Pluggy (extrato e saldo) e o comando de importação serão escritos na P2-13. A
+idempotência continua sendo por `Movimento.id_externo`, agora com o id da transação da Pluggy.
 
 ## Onde este projeto roda (decidido em 2026-11-01, revisto no mesmo dia)
 

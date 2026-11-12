@@ -287,6 +287,28 @@ class LancamentoRapidoTests(BaseFinancas):
         self.assertEqual(resposta.status_code, 302)
         self.assertIn(reverse("financas:login"), resposta.url)
 
+    def test_opcoes_de_categoria_em_ordem_alfabetica_de_verdade(self):
+        """Achar a categoria não pode depender da ordem byte a byte do banco (2026-11-08).
+
+        O SQLite joga "Água" para depois de "Z" e minúscula para depois de
+        maiúscula; a lista do formulário tem que ser A-Z como uma pessoa lê.
+        """
+        Categoria.objects.create(nome="Água", tipo=TipoValor.DESPESA)
+        Categoria.objects.create(nome="Aluguel", tipo=TipoValor.DESPESA)
+        Categoria.objects.create(nome="Zeladoria", tipo=TipoValor.DESPESA)
+        Categoria.objects.create(nome="alimentação", tipo=TipoValor.DESPESA)
+
+        form = MovimentoRapidoForm()
+        nomes = [
+            rotulo.split(" (")[0]
+            for _, rotulo in form.fields["categoria"].choices
+        ]
+
+        self.assertEqual(
+            nomes,
+            ["Escolha a categoria", "Água", "alimentação", "Aluguel", "Mercado", "Salário", "Zeladoria"],
+        )
+
     def test_form_aceita_virgula_com_milhar(self):
         form = MovimentoRapidoForm(
             data={"valor": "1.234,56", "categoria": self.categoria_despesa.pk}

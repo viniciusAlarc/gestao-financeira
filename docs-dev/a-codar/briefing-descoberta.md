@@ -29,6 +29,8 @@ Não é falta de app: é falta de **visão**. O critério de sucesso do produto 
 
 ## 4. De onde vêm os dados
 
+> **Substituído em 2026-11-09.** A API do Inter é exclusiva de PJ e **não atende MEI**. O caminho passou a ser a **Pluggy pelo Open Finance, modo pessoal gratuito** (Meu Pluggy + conector 200): o dono conectou a conta **Itaú pelo CPF** e os dados apareceram. A D4 da seção 5 fica substituída por esta decisão. O texto abaixo fica como registro da descoberta original.
+
 Integração **direta com a conta PJ do Inter**, para não importar arquivo de extrato. Ele respondeu "acredito que tudo isso" quando perguntei se entram extrato e saldo da PJ, conta PF, cartão, Pix e boletos. Ou seja: **intenção de consolidar tudo, escopo a fechar**.
 
 Fatos conferidos no portal do Inter em 01/11/2026:

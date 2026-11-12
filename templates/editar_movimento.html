@@ -17,6 +17,9 @@
   <label for="{{ form.categoria.id_for_label }}">{{ form.categoria.label }}</label>
   {{ form.categoria }}
   {% if form.categoria.errors %}<p class="erro" id="{{ form.categoria.auto_id }}_error" role="alert">{{ form.categoria.errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.descricao.id_for_label }}">{{ form.descricao.label }} <span class="campo-opcional">(opcional)</span></label>
+  {{ form.descricao }}
+  {% if form.descricao.errors %}<p class="erro" id="{{ form.descricao.auto_id }}_error" role="alert">{{ form.descricao.errors|join:" " }}</p>{% endif %}
   <button type="submit" class="botao-primario">Salvar</button>
 </form>
 

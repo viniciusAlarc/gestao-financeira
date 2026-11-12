@@ -277,3 +277,54 @@ class PrevistoAvulsoTests(BaseGastosFixos):
         self.assertIsNone(previsto.competencia)
         self.assertEqual(previsto.descricao, "Conserto")
         self.assertFalse(GastoFixo.objects.exists())
+
+
+class TotalDosFixosTests(BaseGastosFixos):
+    """O total mensal dos fixos ativos fica no botão que abre a lista (2026-11-08).
+
+    Pedido do dono: ele quer ver em algum lugar quanto os gastos fixos somam
+    por mês. O total sai do cadastro, não dos previstos do mês: inativo não
+    entra, porque não gera cobrança. Com a lista recolhida, o número continua
+    à vista no resumo.
+    """
+
+    def test_total_soma_so_os_ativos(self):
+        self.criar_fixo()  # 1.800,00 ativo
+        self.criar_fixo(descricao="Academia", valor=Decimal("250.00"), ativo=False)
+
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.context["total_fixos"], Decimal("1800.00"))
+        self.assertContains(resposta, "R$ 1.800,00 por mês")
+        self.assertNotContains(resposta, "R$ 2.050,00")
+
+    def test_sem_gasto_fixo_o_resumo_nao_mostra_valor(self):
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.context["total_fixos"], Decimal("0.00"))
+        self.assertNotContains(resposta, "por mês")
+
+    def test_bloco_de_fixos_vem_recolhido(self):
+        self.criar_fixo()
+
+        resposta = self.client.get(self.url)
+
+        self.assertNotContains(resposta, 'bloco-recolhivel" open')
+
+    def test_erro_no_cadastro_abre_o_bloco(self):
+        """Sem isso, o erro do formulário ficaria escondido atrás do botão."""
+        resposta = self.client.post(
+            self.url, self.dados_fixo(**{"fixo-valor": "abc"})
+        )
+
+        self.assertContains(resposta, 'bloco-recolhivel" open')
+
+    def test_pagar_o_previsto_nao_muda_o_total(self):
+        fixo = self.criar_fixo()
+        garantir_previstos_do_mes()
+        previsto = Previsto.objects.get(fixo=fixo)
+        self.client.post(reverse("financas:pagar_previsto", args=[previsto.pk]))
+
+        resposta = self.client.get(self.url)
+
+        self.assertEqual(resposta.context["total_fixos"], Decimal("1800.00"))

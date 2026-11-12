@@ -137,7 +137,7 @@ def lancamentos(request):
         movimento.save()
         messages.success(
             request,
-            f"Lançado: {movimento.categoria.nome} · {dinheiro(movimento.valor)}",
+            f"Lançado: {movimento.descricao or movimento.categoria.nome} · {dinheiro(movimento.valor)}",
         )
         return redirect(_url_do_mes("financas:lancamentos", movimento.data))
 
@@ -209,7 +209,7 @@ def editar_movimento(request, pk):
         movimento.save()
         messages.success(
             request,
-            f"Atualizado: {movimento.categoria.nome} · {dinheiro(movimento.valor)}",
+            f"Atualizado: {movimento.descricao or movimento.categoria.nome} · {dinheiro(movimento.valor)}",
         )
         return redirect(_url_do_mes("financas:lancamentos", movimento.data))
 
@@ -270,7 +270,8 @@ def previstos(request):
 
     Decisão de 2026-11-08: o previsto nasce de um cadastro fixo e cada mês gera
     a instância daquele mês; o avulso continua como opção secundária. Ignorar e
-    reabrir seguem a máquina de estados (par simétrico, G10).
+    reabrir seguem a máquina de estados (par simétrico, G10). A tela fecha a
+    lista de fixos com o total mensal dos ativos (2026-11-08).
     """
     garantir_previstos_do_mes()
     conta_padrao = Conta.objects.filter(padrao=True, ativa=True).first()
@@ -314,6 +315,12 @@ def previstos(request):
     gastos_fixos = GastoFixo.objects.select_related(
         "categoria", "conta"
     ).order_by("descricao")
+    # Quanto os fixos custam por mês (2026-11-08): só os ativos, porque são os
+    # que geram previsto; o inativo fica na lista como histórico do cadastro.
+    total_fixos = (
+        GastoFixo.objects.filter(ativo=True).aggregate(total=Sum("valor"))["total"]
+        or ZERO
+    )
     previstos_abertos = (
         Previsto.objects.filter(
             status=Previsto.Status.ABERTO, tipo=TipoValor.DESPESA
@@ -336,6 +343,7 @@ def previstos(request):
             "form": form,
             "form_fixo": form_fixo,
             "gastos_fixos": gastos_fixos,
+            "total_fixos": total_fixos,
             "previstos": previstos_abertos,
             "ignorados": previstos_ignorados,
             "conta_padrao": conta_padrao,

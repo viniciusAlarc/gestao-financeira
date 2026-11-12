@@ -12,7 +12,7 @@
 | Backend Django   | `manage.py`, `config/`     | rodando, com os 4 modelos       |
 | Banco            | `db.sqlite3` (fora do git) | 5 tabelas de `financas` criadas; migrations 0001 a 0005 aplicadas |
 | Modelo de dado   | `financas/models.py`       | pronto, com `id_externo` e `entra_no_gasto` |
-| Suíte de testes  | `financas/tests.py` + arquivos por assunto | 179 testes, todos passando |
+| Suíte de testes  | `financas/tests.py` + arquivos por assunto | 213 testes, todos passando |
 | Tela inicial     | `financas/views.py`, `templates/` | pronta; visual revisto em 08/11 (375/360/768/1280) |
 | Lançamentos      | `financas/views.py`, `templates/lancamentos.html` | implementado; data editável, editar/desfazer e navegação de mês (08/11) |
 | Gastos previstos | `financas/views.py`, `templates/previstos.html` | cadastro fixo mensal que gera o previsto do mês; avulso secundário (08/11) |
@@ -21,7 +21,7 @@
 | UI/UX            | `financas/static/financas/app.css`, `templates/base.html` | revisão de 08/11: navegação responsiva, layout espaçado, mensagens por tipo |
 | Segundo login    | admin do Django            | conta `Kethlen` criada; falta a senha (P3-9) |
 | PWA              | `financas/static/financas/` | manifest e ícones conferidos na entrega HTTP; instalação no celular pendente (P3-9) |
-| Integração Inter | `scripts/teste_inter.py`   | escopo e mapeamento fechados; aguardando certificado e diagnóstico |
+| Integração bancária | `financas/pluggy_api.py`, `importacao_pluggy.py`, `importar_pluggy` | cliente, importador e comando prontos e testados; falta rodar com credencial e `itemId` (P2-12) |
 
 ## P1 — Crítico (bloqueia uso ou expõe dado)
 
@@ -33,10 +33,12 @@
 
 | ID   | Dono | Item                                                                                                                                                                                                                                                                         | Aberto em  |
 | ---- | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| P2-1 | 👤   | Criar a integração no **portal Sandbox** e baixar e ativar certificado e chaves. O sandbox se cria ali, com **login da Comunidade Inter**. O portal só responde das **8h às 20h, de segunda a sexta**. **Pausado** até a fase 7 do plano.                                    | 2026-11-01 |
-| P2-2 | 👤   | Converter para PEM se o arquivo vier em `.pfx`, e preencher o `.env` a partir do `.env.example`. Os valores ficam fora do git (G13).                                                                                                                                         | 2026-11-01 |
-| P2-3 | 💻   | Rodar `scripts/teste_inter.py` contra o sandbox e conferir os três caminhos (`/oauth/v2/token`, `/banking/v2/saldo`, `/banking/v2/extrato`). Vieram da doc pública e nunca foram verificados. Rodar quando `.env` e certificado estiverem prontos. | 2026-11-01 |
-| P2-9 | 👤   | **Celular sem acesso por falta de `.env`.** Hoje o `.env` não existe; sem `DJANGO_ALLOWED_HOSTS` com o IP da máquina, o celular leva `DisallowedHost`. Passo a passo em `docs-dev/guias/OPERACAO.md`. | 2026-11-05 |
+| P2-9 | 👤   | **Celular sem acesso por falta de `.env`.** O `.env` já existe (criado em 2026-11-09), mas sem `DJANGO_ALLOWED_HOSTS` com o IP da máquina o celular leva `DisallowedHost`. Passo a passo em `docs-dev/guias/OPERACAO.md`. | 2026-11-05 |
+| P2-12 | 👤   | **Aplicação na Pluggy.** Criar a aplicação no dashboard da Pluggy, habilitar o conector do **Meu Pluggy** (200) e obter `client_id`, `client_secret` e o `itemId` da conexão do Itaú; preencher no `.env` (G13). Sem isso não há como ler saldo nem extrato. | 2026-11-09 |
+| P2-13 | 💻   | **Verificação real da importação da Pluggy.** Código pronto e testado (cliente, importador e `importar_pluggy`, 50 testes novos). Falta rodar `--dry-run` contra a conta real, depois do P2-12, conferir o primeiro extrato e o fuso do campo `date` (UTC x GMT-3). | 2026-11-09 |
+| P2-14 | 👤   | **A conta "Inter" no app.** Existe uma `Conta` chamada "Inter" no banco real; renomear para "Itaú" ou criar outra é mudança de dado (G3). Decidir o que fazer antes da primeira importação. | 2026-11-09 |
+| P2-15 | 👤   | **Categorias da Pluggy.** Todo movimento importado cai em "Não categorizado"; o campo `category` da Pluggy não é mapeado. O `importar_pluggy --dry-run` mostra a contagem por categoria para servir à decisão. | 2026-11-10 |
+| P2-16 | 👤   | **Aplicar a migration 0006 no banco real** (novo valor `pluggy` em `Movimento.origem`). O arquivo está escrito; o classificador de permissão exige um "pode" do dono nomeando a mudança no banco. Comando: `.venv/bin/python manage.py migrate financas`. | 2026-11-10 |
 
 ## P3 — Médio
 

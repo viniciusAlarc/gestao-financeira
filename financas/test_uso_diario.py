@@ -92,6 +92,63 @@ class DataNoLancamentoTests(BaseUsoDiario):
         self.assertIsNone(form.cleaned_data["data"])
 
 
+class DescricaoNoLancamentoTests(BaseUsoDiario):
+    """Descrição opcional no lançamento rápido (2026-11-08).
+
+    Ela existe para diferenciar dois lançamentos da mesma categoria na lista;
+    sem ela, o texto exibido continua sendo o nome da categoria.
+    """
+
+    def test_lanca_com_descricao_e_lista_mostra_ela(self):
+        self.client.post(
+            reverse("financas:lancamentos"),
+            {
+                "valor": "30,00",
+                "categoria": self.despesa.pk,
+                "descricao": "Padaria da esquina",
+            },
+        )
+        movimento = Movimento.objects.get()
+        self.assertEqual(movimento.descricao, "Padaria da esquina")
+        resposta = self.client.get(reverse("financas:lancamentos"))
+        self.assertContains(resposta, "Padaria da esquina")
+
+    def test_sem_descricao_a_lista_mostra_a_categoria(self):
+        self.lancar(valor="30.00")
+        resposta = self.client.get(reverse("financas:lancamentos"))
+        self.assertContains(resposta, "Mercado")
+
+    def test_editar_mostra_a_descricao_atual_e_grava_a_nova(self):
+        movimento = self.lancar(valor="30.00", descricao="Almoço")
+        url = reverse("financas:editar_movimento", args=[movimento.pk])
+
+        resposta = self.client.get(url)
+        self.assertContains(resposta, 'value="Almoço"')
+
+        self.client.post(
+            url,
+            {
+                "valor": "30,00",
+                "categoria": self.despesa.pk,
+                "descricao": "Almoço de sábado",
+            },
+        )
+        movimento.refresh_from_db()
+        self.assertEqual(movimento.descricao, "Almoço de sábado")
+
+    def test_descricao_acima_de_120_e_recusada(self):
+        resposta = self.client.post(
+            reverse("financas:lancamentos"),
+            {
+                "valor": "30,00",
+                "categoria": self.despesa.pk,
+                "descricao": "D" * 121,
+            },
+        )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertFalse(Movimento.objects.exists())
+
+
 class NavegacaoDeMesTests(BaseUsoDiario):
     def test_lista_mostra_o_mes_pedido(self):
         self.lancar(valor="10.00", data=date(2026, 10, 5))

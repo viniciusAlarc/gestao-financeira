@@ -3,6 +3,302 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-10 — Importação da Pluggy escrita e testada (P2-13)
+
+**Pedido do dono (2026-11-10):** continuar o P2-13 com a doc da transação em mãos.
+
+**O que mudou:**
+- Doc oficial de `GET /v2/transactions` conferida: paginação por cursor (`next`),
+  filtros `dateFrom`/`dateTo` (inclusivos, sobre a data da transação) e `amount` com
+  sinal (saída negativa) acompanhando `type` (`DEBIT`/`CREDIT`).
+- `financas/pluggy_api.py`: transações passam a usar `/v2/transactions` com cursor
+  (`next`), no lugar do `/transactions` paginado por página (depreciado). Contas
+  seguem no `/accounts?itemId`, por página.
+- `financas/importacao_pluggy.py` (novo): mapeamento para `Movimento` — `id` vira
+  `id_externo`; `date` vira `data`; `type` DEBIT/CREDIT vira despesa/receita;
+  `abs(amount)` vira o valor; **só `POSTED` entra** (decisão do dono em 2026-11-10) e
+  `PENDING` é pulado com motivo; descrição com `description` (reserva
+  `descriptionRaw`); categoria `Não categorizado` do tipo; usuário técnico `Pluggy`;
+  origem `pluggy`. O relatório conta as `category` da Pluggy para servir ao P2-15.
+- `financas/management/commands/importar_pluggy.py` (novo): `--conta` (do app),
+  `--pluggy-conta` (id; sem ele, usa a única conta `BANK` do item), `--desde`,
+  `--ate`, `--dry-run`. Sai com erro quando alguma transação é recusada.
+- `Movimento.Origem.PLUGGY` adicionado (`models.py` + migration `0006_origem_pluggy`).
+  A migration **não foi aplicada** no banco real: o classificador de permissão exige
+  um "pode" do dono nomeando a mudança no banco (P2-16).
+- `.env.example`: `PLUGGY_ITEM_ID` documentado.
+- Testes novos: `test_importacao_pluggy.py` (35) e `test_pluggy_api.py` ampliado; o
+  comando é testado com o cliente trocado por dublê, sem rede.
+
+**Arquivos:** `financas/models.py`, `financas/migrations/0006_origem_pluggy.py`,
+`financas/pluggy_api.py`, `financas/importacao_pluggy.py`,
+`financas/management/commands/importar_pluggy.py`, `financas/test_pluggy_api.py`,
+`financas/test_importacao_pluggy.py`, `.env.example`, `PENDENCIAS.md`,
+`docs-dev/painel.json`.
+
+**Testes:** `.venv/bin/python manage.py test` → **213 testes, OK**.
+
+**Aberto:** aplicar a migration 0006 (P2-16, do dono), credenciais e `itemId` da
+Pluggy (P2-12, do dono), dry-run contra a conta real, mapeamento de categorias
+(P2-15) e a conta "Inter" no app (P2-14). Nada commitado.
+
+## 2026-11-09 — Cliente HTTP da Pluggy (P2-13, parte 1)
+
+**Pedido do dono (2026-11-09):** continuar o P2-13 no que não depende de credencial.
+
+**O que mudou:**
+- `financas/pluggy_api.py` (novo): cliente da API com `POST /auth` (credenciais no corpo,
+  chave no cabeçalho `X-API-KEY` e reaproveitada por 1h50), `GET /accounts?itemId=...` e
+  `GET /transactions?accountId=...&from=...&to=...`, paginação por `page`/`pageSize`
+  (500, o máximo que a API aceita) e `ErroPluggy` com status e mensagem da API. Caminhos e
+  campos conferidos na documentação oficial em 2026-11-09: `/auth` → `apiKey`; contas com
+  `id`, `type`, `balance`, `currencyCode`; transações com `id`, `description`, `amount`,
+  `date`, `type` (DEBIT/CREDIT), `status` (PENDING/POSTED). O módulo não grava nada e não
+  põe segredo em mensagem de erro (G13).
+- `financas/test_pluggy_api.py` (novo, 15 testes): autenticação no corpo, `X-API-KEY` nas
+  chamadas seguintes, cache e renovação da chave, paginação, filtros `from`/`to`, erro HTTP
+  com status, erro de rede e segredo fora da mensagem. Nenhum teste chama a internet.
+
+**Arquivos:** `financas/pluggy_api.py`, `financas/test_pluggy_api.py`, `PENDENCIAS.md`.
+
+**Testes:** `.venv/bin/python manage.py test` → **178 testes, OK** (163 da base + 15 novos).
+
+**Aberto:** a parte 2 do P2-13 (mapeamento para `Movimento` e comando `importar_pluggy`)
+depende de: doc da transação (sinal do `amount` em conta bancária, semântica de
+`from`/`to` e de `status`), decisão do dono sobre importar `PENDING` e a mudança de modelo
+para `origem = pluggy` (G3). Nada commitado.
+
+## 2026-11-09 — Inter descartado: a integração passa a ser Pluggy (Open Finance)
+
+**Pedido do dono (2026-11-09):** importar saldo e extrato do banco para o app, sem exportar arquivo,
+e limpar o que não serve.
+
+**O que mudou:**
+- Pesquisa dos bancos: BB, Itaú, Bradesco, Santander, Sicredi, Sicoob, C6, BTG e Cora exigem conta
+  PJ/contrato/certificado; o C6 não libera API para conta MEI; Cora custa R$ 44,90/mês e BTG
+  R$ 200/mês; Asaas e Efí são grátis, mas obrigam a mover a conta do MEI.
+- **Decisão do dono:** a **Pluggy pelo Open Finance**, no modo pessoal gratuito (Meu Pluggy +
+  conector 200). O dono conectou a conta **Itaú pelo CPF** e os dados apareceram — é o teste real
+  do caminho gratuito. O Inter foi descartado: a API dele é exclusiva de PJ e não atende MEI
+  (confirmado na ajuda oficial).
+- Limpeza do Inter (aprovada pelo dono), 10 arquivos apagados: `financas/inter_api.py`,
+  `financas/management/commands/conferir_saldo_inter.py`, `financas/test_api_inter.py` (esses três
+  não estavam no git, sem volta), `financas/importacao_inter.py`, `financas/test_importacao.py`,
+  `financas/management/commands/importar_inter.py`, `scripts/teste_inter.py`,
+  `docs-dev/guias/INTER-PASSO-A-PASSO.md`, `docs-dev/a-codar/03-decisao-d4-escopo-inter.md` e
+  `docs-dev/a-codar/04-decisao-d4-p2-8-importacao.md` (recuperáveis pelo git).
+- `AGENTS.md`: estado atual, regras 2 a 5 e as seções de integração/importação reescritas para a
+  Pluggy. `.env.example`: seção `INTER_*` removida; placeholders comentados `PLUGGY_CLIENT_ID` e
+  `PLUGGY_CLIENT_SECRET`.
+
+**Arquivos:** os 10 apagados, `AGENTS.md`, `.env.example`, `PENDENCIAS.md`, `docs-dev/painel.json`,
+`docs-dev/a-codar/briefing-descoberta.md`, `docs-dev/a-codar/01-plano-desenvolvimento.md`.
+O `.env` real ainda tem as variáveis `INTER_*` (limpeza não executada, P4-7).
+
+**Testes:** `.venv/bin/python manage.py test` → **163 testes, OK**. A suíte caiu de 230 porque saíram
+os 67 testes do Inter (26 de `test_importacao` e 41 de `test_api_inter`); é a linha de base nova até
+os testes da Pluggy entrarem.
+
+**Aberto:** P2-12 (aplicação na Pluggy, do dono), P2-13 (mapeamento/importação), P2-14 (a conta
+"Inter" no app, do dono), P4-7 (limpeza do `.env` e dos segredos do Inter). Nada foi commitado.
+
+## 2026-11-09 — P2-3 fechado: diagnóstico do Inter com credencial e formato do token corrigido
+
+**Pedido do dono (2026-11-09):** preencher as credenciais no `.env` e rodar o diagnóstico do sandbox.
+
+**O que mudou:**
+- O dono preencheu `INTER_CLIENT_ID` e `INTER_CLIENT_SECRET` no `.env`, direto do portal (36
+  caracteres cada, formato UUID, sem espaço). Os valores nunca passaram por chat, documento ou log.
+- O primeiro `scripts/teste_inter.py` falhou no token com HTTP 401 e a mensagem "no parameters or
+  duplicate parameters or a missing required parameters". O formato foi testado: o sandbox **recusa
+  as credenciais em cabeçalho** e **aceita no corpo do formulário** (`client_secret_post`); com as
+  mesmas credenciais, query string e corpo deram 200. A credencial estava certa; o pedido é que
+  estava no formato errado.
+- `financas/inter_api.py` e `scripts/teste_inter.py`: `client_id` e `client_secret` movidos do
+  cabeçalho para o corpo do `POST /oauth/v2/token`. O teste do token em `financas/test_api_inter.py`
+  foi atualizado para travar o formato novo (e recusar credencial em cabeçalho).
+- Diagnóstico com credencial: **TLS, token, saldo e extrato OK**. Simulação
+  `importar_inter --api --dry-run --conta Inter`: **1.237 transações lidas, 1.237 seriam criadas,
+  0 puladas, 0 erros**, nada gravado.
+- Achados do sandbox: o **período é ignorado** (1.237 transações datadas de 2023 vieram para uma
+  janela de um dia em 2026); `idTransacao` veio preenchido em todas; a estabilidade entre chamadas e
+  o filtro `dataTransacao`/`dataInclusao` só se confirmam com dado real (P2-11).
+- `PENDENCIAS.md`: P2-1, P2-2 e P2-3 fechados (saíram da lista); P2-11 atualizada.
+
+**Arquivos:** `financas/inter_api.py`, `scripts/teste_inter.py`, `financas/test_api_inter.py`,
+`AGENTS.md`, `PENDENCIAS.md`, `docs-dev/guias/INTER-PASSO-A-PASSO.md`, `docs-dev/painel.json`.
+O `.env` mudou (fora do git).
+
+**Testes:** `.venv/bin/python manage.py test` → **230 testes, OK** (linha de base: 230).
+
+**Aberto:** P2-11 (ativação em produção, do dono). Nada foi commitado.
+
+## 2026-11-09 — Importação direto da API do Inter (`--api`) e conferência de saldo
+
+**Pedido do dono (2026-11-09):** continuar a integração com a API do Inter e fazer tudo o que não
+depende dele. O que faltava era a camada entre o diagnóstico e o importador: o comando só sabia ler
+um JSON salvo à mão.
+
+**O que mudou:**
+- `financas/inter_api.py` (novo): cliente da API com mTLS, token OAuth reaproveitado enquanto vale,
+  `GET /banking/v2/saldo` e `GET /banking/v2/extrato/completo` com paginação tradicional
+  (`pagina`/`tamanhoPagina`, 10.000 por página). Períodos maiores que 90 dias são fatidos em janelas
+  contíguas; o header `x-conta-corrente` só vai quando `INTER_CONTA_CORRENTE` está preenchido.
+  Erros viram `ErroInter` com status e `title`/`detail`; configuração ausente vira
+  `ErroConfiguracaoInter`. O módulo não importa Django e não grava nada.
+- Caminhos, parâmetros e envelope conferidos na **especificação OpenAPI oficial** em 2026-11-09 (até
+  então só o host tinha sido conferido). O script `scripts/teste_inter.py` fica como está: ele é o
+  diagnóstico do extrato simples; o importador usa o **extrato completo**, que é o que tem
+  `idTransacao`.
+- `importar_inter` ganhou `--api` (exclusivo com `--arquivo`), `--desde` e `--ate`. O período padrão
+  é hoje nas duas pontas, que é a data de corte da primeira importação decidida no P2-8. `--desde` e
+  `--ate` sem `--api` são recusados, para não serem ignorados em silêncio.
+- `conferir_saldo_inter` (novo): compara `Conta.saldo` com o `disponivel` do `/saldo`, mostra a
+  diferença e o `saldo_inicial` que faria os dois baterem. **Só leitura**: o ajuste continua sendo
+  ação do dono (G3). Serve à conciliação da ativação (P2-8, item 5).
+- `financas/test_api_inter.py` (novo, 41 testes): configuração, token (pedido, cache, renovação,
+  recusa), saldo, extrato (parâmetros, paginação, janelas), erros e os dois comandos. Sessão falsa,
+  sem rede, payload inventado.
+
+**Arquivos:** `financas/inter_api.py` (novo), `financas/management/commands/importar_inter.py`,
+`financas/management/commands/conferir_saldo_inter.py` (novo), `financas/test_api_inter.py` (novo),
+`AGENTS.md`, `PENDENCIAS.md`, `docs-dev/a-codar/04-decisao-d4-p2-8-importacao.md`,
+`docs-dev/guias/INTER-PASSO-A-PASSO.md`, `docs-dev/painel.json`.
+
+**Testes:** `.venv/bin/python manage.py test` → **230 testes, OK** (linha de base antes da mudança:
+189, OK; 41 novos). `check` limpo; `makemigrations --check` sem drift.
+
+**Fumaça (banco descartável de `/tmp`, dado inventado):** o modo `--arquivo` criou 2 movimentos e,
+na segunda rodada, pulou os 2 como já importados. `--api` e `conferir_saldo_inter` sem `.env` param
+com a lista das variáveis que faltam, antes de qualquer chamada. O `db.sqlite3` real não foi aberto.
+
+**O que foi confirmado sem credencial:** em 2026-11-09, dentro da janela do sandbox, `GET` em
+`/oauth/v2/token` respondeu 405 (é `POST`) e `/banking/v2/saldo`, `/banking/v2/extrato` e
+`/banking/v2/extrato/completo` responderam 400 sem corpo — a rota existe; 404 significaria caminho
+errado. Nenhum dado foi lido nem enviado.
+
+**O que ainda não foi provado:** tudo o que depende de credencial: se o token sai, se o filtro
+`dataInicio`/`dataFim` usa `dataTransacao` ou `dataInclusao` e se `idTransacao` vem sempre
+preenchido (P2-3). Por isso a chamada real continua aberta.
+
+**Aberto:** P2-1/P2-2 (integração e certificado, 👤), P2-3 (diagnóstico e `--dry-run` no sandbox),
+P2-11 (ativação em produção, 👤). O padrão de período é hoje; se o dono quiser sobreposição de
+alguns dias nas execuções seguintes, é uma linha no comando — decidir depois de saber qual data o
+filtro usa (P2-3).
+
+## 2026-11-08 — Bloco de gastos fixos recolhido atrás de um botão
+
+**Pedido do dono (2026-11-08, testando o app):** a lista de gastos fixos empurrava "Abertos" para
+baixo, e ele tinha que rolar muito para chegar ao "Paguei"/"Ignorar". Queria um botão que abrisse
+só essa lista.
+
+**O que mudou:**
+- `templates/previstos.html`: a seção "Gastos fixos" (formulário de cadastro + lista) virou um
+  `<details class="bloco-recolhivel">`, fechado por padrão. O `<summary>` é o botão: título à
+  esquerda, total do mês à direita. Com isso o total da entrega anterior continua à vista sem
+  abrir nada, e a linha `.total-mes` interna saiu (ficaria repetida).
+- O bloco abre sozinho quando o formulário de cadastro volta com erro (`{% if form_fixo.errors %}
+  open`); sem isso, o erro ficaria escondido atrás do botão.
+- `app.css`: `.bloco-recolhivel` com o mesmo desenho de cartão neutro do resto da tela (borda,
+  raio, sombra discreta), alvo de 44px, marcador nativo do `<details>` preservado (é a pista de
+  que a linha abre). Sem peça visual nova em essência: é o cartão que já existe com cara de botão.
+- `financas/test_gastos_fixos.py`: 2 testes novos (bloco fechado no GET; aberto quando o cadastro
+  tem erro) e os 2 existentes ajustados para o total no `<summary>`.
+
+**Arquivos:** `templates/previstos.html`, `financas/static/financas/app.css`,
+`financas/test_gastos_fixos.py`.
+
+**Testes:** `.venv/bin/python manage.py test` → **189 testes, OK** (linha de base antes da mudança:
+187, OK). Sem migration.
+
+**Verificação visual (banco descartável de `/tmp`, servidor em 8010, dado inventado):** a 500px o
+resumo renderiza alinhado com os cartões da tela e o total cabe inteiro. O Edge headless do Windows
+não aceita janela menor que 500px, então **375px/360px não foram renderizados**: por medida, o
+conteúdo do resumo ocupa ~277px dos 335px disponíveis, com folga. Conferir no celular do dono.
+
+**Sobre a ordenação de categorias da rodada anterior:** o pedido de ordem alfabética no seletor
+**já estava atendido** pela outra sessão (`_opcoes_de_categoria` em `financas/forms.py`, entregue
+23:13). Conferido no HTML servido: as opções saem Cartão, Mercado, Moradia, Saúde, Transporte.
+Nada mudou aqui; se o dono ainda via a ordem antiga, era a página carregada antes da troca.
+
+**Aberto:** nada desta entrega.
+
+## 2026-11-08 — Total mensal dos gastos fixos na tela de previstos
+
+**Pedido do dono (2026-11-08, testando o app):** ele quer saber quanto os gastos fixos somam por
+mês. A primeira ideia era trocar o card "Previsto em aberto" da tela inicial por um "gasto previsto
+x/y"; ao ver as opções, preferiu **manter o card como está** e ter o total na tela de gastos
+previstos, "só para ter essa informação em algum lugar".
+
+**O que mudou:**
+- `financas/views.py` (view `previstos`): `total_fixos` soma `GastoFixo.valor` dos **ativos** — os
+  que geram previsto. Inativo continua na lista como histórico do cadastro, mas não entra no total.
+- `templates/previstos.html`: linha fechando a seção "Gastos fixos", com o mesmo `.total-mes` que
+  Lançamentos e Relatório já usam (sem peça visual nova). Some quando não há gasto fixo cadastrado.
+- Nada mudou na tela inicial: o card "Previsto em aberto" e a leitura `previsto_aberto` continuam.
+
+**Arquivos:** `financas/views.py`, `templates/previstos.html`, `financas/test_gastos_fixos.py`
+(3 testes novos: só ativos somam, sem fixo não aparece a linha, pagar o previsto não muda o total).
+
+**Testes:** `.venv/bin/python manage.py test` → **187 testes, OK** (linha de base antes da mudança:
+184, OK). Sem migration. Sem verificação visual nova: a linha reusa o `.total-mes` já conferido a
+375/360/768/1280 e o rótulo ("Total dos fixos ativos") é mais curto que o de Lançamentos.
+
+**Aberto:** nada desta entrega.
+
+## 2026-11-08 — Categorias em ordem alfabética no seletor
+
+**Pedido do dono (2026-11-08, testando o app):** com muitas categorias, achar a certa na lista do
+lançamento ficou confuso; o palpite dele foi ordenar alfabeticamente.
+
+**Causa:** a lista vinha na ordem do banco (`tipo`, `nome`): todas as despesas, depois todas as
+receitas. E a comparação do SQLite é byte a byte, então `Água` e `Ótica` caíam **depois de `Z`** e
+minúscula vinha depois de maiúscula. Não era ordem alfabética nem dentro de cada bloco.
+
+**O que mudou:**
+- `financas/forms.py`: os três seletores de categoria (lançamento novo e edição, gasto fixo e
+  previsto avulso) passam por `_opcoes_de_categoria`, que ordena em Python por uma chave que
+  **ignora acento e caixa** (`NFKD` + remoção dos diacríticos + `casefold`) e mantém
+  "Escolha a categoria" no topo. O `queryset` filtrado continua o mesmo — a validação do POST segue
+  recusando categoria inativa ou de tipo errado.
+- A lista agora é uma só, A-Z, misturando despesa e receita; o rótulo de cada opção continua
+  "Nome (despesa)" / "Nome (receita)", então o tipo não some. Lista curta, ordenar em Python não
+  pesa.
+- `financas/tests.py`: teste que fixa a ordem (`Água`, `alimentação`, `Aluguel`, …) e a opção vazia.
+
+**Arquivos:** `financas/forms.py`, `financas/tests.py`.
+**Testes:** `.venv/bin/python manage.py test` → **184 testes, OK** (linha de base antes da mudança:
+183, OK). Sem migration. Sem verificação visual: é `<select>` nativo, mudou só a ordem das opções.
+**Aberto:** nada desta entrega. Busca/filtro dentro do seletor não entrou (não foi pedido).
+
+## 2026-11-08 — Descrição opcional no lançamento rápido
+
+**Decisão do dono (2026-11-08, testando o app):** o lançamento tinha só categoria, então dois gastos
+da mesma categoria ficavam indistinguíveis na lista. A descrição entra no formulário rápido como
+**opcional** (quem lança rápido continua lançando em três campos) e com o rótulo **"Descrição"**,
+igual a gastos fixos e previstos.
+
+**O que mudou:**
+- `MovimentoRapidoForm` passa a incluir `descricao` (o campo já existia no modelo, `blank=True`,
+  `max_length=120`; é o mesmo preenchido pelo gasto fixo e pela importação do Inter). **Sem
+  migration.**
+- `templates/lancamentos.html` e `templates/editar_movimento.html`: campo depois da categoria, com
+  a marca "(opcional)" no rótulo; a edição precisa exibir o campo, senão salvar apagaria a
+  descrição existente.
+- Mensagens de sucesso do lançar e do editar passam a nomear `descricao or categoria.nome`, o mesmo
+  critério que a lista (`templates/lancamentos.html:44`) e o desfazer já usavam.
+- `app.css`: regra neutra para `.campo-opcional` (texto de apoio, sem negrito).
+
+**Arquivos:** `financas/forms.py`, `financas/views.py`, `financas/static/financas/app.css`,
+`templates/lancamentos.html`, `templates/editar_movimento.html`,
+`financas/test_uso_diario.py` (4 testes novos).
+
+**Testes:** `.venv/bin/python manage.py test` → **183 testes, OK** (linha de base antes da mudança:
+179, OK). Sem verificação visual nova: o campo reaproveita o `.campo` e o empilhamento já conferidos
+a 375/360/768/1280 na revisão de UI do mesmo dia.
+
+**Aberto:** nada desta entrega.
+
 ## 2026-11-08 — UI/UX revista: layout espaçado, navegação responsiva e leitura mais clara
 
 **Decisão do dono (2026-11-08):** o sistema inteiro ganha uma revisão visual mantendo claro,
