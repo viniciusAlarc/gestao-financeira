@@ -3,6 +3,53 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-17 — Categorias e gastos fixos importados para o servidor (P2-20 fechado)
+
+**Pedido do dono:** trazer as categorias e os gastos fixos do banco do PC para o MVP, em massa.
+
+**O que foi feito:**
+- Exportação no PC com `dumpdata financas.Conta financas.Categoria financas.GastoFixo --indent 2 >
+  /tmp/iniciais.json`. A `Conta` entrou junto porque `GastoFixo.conta` é FK e a importação falharia
+  sem ela. Movimentos e previstos ficaram de fora; o histórico fica no PC e o app gera o previsto do
+  mês a partir dos gastos fixos.
+- Conferência de que o banco do servidor estava vazio (0 contas, 0 categorias, 0 gastos) antes de
+  importar.
+- Upload do arquivo para `/home/viniciusapps/iniciais.json` (fora do repo) e `loaddata` no servidor.
+- Ajustes no admin: nome da conta, saldo inicial, padrão/ativa, categorias e gastos fixos.
+- Arquivos temporários apagados no servidor e no PC. O `db.sqlite3` do PC não foi tocado.
+
+**Resultado:** conta, categorias e gastos fixos disponíveis no MVP; o lançamento rápido está
+desbloqueado. A segunda conta de login e o uso real ficam na P3-9.
+
+## 2026-11-17 — App no ar no PythonAnywhere (P2-18 e P2-19 fechados)
+
+**Resultado:** o app está em **https://viniciusapps.pythonanywhere.com**, com HTTPS, tela de login
+e CSS servido. O banco é novo (opção A, escolhida pelo dono depois de parar no passo 5 da opção B);
+o `db.sqlite3` do PC não foi tocado.
+
+**O que foi feito:**
+- Repositório tornado público com `gh repo edit --visibility public`, porque o clone no
+  PythonAnywhere falhou no privado. A varredura do histórico não achou `.env`, banco, certificado
+  nem chave; o primeiro nome da segunda conta aparece nos documentos e em dois commits.
+- Commit `3c71e26` com as configurações de produção (`STATIC_ROOT`,
+  `SECURE_PROXY_SSL_HEADER`, cookies `Secure` e `CSRF_TRUSTED_ORIGINS`) enviado ao GitHub.
+- No servidor: `git pull`, `.env` com `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS` e
+  `DJANGO_CSRF_TRUSTED_ORIGINS`, `migrate` (banco novo, 0001-0006), `collectstatic` e o WSGI
+  apontando para `config.settings`.
+- O WSGI padrão foi colado com indentação e deu `IndentationError: unexpected indent`; corrigido
+  apagando o arquivo e colando o código na coluna 1.
+- A primeira tela de debug mostrou o `.env` ausente e o código antigo (`DEBUG=True`,
+  `STATIC_ROOT=None`); o diagnóstico foi refeito com comandos de uma linha, porque o console
+  embaralhou um bloco longo na colagem.
+
+**Verificação externa:** `curl` em `/` → `/login/?next=/` **200**; `/static/financas/app.css`
+**200**; HTML com manifest e ícones do PWA.
+
+**Testes:** suíte local **213 OK** (sem mudança de código desde a última execução).
+
+**Aberto:** cadastros iniciais no admin (P2-20), uso real a dois (P3-9), renovação mensal (P3-10),
+backup semanal (P3-12) e a Pluggy no plano grátis (P3-11).
+
 ## 2026-11-17 — Publicação do MVP no PythonAnywhere (D6 revista, P3-3 fechado)
 
 **Pedido do dono (2026-11-17):** publicar o MVP para a namorada usar, com solução básica e

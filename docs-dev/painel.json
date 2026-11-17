@@ -11,10 +11,15 @@
       { "nome": "Relatório por categoria", "estado": "feito" },
       { "nome": "Dois usuários e uso real", "estado": "andamento" },
       { "nome": "Integração Pluggy", "estado": "andamento" },
-      { "nome": "Publicação (PythonAnywhere)", "estado": "andamento" }
+      { "nome": "Publicação (PythonAnywhere)", "estado": "feito" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-17",
+      "o_que": "App publicado no PythonAnywhere em https://viniciusapps.pythonanywhere.com, com HTTPS, login e estáticos",
+      "como": "commit 3c71e26; git pull, .env de produção, migrate (banco novo, opção A), collectstatic, WSGI e Force HTTPS; curl externo: login 200 e CSS 200"
+    },
     {
       "data": "2026-11-17",
       "o_que": "Decisão de publicar no PythonAnywhere (plano grátis) e código preparado para produção",

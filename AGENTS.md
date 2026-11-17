@@ -37,9 +37,10 @@ PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso
 da API da Pluggy é o próximo passo (P2-12/P2-13). As migrations 0001 a 0005 estão aplicadas no
 banco real. A suíte tem 213 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
-2026-11-17 a D6 foi revista para publicar o MVP no **PythonAnywhere, plano gratuito**, e o código foi
-preparado para produção; falta criar a conta e executar o deploy (P2-17/P2-18). O que foi feito fica
-em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
+2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
+`https://viniciusapps.pythonanywhere.com` (commit `3c71e26`); a conta, as categorias e os gastos
+fixos foram importados do banco do PC. Falta o uso real a dois (P3-9). O que foi feito fica em
+`PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 

@@ -190,8 +190,11 @@ agendada; a rotina é manual.
 
 ## O que este documento não decide
 
-- O username: escolha do dono.
-- A opção A ou B do banco: decisão do dono (G3).
-- A senha da segunda conta: definida pelo dono, nunca registrada aqui (G13).
 - A saída do plano grátis: só quando a Pluggy (fase 7) for usada no servidor ou quando a renovação
   mensal incomodar. As alternativas estão no dossiê D6 (`02-decisao-d6-onde-roda.md`).
+
+## O que ainda depende do dono
+
+- criar a segunda conta de login no admin, se ainda não existir (P3-9);
+- renovar o web app mensalmente (P3-10);
+- baixar o backup semanalmente (P3-12).

@@ -22,7 +22,7 @@
 | Segundo login    | admin do Django            | conta `Kethlen` criada; falta a senha (P3-9) |
 | PWA              | `financas/static/financas/` | manifest e ícones conferidos na entrega HTTP; instalação no celular pendente (P3-9) |
 | Integração bancária | `financas/pluggy_api.py`, `importacao_pluggy.py`, `importar_pluggy` | cliente, importador e comando prontos e testados; falta rodar com credencial e `itemId` (P2-12) |
-| Produção          | PythonAnywhere (conta `viniciusapps`) | conta criada; falta executar o deploy (P2-18) e criar o banco novo (P2-19) |
+| Produção          | PythonAnywhere (conta `viniciusapps`) | **no ar** em https://viniciusapps.pythonanywhere.com; conta, categorias e gastos fixos importados em 2026-11-17; falta o uso real (P3-9) |
 
 ## P1 — Crítico (bloqueia uso ou expõe dado)
 
@@ -40,14 +40,12 @@
 | P2-14 | 👤   | **A conta "Inter" no app.** Existe uma `Conta` chamada "Inter" no banco real; renomear para "Itaú" ou criar outra é mudança de dado (G3). Decidir o que fazer antes da primeira importação. | 2026-11-09 |
 | P2-15 | 👤   | **Categorias da Pluggy.** Todo movimento importado cai em "Não categorizado"; o campo `category` da Pluggy não é mapeado. O `importar_pluggy --dry-run` mostra a contagem por categoria para servir à decisão. | 2026-11-10 |
 | P2-16 | 👤   | **Aplicar a migration 0006 no banco real** (novo valor `pluggy` em `Movimento.origem`). O arquivo está escrito; o classificador de permissão exige um "pode" do dono nomeando a mudança no banco. Comando: `.venv/bin/python manage.py migrate financas`. | 2026-11-10 |
-| P2-18 | 💻   | **Executar o deploy no PythonAnywhere** na conta `viniciusapps` (criada em 2026-11-17): clonar o repositório, criar o virtualenv, instalar dependências, criar o `.env`, configurar o WSGI e os estáticos, ligar o Force HTTPS e verificar no celular. Passo a passo em `docs-dev/a-codar/03-deploy-pythonanywhere.md`. | 2026-11-17 |
-| P2-19 | 👤   | **Banco do servidor (G3).** Escolha do dono em 2026-11-17: **A, começar limpo**. O `migrate` no servidor cria o banco novo (0001-0006) e o `db.sqlite3` do PC não é tocado. A 0006 aplicada no servidor **não** é o P2-16, que é o banco real do PC. Depois do deploy, criar a conta padrão, as categorias e a segunda conta no admin. | 2026-11-17 |
 
 ## P3 — Médio
 
 | ID   | Dono | Item                                                                                                                                                     | Aberto em  |
 | ---- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| P3-9 | 👤   | **Verificação da fase 6.** Conta `Kethlen` criada em 05/11 (sem senha — o dono define no admin ou com `manage.py changepassword Kethlen`). Falta: instalar o PWA nos dois celulares e usar por uma semana com as duas pessoas lançando. Data alvo: 2026-11-12. Checklist em `docs-dev/rodada-2026-11-05/s3-p3-9.md`. | 2026-11-03 |
+| P3-9 | 👤   | **Verificação da fase 6 no servidor.** Criar a segunda conta no admin (se ainda não existir), instalar o PWA nos dois celulares e usar por uma semana com as duas pessoas lançando em https://viniciusapps.pythonanywhere.com. O checklist antigo (`docs-dev/rodada-2026-11-05/s3-p3-9.md`) é do banco local e serve de referência. | 2026-11-03 |
 | P3-10 | 👤  | **Renovação mensal do web app.** O plano grátis do PythonAnywhere expira a cada mês; quando o e-mail avisar, renovar na aba **Web**. Sem isso, o app fica fora do ar até o clique (os arquivos não são apagados). | 2026-11-17 |
 | P3-11 | 👤  | **Pluggy no plano grátis.** A API da Pluggy não é acessível pela allowlist de saída; quando a fase 7 for usada no servidor, decidir entre o upgrade do PythonAnywhere (US$ 10/mês) ou outro host (Railway US$ 5/mês, VPS). | 2026-11-17 |
 | P3-12 | 👤  | **Backup semanal do banco.** Baixar o `db.sqlite3` pela aba **Files** toda semana e guardar no PC com a data. O plano grátis não tem tarefa agendada nem backup automático. | 2026-11-17 |
