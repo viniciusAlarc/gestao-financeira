@@ -35,9 +35,11 @@ no celular, topo no desktop, layout mais espaçado, mensagens por tipo e tema do
 PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso pessoal gratuito**
 (Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; o mapeamento
 da API da Pluggy é o próximo passo (P2-12/P2-13). As migrations 0001 a 0005 estão aplicadas no
-banco real. A suíte tem 163 testes passando. O lançamento
-rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. O que foi
-feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
+banco real. A suíte tem 213 testes passando. O lançamento
+rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
+2026-11-17 a D6 foi revista para publicar o MVP no **PythonAnywhere, plano gratuito**, e o código foi
+preparado para produção; falta criar a conta e executar o deploy (P2-17/P2-18). O que foi feito fica
+em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
@@ -49,6 +51,7 @@ feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 | `docs-dev/a-codar/briefing-descoberta.md`      | Descoberta do produto, decisões D1–D6, perguntas em aberto (G7) |
 | `docs-dev/guias/OPERACAO.md`                   | Como subir, derrubar e o que olhar quando não sobe (G14)        |
 | `docs-dev/painel.json`                         | Fases e entregas do plano em andamento (G14)                    |
+| `docs-dev/a-codar/03-deploy-pythonanywhere.md` | Publicar, atualizar e fazer backup em produção                  |
 
 ## Regras técnicas deste projeto — invioláveis
 
@@ -67,8 +70,7 @@ feito fica em `PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
 4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
    oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; depois da limpeza do Inter, em 2026-11-09 a suíte está
-   em 163, todos passando.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-17 a suíte está em 213, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
@@ -89,19 +91,27 @@ Nunca escrever chave no código (G13).
 ### Integração com o banco (fase 7)
 
 O caminho é o **Pluggy em modo pessoal gratuito** (Meu Pluggy + conector 200), decidido em
-2026-11-09. O mapeamento da API e os comandos de importação serão escritos na P2-13; até lá, não há
-comando de importação no projeto.
+2026-11-09. O cliente (`financas/pluggy_api.py`), o importador (`importacao_pluggy.py`) e o comando
+`importar_pluggy` estão escritos e testados; falta rodar contra a conta real (P2-12/P2-13). **No
+plano grátis do PythonAnywhere a API da Pluggy não é acessível** (allowlist de saída): a importação
+roda no WSL ou exige upgrade/outro host.
 
 ### Importação (fase 7)
 
-O mapeamento da Pluggy (extrato e saldo) e o comando de importação serão escritos na P2-13. A
-idempotência continua sendo por `Movimento.id_externo`, agora com o id da transação da Pluggy.
+O comando `importar_pluggy` (com `--dry-run`) está no projeto. A idempotência é por
+`Movimento.id_externo`, com o id da transação da Pluggy. A migration 0006 (novo valor `pluggy` em
+`Movimento.origem`) está escrita e ainda não foi aplicada no banco real (P2-16).
 
-## Onde este projeto roda (decidido em 2026-11-01, revisto no mesmo dia)
+## Onde este projeto roda (desenvolvimento no WSL; produção no PythonAnywhere)
 
-- **Só no WSL (Ubuntu 24.04)**, em `~/Documents/Projetos-pessoais/gestao-financeira`, codado pelo
-  Dev Valley com o DeepSeek (perfil pessoal do Claude Code). A cópia antiga no Windows não é mais usada.
-- O `.venv` é de Linux: comando de Python neste projeto é `.venv/bin/python ...`.
+- **Desenvolvimento:** WSL (Ubuntu 24.04), em `~/Documents/Projetos-pessoais/gestao-financeira`,
+  codado pelo Dev Valley com o DeepSeek (perfil pessoal do Claude Code). A cópia antiga no Windows
+  não é mais usada.
+- **Produção (decidida em 2026-11-17):** PythonAnywhere, plano Beginner gratuito, em
+  `https://viniciusapps.pythonanywhere.com`. Passo a passo em
+  `docs-dev/a-codar/03-deploy-pythonanywhere.md`. O plano grátis expira todo mês, não roda a
+  Pluggy e não tem backup automático.
+- O `.venv` é de Linux: comando de Python no desenvolvimento é `.venv/bin/python ...`.
 - O `.venv` foi criado sem pip (o WSL não tem o pacote `python3-venv`). Instalar dependência:
   `pip3 --python .venv/bin/python install -r requirements.txt`.
 

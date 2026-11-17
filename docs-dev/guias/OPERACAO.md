@@ -8,10 +8,18 @@
 | Lado  | Pasta | Comando                                                 | Porta |
 | ----- | ----- | ------------------------------------------------------- | ----- |
 | back  | `.`   | `.venv/bin/python manage.py runserver 0.0.0.0:8000` | 8000  |
+| back (produção) | `~/gestao-financeira` no PythonAnywhere | aba **Web** → **Reload** | 443 |
 | front |       |                                                         |       |
 
 O `0.0.0.0` é o que permite abrir no celular pela rede de casa. Sem ele o servidor só responde em
 `localhost` e o celular não alcança.
+
+## Produção (PythonAnywhere)
+
+O app publicado roda no PythonAnywhere, plano gratuito, em `https://viniciusapps.pythonanywhere.com`.
+O passo a passo completo (conta, WSGI, estáticos, banco e backup) está em
+`docs-dev/a-codar/03-deploy-pythonanywhere.md`. Para publicar uma atualização: `git pull`,
+`collectstatic` quando mudar estático, `migrate` só com o "pode" do dono e **Reload** na aba Web.
 
 ## O que digitar no celular
 
@@ -35,7 +43,7 @@ do dono no Windows.
 
 ## Preparar o `.env` pelo celular (um comando)
 
-O `.env` é **do dono**: fica fora do git (`.gitignore`) e é onde os segredos do Inter vão morar na
+O `.env` é **do dono**: fica fora do git (`.gitignore`) e é onde os segredos da Pluggy vão morar na
 fase 7. O script abaixo só cuida da linha do celular: **não cria nem imprime segredo** e não mostra
 nenhum outro valor do arquivo (G13).
 
@@ -84,7 +92,7 @@ Se algo falhar no caminho, a tabela "Quando alguma coisa não sobe" tem os sinto
 - `ALLOWED_HOSTS` vem de `DJANGO_ALLOWED_HOSTS` no `.env`; sem ela vale `localhost,127.0.0.1`.
   Para o celular alcançar, o script e o passo a passo estão em "Preparar o `.env` pelo celular" e
   "Checklist de 5 minutos no primeiro celular".
-- `.env` com as variáveis do Inter só é necessário na fase 7.
+- `.env` com as variáveis da Pluggy só é necessário na fase 7.
 
 ## Instalar o PWA no celular
 
@@ -94,7 +102,8 @@ O app está preparado com `manifest.webmanifest` e ícones em `financas/static/f
 - iPhone/Safari: Compartilhar → "Adicionar à Tela de Início".
 
 Em rede local por HTTP, alguns navegadores só oferecem a instalação com HTTPS. Se o celular não
-mostrar a opção, isso é limitação do navegador/rede, não defeito do app; HTTPS entra na fase 8.
+mostrar a opção, isso é limitação do navegador/rede, não defeito do app. Em produção
+(PythonAnywhere) o endereço é HTTPS e a instalação funciona.
 
 ## Ver o que está rodando
 

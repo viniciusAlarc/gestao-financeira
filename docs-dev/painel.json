@@ -10,10 +10,16 @@
       { "nome": "Gastos previstos", "estado": "feito" },
       { "nome": "Relatório por categoria", "estado": "feito" },
       { "nome": "Dois usuários e uso real", "estado": "andamento" },
-      { "nome": "Integração Pluggy", "estado": "andamento" }
+      { "nome": "Integração Pluggy", "estado": "andamento" },
+      { "nome": "Publicação (PythonAnywhere)", "estado": "andamento" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-17",
+      "o_que": "Decisão de publicar no PythonAnywhere (plano grátis) e código preparado para produção",
+      "como": "STATIC_ROOT, SECURE_PROXY_SSL_HEADER, cookies Secure e CSRF_TRUSTED_ORIGINS; passo a passo em 03-deploy-pythonanywhere.md; 213 testes OK"
+    },
     {
       "data": "2026-11-10",
       "o_que": "Importação da Pluggy escrita: cliente com cursor, mapeamento para Movimento e comando importar_pluggy",

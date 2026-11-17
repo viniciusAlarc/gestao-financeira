@@ -3,6 +3,51 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-17 — Publicação do MVP no PythonAnywhere (D6 revista, P3-3 fechado)
+
+**Pedido do dono (2026-11-17):** publicar o MVP para a namorada usar, com solução básica e
+acesso controlado; a ideia de um "link do Claude" foi descartada por não rodar Django.
+
+**Decisão:** PythonAnywhere no plano Beginner (gratuito), registrada no dossiê D6
+(`docs-dev/a-codar/02-decisao-d6-onde-roda.md`). Custo R$ 0; o app deixa de depender do PC de
+casa. Limitações aceitas: web app expira a cada mês, 100 s de CPU/dia, 512 MB de disco e a API
+da Pluggy não é acessível no plano grátis (allowlist de saída).
+
+**Atualização (mesma data):** o dono criou a conta no PythonAnywhere (`viniciusapps`). Ele começou
+pela opção B, parou no passo 5 e mudou para a **opção A (banco novo)**: o `migrate` no servidor cria
+o banco do zero e o `db.sqlite3` do PC não é tocado. O deploy está em andamento (P2-18/P2-19).
+
+**Repositório público (mesma data):** o repositório estava privado e o clone no PythonAnywhere
+falhou; a pedido do dono, foi tornado público com `gh repo edit --visibility public`. A varredura do
+histórico não encontrou `.env`, banco, certificado nem chave; o primeiro nome da segunda conta
+aparece nos documentos e em dois commits.
+
+**O que mudou:**
+- `config/settings.py`: `STATIC_ROOT`, `SECURE_PROXY_SSL_HEADER`, cookies `Secure` quando
+  `DEBUG=0` e `CSRF_TRUSTED_ORIGINS` vindo de `DJANGO_CSRF_TRUSTED_ORIGINS`.
+- `.env.example`: as três variáveis de produção documentadas.
+- `.gitignore`: `staticfiles/` (gerado pelo `collectstatic`).
+- `docs-dev/a-codar/03-deploy-pythonanywhere.md` (novo): passo a passo completo, com banco A/B
+  (G3), WSGI, estáticos, Force HTTPS, verificação, atualizações e backup.
+- `docs-dev/guias/OPERACAO.md`: linha de produção na tabela "Subir", seção de produção e
+  correção das menções ao Inter (agora Pluggy).
+- `AGENTS.md`, `docs-dev/a-codar/01-plano-desenvolvimento.md` e `PENDENCIAS.md`: D6 revista,
+  fase 8 decidida e itens novos (P2-17 a P2-19, P3-10 a P3-12).
+- `docs-dev/painel.json`: fase de publicação em andamento e entrega de 2026-11-17.
+
+**Arquivos:** `config/settings.py`, `.env.example`, `.gitignore`, `AGENTS.md`,
+`docs-dev/a-codar/01-plano-desenvolvimento.md`, `docs-dev/a-codar/02-decisao-d6-onde-roda.md`,
+`docs-dev/a-codar/03-deploy-pythonanywhere.md`, `docs-dev/guias/OPERACAO.md`, `PENDENCIAS.md`,
+`docs-dev/painel.json`.
+
+**Testes:** `.venv/bin/python manage.py test` → **213 testes, OK**. `collectstatic --noinput` →
+131 arquivos. `check --deploy` com env de produção → só W004 (HSTS) e W008 (redirect), cobertos
+pelo Force HTTPS do PythonAnywhere.
+
+**Aberto:** executar o deploy na conta `viniciusapps` (P2-18), criar o banco novo pela opção A
+(P2-19, G3), renovar o web app mensalmente (P3-10), backup semanal (P3-12) e a Pluggy no plano
+grátis (P3-11). Nada publicado ainda: o deploy está em andamento.
+
 ## 2026-11-10 — Importação da Pluggy escrita e testada (P2-13)
 
 **Pedido do dono (2026-11-10):** continuar o P2-13 com a doc da transação em mãos.

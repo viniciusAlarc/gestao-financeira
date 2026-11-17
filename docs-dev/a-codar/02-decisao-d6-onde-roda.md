@@ -301,14 +301,31 @@ Depois da resposta, a decisão entra neste documento com data e o item P3-3 sai 
 (o maestro consolida). Se a resposta for A, a decisão é "manter a opção 1 na v1" e a fase 8 fica
 para quando o uso real pedir.
 
-## 8. Registro da decisão (a preencher depois da resposta)
+## 8. Registro da decisão
 
 | Campo | Valor |
 |---|---|
-| Data da decisão | |
-| Escolha (A/B/C/D) | |
-| O PC pode ficar ligado fora de casa? | |
-| Observações | |
+| Data da decisão | 2026-11-17 |
+| Escolha | **PythonAnywhere, plano Beginner (gratuito)** — opção nova, fora das A a D |
+| O PC pode ficar ligado fora de casa? | não é requisito: o app passa a rodar no servidor |
+| Observações | Decidida para publicar o MVP a dois, sem custo recorrente. Passo a passo em `03-deploy-pythonanywhere.md`. |
+
+**Por que fora das A a D.** O dossiê foi escrito em 2026-11-05 supondo que o app continuaria em
+casa; o PythonAnywhere é um serviço gerenciado (PaaS), não um túnel nem uma VPS. Ele entrega Django e
+SQLite persistentes com HTTPS sem configuração de servidor, que é o que o MVP pedia.
+
+**O que a escolha aceita:**
+
+- o web app expira a cada mês (contas novas) e precisa de renovação manual na aba Web;
+- 100 s de CPU por dia, suficiente para duas pessoas;
+- a conta só acessa APIs da allowlist, então a importação da Pluggy (fase 7) **não roda** no plano
+  grátis;
+- o banco é cópia única no servidor; o backup passa a ser manual e semanal.
+
+**Quando rever.** Se a Pluggy for usada no servidor ou a renovação mensal incomodar, as alternativas
+são o plano Developer do PythonAnywhere (US$ 10/mês, com internet externa irrestrita) ou o Railway
+(US$ 5/mês, com volume persistente). A opção D (VPS) continua valendo para quem quiser o dado no
+Brasil, com o custo e a manutenção já registrados neste dossiê.
 
 ## 9. Fontes e data de consulta
 

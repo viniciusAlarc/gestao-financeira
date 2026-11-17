@@ -31,6 +31,9 @@ build/
 *.sqlite
 *.sqlite3
 
+# Estáticos coletados (collectstatic)
+staticfiles/
+
 # Chave de desenvolvimento do Django (gerada no primeiro start)
 .django-secret
 

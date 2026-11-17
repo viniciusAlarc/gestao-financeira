@@ -116,6 +116,28 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Pasta que o `collectstatic` preenche e que o servidor publica. No PythonAnywhere ela é
+# mapeada em "Static files" na aba Web; a pasta é gerada e não vai para o git.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+# Produção (PythonAnywhere, decisão de 2026-11-17)
+
+# O TLS termina no proxy do PythonAnywhere, que repassa HTTP para o app. Sem este header,
+# o Django trata o request como inseguro e o CSRF recusa o POST do login.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# Em produção o cookie só viaja por HTTPS. Em debug local (HTTP) continua normal.
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# O Django 5 exige a origem HTTPS explícita para aceitar POST. No servidor, vem do `.env`.
+CSRF_TRUSTED_ORIGINS = [
+    origem.strip()
+    for origem in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
+    if origem.strip()
+]
+
 
 # Entrada do app é a tela inicial, e ela exige login (D5: duas pessoas).
 # Nomes com namespace `financas:` desde 2026-11-02, quando o app ganhou urls.py.

@@ -96,8 +96,9 @@ Cada fase entrega algo que você consegue **usar e olhar**, não uma camada de c
 
 ### Fase 8 — Sair de casa (opcional, tem custo)
 
-- Túnel ou VPS, com número de custo na mesa antes de criar (G20).
-- Só entra se a fase 6 mostrar que a limitação de "só em casa" incomoda de verdade.
+- Serviço gerenciado, túnel ou VPS, com número de custo na mesa antes de criar (G20).
+- **Decidida em 2026-11-17:** PythonAnywhere no plano gratuito, para publicar o MVP a dois.
+  Passo a passo em `03-deploy-pythonanywhere.md`; a API da Pluggy não roda no plano grátis.
 
 ## 4. Modelo de dado proposto
 
