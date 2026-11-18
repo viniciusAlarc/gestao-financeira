@@ -10,11 +10,26 @@
       { "nome": "Gastos previstos", "estado": "feito" },
       { "nome": "Relatório por categoria", "estado": "feito" },
       { "nome": "Dois usuários e uso real", "estado": "andamento" },
-      { "nome": "Integração Pluggy", "estado": "andamento" },
+      { "nome": "Integração Pluggy", "estado": "feito" },
       { "nome": "Publicação (PythonAnywhere)", "estado": "feito" }
     ]
   },
   "entregas": [
+    {
+      "data": "2026-11-18",
+      "o_que": "P2-13 fechado: importação da Pluggy validada (dry-run, importação real, idempotência e fuso)",
+      "como": "segunda execução com Criados: 0; data conferida em transação conhecida; categorização (P2-15) e rotina (P2-21) ficam como próximos"
+    },
+    {
+      "data": "2026-11-18",
+      "o_que": "Importação real da Pluggy concluída no servidor",
+      "como": "importar_pluggy sem --dry-run após o dry-run validado; movimentos com id_externo e autoria Pluggy; falta a prova de idempotência (P2-13)"
+    },
+    {
+      "data": "2026-11-18",
+      "o_que": "Dry-run da Pluggy contra a conta real validado (credenciais da Demo App e item do MeuPluggy)",
+      "como": "importar_pluggy --dry-run no console do PythonAnywhere; api.pluggy.ai na allowlist; falta a importação real e a conferência do fuso/idempotência"
+    },
     {
       "data": "2026-11-17",
       "o_que": "App publicado no PythonAnywhere em https://viniciusapps.pythonanywhere.com, com HTTPS, login e estáticos",

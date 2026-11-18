@@ -1,0 +1,17 @@
+name: Importar Pluggy
+
+on:
+  schedule:
+    # Diário, 09:00 UTC (06:00 em Brasília). O MeuPluggy atualiza a cada 24h.
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar o endpoint do app
+        run: |
+          curl -fsS --max-time 300 -X POST \
+            "https://viniciusapps.pythonanywhere.com/tarefas/importar-pluggy/" \
+            -H "X-Import-Token: ${{ secrets.IMPORT_TOKEN }}"

@@ -318,8 +318,8 @@ SQLite persistentes com HTTPS sem configuração de servidor, que é o que o MVP
 
 - o web app expira a cada mês (contas novas) e precisa de renovação manual na aba Web;
 - 100 s de CPU por dia, suficiente para duas pessoas;
-- a conta só acessa APIs da allowlist, então a importação da Pluggy (fase 7) **não roda** no plano
-  grátis;
+- a conta só acessa APIs da allowlist; como `api.pluggy.ai` está nela, a importação da Pluggy
+  (fase 7) **pode rodar** no plano grátis; outras APIs dependem da lista;
 - o banco é cópia única no servidor; o backup passa a ser manual e semanal.
 
 **Quando rever.** Se a Pluggy for usada no servidor ou a renovação mensal incomodar, as alternativas

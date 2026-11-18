@@ -98,7 +98,7 @@ Cada fase entrega algo que você consegue **usar e olhar**, não uma camada de c
 
 - Serviço gerenciado, túnel ou VPS, com número de custo na mesa antes de criar (G20).
 - **Decidida em 2026-11-17:** PythonAnywhere no plano gratuito, para publicar o MVP a dois.
-  Passo a passo em `03-deploy-pythonanywhere.md`; a API da Pluggy não roda no plano grátis.
+  Passo a passo em `03-deploy-pythonanywhere.md`; a API da Pluggy está na allowlist do plano grátis.
 
 ## 4. Modelo de dado proposto
 

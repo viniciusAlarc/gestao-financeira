@@ -27,6 +27,11 @@ urlpatterns = [
         name="editar_gasto_fixo",
     ),
     path("relatorio/", views.relatorio, name="relatorio"),
+    path(
+        "tarefas/importar-pluggy/",
+        views.importar_pluggy_tarefa,
+        name="importar_pluggy_tarefa",
+    ),
     path("categorias/", views.categorias, name="categorias"),
     path(
         "categorias/<int:pk>/editar/",

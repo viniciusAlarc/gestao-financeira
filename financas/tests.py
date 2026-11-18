@@ -6,6 +6,7 @@ e a formatação de dinheiro.
 """
 
 import json
+import os
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -878,3 +879,44 @@ class PwaTests(SimpleTestCase):
         self.assertContains(resposta, 'rel="manifest"')
         self.assertContains(resposta, "icone-192.png")
         self.assertContains(resposta, 'name="theme-color"')
+
+
+class ImportarPluggyTarefaTests(TestCase):
+    """Endpoint da rotina do GitHub Actions (P2-21)."""
+
+    def setUp(self):
+        self.url = reverse("financas:importar_pluggy_tarefa")
+
+    def test_sem_token_recusa(self):
+        resposta = self.client.post(self.url)
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_token_errado_recusa(self):
+        with patch.dict(os.environ, {"IMPORT_TOKEN": "token-certo"}):
+            resposta = self.client.post(
+                self.url, HTTP_X_IMPORT_TOKEN="token-errado"
+            )
+        self.assertEqual(resposta.status_code, 403)
+
+    def test_token_certo_dispara_o_comando(self):
+        with patch.dict(
+            os.environ,
+            {"IMPORT_TOKEN": "token-certo", "IMPORT_CONTA": "Carteira"},
+        ):
+            with patch("financas.views.call_command") as chamada:
+                resposta = self.client.post(
+                    self.url, HTTP_X_IMPORT_TOKEN="token-certo"
+                )
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTrue(resposta.json()["ok"])
+        chamada.assert_called_once()
+        self.assertEqual(chamada.call_args.args[0], "importar_pluggy")
+        self.assertEqual(chamada.call_args.kwargs["conta"], "Carteira")
+
+    def test_conta_ausente_erro(self):
+        with patch.dict(os.environ, {"IMPORT_TOKEN": "token-certo"}):
+            with patch.dict(os.environ, {"IMPORT_CONTA": ""}):
+                resposta = self.client.post(
+                    self.url, HTTP_X_IMPORT_TOKEN="token-certo"
+                )
+        self.assertEqual(resposta.status_code, 500)

@@ -34,8 +34,10 @@ fixo depois de criada). A **UI/UX foi revista** em 2026-11-08: cabeçalho com ma
 no celular, topo no desktop, layout mais espaçado, mensagens por tipo e tema do PWA claro. A fase 7
 (integrar o banco) mudou de caminho em 2026-11-09: **o Inter foi descartado** (a API é exclusiva de
 PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso pessoal gratuito**
-(Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; o mapeamento
-da API da Pluggy é o próximo passo (P2-12/P2-13). As migrations 0001 a 0005 estão aplicadas no
+(Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; as credenciais da Demo App
+e o item do MeuPluggy estão no `.env` do servidor e a importação da Pluggy foi validada em 2026-11-18
+(dry-run, importação real, idempotência e fuso: P2-13 fechado). Falta o mapeamento de categorias
+(P2-15); a rotina automática (P2-21) está implementada e falta o deploy. As migrations 0001 a 0005 estão aplicadas no
 banco real. A suíte tem 214 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
@@ -95,9 +97,12 @@ Nunca escrever chave no código (G13).
 
 O caminho é o **Pluggy em modo pessoal gratuito** (Meu Pluggy + conector 200), decidido em
 2026-11-09. O cliente (`financas/pluggy_api.py`), o importador (`importacao_pluggy.py`) e o comando
-`importar_pluggy` estão escritos e testados; falta rodar contra a conta real (P2-12/P2-13). **No
-plano grátis do PythonAnywhere a API da Pluggy não é acessível** (allowlist de saída): a importação
-roda no WSL ou exige upgrade/outro host.
+`importar_pluggy` estão escritos e testados. As credenciais da Demo App e o item do MeuPluggy estão
+no `.env` do servidor; dry-run, importação real, idempotência e fuso foram validados em 2026-11-18
+(P2-13 fechado). Falta o mapeamento de categorias (P2-15); a rotina automática (P2-21) está
+implementada e falta o deploy. **A
+`api.pluggy.ai` está na allowlist de saída do plano grátis**, então a importação pode rodar no
+servidor; o `requests` aplica o proxy da conta automaticamente.
 
 ### Importação (fase 7)
 
@@ -112,8 +117,8 @@ O comando `importar_pluggy` (com `--dry-run`) está no projeto. A idempotência 
   não é mais usada.
 - **Produção (decidida em 2026-11-17):** PythonAnywhere, plano Beginner gratuito, em
   `https://viniciusapps.pythonanywhere.com`. Passo a passo em
-  `docs-dev/a-codar/03-deploy-pythonanywhere.md`. O plano grátis expira todo mês, não roda a
-  Pluggy e não tem backup automático.
+  `docs-dev/a-codar/03-deploy-pythonanywhere.md`. O plano grátis expira todo mês e não tem backup
+  automático; a API da Pluggy está na allowlist.
 - O `.venv` é de Linux: comando de Python no desenvolvimento é `.venv/bin/python ...`.
 - O `.venv` foi criado sem pip (o WSL não tem o pacote `python3-venv`). Instalar dependência:
   `pip3 --python .venv/bin/python install -r requirements.txt`.

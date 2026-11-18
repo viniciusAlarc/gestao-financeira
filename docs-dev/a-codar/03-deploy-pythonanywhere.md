@@ -20,7 +20,7 @@
 | 100 s de CPU por dia | Para duas pessoas, sobra; tarefa pesada não roda | Nada no MVP |
 | 512 MB de disco | Suficiente para o projeto e o banco | Conferir o uso na aba **Files** |
 | Sem SSH de entrada | Deploy e manutenção pelo console do navegador | Usar a aba **Consoles** |
-| Chamadas externas só para a allowlist | A API da Pluggy não é acessível no plano grátis | Fase 7 fica para quando houver upgrade (US$ 10/mês) ou outro host |
+| Chamadas externas só para a allowlist | `api.pluggy.ai` está na lista; outras APIs podem não estar | A Pluggy pode rodar no free; outras integrações dependem da lista |
 | Sem backup automático | O banco é cópia única no servidor | Baixar o `db.sqlite3` toda semana |
 
 ## Pré-requisitos (o dono faz)
@@ -177,6 +177,22 @@ python manage.py collectstatic --noinput
 ```
 
 E **Reload** na aba Web. O PythonAnywhere não recarrega sozinho.
+
+## Importação automática (GitHub Actions)
+
+O endpoint `POST /tarefas/importar-pluggy/` dispara o `importar_pluggy` para a conta de
+`IMPORT_CONTA`. Ele exige o header `X-Import-Token` igual a `IMPORT_TOKEN` do `.env`. O workflow
+`.github/workflows/importar-pluggy.yml` roda uma vez por dia (09:00 UTC) e pode ser disparado à mão
+em **Actions → Importar Pluggy → Run workflow**.
+
+- No `.env` do servidor: `IMPORT_TOKEN` (valor aleatório, não versionado) e `IMPORT_CONTA` (nome
+  exato da conta no app).
+- No GitHub: **Settings → Secrets and variables → Actions** → novo secret `IMPORT_TOKEN` com o
+  mesmo valor.
+- O MeuPluggy atualiza a cada 24h; rodar mais de uma vez por dia não traz dados novos.
+
+O endpoint responde `403` sem o token e `500` se a conta não estiver configurada. O comando é
+idempotente: os movimentos já importados são pulados.
 
 ## Backup (obrigatório a partir de agora)
 

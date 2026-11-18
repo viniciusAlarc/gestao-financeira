@@ -4,18 +4,24 @@ Fase 2 do plano (2026-11-01): a tela inicial responde, sem esforço, "quanto ten
 quanto gastei neste mês e o que está comprometido à frente".
 """
 
+import os
+import secrets
 from datetime import date, timedelta
 from decimal import Decimal
+from io import StringIO
 from itertools import groupby
 from operator import attrgetter
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.management import call_command
 from django.db import transaction
 from django.db.models import Q, Sum
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .forms import (
@@ -567,3 +573,29 @@ def relatorio(request):
             "mes_seguinte": _mes_seguinte(mes),
         },
     )
+
+
+@csrf_exempt
+@require_POST
+def importar_pluggy_tarefa(request):
+    """Dispara o `importar_pluggy` para a rotina do GitHub Actions.
+
+    O chamador é um cron, não uma pessoa: a autenticação é o token do header
+    `X-Import-Token`, comparado com `IMPORT_TOKEN` do ambiente. A conta de
+    destino vem de `IMPORT_CONTA`. Sem login e sem CSRF, porque não há sessão.
+    """
+    token = os.getenv("IMPORT_TOKEN", "").strip()
+    recebido = request.headers.get("X-Import-Token", "").strip()
+    if not token or not secrets.compare_digest(token, recebido):
+        return JsonResponse({"erro": "não autorizado"}, status=403)
+
+    conta = os.getenv("IMPORT_CONTA", "").strip()
+    if not conta:
+        return JsonResponse({"erro": "IMPORT_CONTA não configurada"}, status=500)
+
+    saida = StringIO()
+    try:
+        call_command("importar_pluggy", conta=conta, stdout=saida, stderr=saida)
+    except Exception as erro:
+        return JsonResponse({"erro": str(erro)}, status=500)
+    return JsonResponse({"ok": True, "resumo": saida.getvalue()})

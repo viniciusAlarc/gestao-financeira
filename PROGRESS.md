@@ -3,6 +3,95 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-18 — Rotina automática de importação (P2-21 implementado, falta o deploy)
+
+**Escolha do dono:** GitHub Actions (R$ 0), em vez do PythonAnywhere Developer (US$ 10/mês).
+
+**O que mudou:**
+- `financas/views.py`: endpoint `importar_pluggy_tarefa` com token no header e conta em
+  `IMPORT_CONTA`; dispara o comando via `call_command`.
+- `financas/urls.py`: rota `tarefas/importar-pluggy/`.
+- `.github/workflows/importar-pluggy.yml`: workflow diário (09:00 UTC) + `workflow_dispatch`.
+- `.env.example`: `IMPORT_TOKEN` e `IMPORT_CONTA`.
+- `financas/tests.py`: 4 testes do endpoint (sem token, token errado, token certo e conta vazia).
+- `docs-dev/a-codar/03-deploy-pythonanywhere.md`: seção de operação da rotina.
+
+**Testes:** 218, OK (214 + 4 novos).
+
+**Aberto:** o deploy (commit/push, `.env` com o token e a conta, secret no GitHub, `git pull` +
+Reload) e o primeiro disparo manual. O MeuPluggy atualiza a cada 24h; a rotina diária é o teto útil.
+O mapeamento de categorias (P2-15) continua aberto.
+
+## 2026-11-18 — P2-13 fechado: importação da Pluggy validada
+
+**Resultado:** dry-run, importação real, idempotência (Criados: 0 na segunda execução) e fuso do
+`date` conferidos em 2026-11-18. A importação da fase 7 está concluída.
+
+**O que falta:**
+- **P2-15 (categorias automáticas):** o dono quer que os movimentos entrem categorizados, sem
+  retrabalho. O dry-run mostra as categorias da Pluggy; a categorização da Pluggy pode ser
+  trial-only. A decisão é mapear as categorias da Pluggy + regras por descrição, com "Não
+  categorizado" como fallback.
+- **P2-21 (rotina automática):** o MeuPluggy atualiza a cada 24h, então o teto útil é uma rotina
+  diária. Opções: endpoint no app + GitHub Actions (R$ 0) ou upgrade do PythonAnywhere
+  (US$ 10/mês), além do manual.
+- P2-14/P2-16 continuam no banco do PC; P3-12 (backup) e P3-9 (uso real) seguem.
+
+**Testes:** 214, OK.
+
+## 2026-11-18 — Importação real da Pluggy concluída (P2-13 em fechamento)
+
+**Resultado:** o `importar_pluggy` rodou contra a conta real no servidor, com o período escolhido,
+e gravou os movimentos. O dono confirmou que a importação funcionou.
+
+**O que foi feito:**
+- `python manage.py importar_pluggy --conta "..."` no console do PythonAnywhere, sem `--dry-run`,
+  depois do dry-run validado.
+- Os movimentos entram com `origem = pluggy`, `id_externo` da transação, autoria do usuário técnico
+  `Pluggy` e categoria `Não categorizado`.
+- O banco do PC não foi tocado.
+
+**O que falta:** provar a idempotência rodando o comando de novo (Criados: 0) e conferir o fuso do
+`date` em uma transação conhecida. A decisão das categorias continua no P2-15.
+
+**Testes:** 214, OK.
+
+## 2026-11-18 — Dry-run da Pluggy validado (P2-12 fechado, P2-13 em andamento)
+
+**Pedido do dono:** seguir a integração com a Pluggy.
+
+**O que foi feito:**
+- O dono criou/preencheu a **Demo App** no dashboard da Pluggy e o item do **MeuPluggy**, e
+  cadastrou `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET` e `PLUGGY_ITEM_ID` no `.env` do servidor.
+- O dry-run do `importar_pluggy` rodou contra a conta real no console do PythonAnywhere, sem gravar.
+  A `api.pluggy.ai` está na allowlist do plano grátis e o `requests` usou o proxy.
+- A aplicação em PRD foi enviada ao time de vendas; não é necessária para o uso pessoal. O Meu
+  Pluggy continua após o trial de 15 dias.
+
+**O que falta:** a importação real (P2-13), a conferência do fuso do `date` em uma transação
+conhecida e a prova de idempotência rodando o comando de novo. A decisão das categorias segue no
+P2-15; por ora, todo movimento importado cai em "Não categorizado".
+
+**Testes:** 214, OK.
+
+## 2026-11-18 — Pluggy está na allowlist do PythonAnywhere free (correção)
+
+**Pergunta do dono:** se o plano atual permite a integração por API, inclusive com outra API ou
+outro banco.
+
+**Verificação:** a allowlist de saída do PythonAnywhere free
+(`https://www.pythonanywhere.com/whitelist/`) inclui **`api.pluggy.ai`**. O cliente do projeto usa
+`requests.Session()`, que aplica o proxy da conta automaticamente. Portanto a Pluggy **pode rodar no
+plano grátis**. As entradas de 2026-11-17 que diziam o contrário estavam erradas: assumi que a API
+não estava na lista sem conferir a allowlist completa.
+
+**O que muda:** a P3-11 (Pluggy no plano grátis) deixa de existir. O que falta para a fase 7 é o
+P2-12 (credenciais e `itemId` no `.env` do servidor) e o P2-13 (dry-run contra a conta real, agora
+podendo rodar no próprio servidor).
+
+**Não é preciso** trocar de banco nem de agregador: o bloqueio era o host, e a Pluggy já está
+liberada nele. Outras APIs (Belvo, bancos) só funcionariam se estivessem na allowlist.
+
 ## 2026-11-18 — Lista de lançamentos mostra quem lançou
 
 **Pedido do dono:** exibir o usuário que fez o lançamento.
