@@ -47,6 +47,7 @@
               <span class="movimento-descricao">{{ m.descricao|default:m.categoria.nome }}</span>
               <span class="movimento-valor {% if m.tipo == 'despesa' %}valor-despesa{% else %}valor-receita{% endif %}">{% if m.tipo == 'despesa' %}-{% endif %}{{ m.valor|dinheiro }}</span>
             </div>
+            <p class="movimento-meta">Lançado por {{ m.criado_por.username }}</p>
             {% if m.pode_ser_editado or m.pode_ser_desfeito %}
             <div class="movimento-acoes">
               {% if m.pode_ser_editado %}<a class="acao" href="{% url 'financas:editar_movimento' m.pk %}">Editar</a>{% endif %}

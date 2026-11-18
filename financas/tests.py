@@ -820,6 +820,15 @@ class DoisUsuariosTests(BaseFinancas):
         )
         self.assertEqual(Movimento.objects.get().criado_por, self.esposa)
 
+    def test_lista_mostra_quem_lancou(self):
+        self.client.login(username="esposa", password="senha-dela")
+        self.client.post(
+            reverse("financas:lancamentos"),
+            {"valor": "12,00", "categoria": self.categoria_despesa.pk},
+        )
+        resposta = self.client.get(reverse("financas:lancamentos"))
+        self.assertContains(resposta, "Lançado por esposa")
+
     def test_pagamento_registra_quem_pagou(self):
         previsto = Previsto.objects.create(
             descricao="Internet",

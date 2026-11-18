@@ -145,7 +145,7 @@ def lancamentos(request):
         Movimento.objects.filter(
             cancelado=False, data__year=mes.year, data__month=mes.month
         )
-        .select_related("categoria", "conta", "previsto")
+        .select_related("categoria", "conta", "previsto", "criado_por")
         .order_by("-data", "-id")
     )
     total_despesas = (

@@ -3,6 +3,24 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-18 — Lista de lançamentos mostra quem lançou
+
+**Pedido do dono:** exibir o usuário que fez o lançamento.
+
+**O que mudou:**
+- `financas/views.py`: a lista de lançamentos passou a trazer `criado_por` no `select_related`,
+  evitando uma consulta por lançamento.
+- `templates/lancamentos.html`: cada item mostra "Lançado por <username>" abaixo da descrição e do
+  valor.
+- `financas/static/financas/app.css`: classe `.movimento-meta` discreta (texto suave, 12px).
+- `financas/tests.py`: teste `test_lista_mostra_quem_lancou` em `DoisUsuariosTests`.
+
+**Testes:** `.venv/bin/python manage.py test` → **214 testes, OK** (213 da base + 1 novo).
+
+**Aberto:** a mudança ainda não está no servidor. Para aparecer em
+https://viniciusapps.pythonanywhere.com é preciso commit, push, `git pull`, `collectstatic` (o CSS
+mudou) e **Reload**.
+
 ## 2026-11-17 — Categorias e gastos fixos importados para o servidor (P2-20 fechado)
 
 **Pedido do dono:** trazer as categorias e os gastos fixos do banco do PC para o MVP, em massa.

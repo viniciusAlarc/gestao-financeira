@@ -15,7 +15,8 @@ Controle financeiro pessoal, privado, de duas pessoas (o dono e a esposa). Não 
 O problema não é registrar gasto, é **ver** para onde o dinheiro foi: responder sem esforço
 "para onde foi o dinheiro deste mês" e "o que já está comprometido à frente".
 Tela inicial: saldo, gasto atual, gastos previstos. As duas contas de login veem todos os dados
-(conta conjunta); cada lançamento registra quem lançou em `criado_por`. Uso principal no celular,
+(conta conjunta); cada lançamento registra quem lançou em `criado_por`, e a lista de lançamentos
+mostra o usuário. Uso principal no celular,
 como web app responsivo (PWA), sem publicar em loja.
 
 ## Estado atual
@@ -35,12 +36,13 @@ no celular, topo no desktop, layout mais espaçado, mensagens por tipo e tema do
 PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso pessoal gratuito**
 (Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; o mapeamento
 da API da Pluggy é o próximo passo (P2-12/P2-13). As migrations 0001 a 0005 estão aplicadas no
-banco real. A suíte tem 213 testes passando. O lançamento
+banco real. A suíte tem 214 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
 `https://viniciusapps.pythonanywhere.com` (commit `3c71e26`); a conta, as categorias e os gastos
-fixos foram importados do banco do PC. Falta o uso real a dois (P3-9). O que foi feito fica em
-`PROGRESS.md`; o que está aberto, em `PENDENCIAS.md`.
+fixos foram importados do banco do PC. Em 2026-11-18 a lista de lançamentos passou a mostrar quem
+lançou. Falta o uso real a dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
+`PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
@@ -71,7 +73,7 @@ fixos foram importados do banco do PC. Falta o uso real a dois (P3-9). O que foi
 4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
    oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; em 2026-11-17 a suíte está em 213, todos passando.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-18 a suíte está em 214, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
