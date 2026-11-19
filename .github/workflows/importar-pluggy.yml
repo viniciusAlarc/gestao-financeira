@@ -2,8 +2,9 @@ name: Importar Pluggy
 
 on:
   schedule:
-    # Diário, 09:00 UTC (06:00 em Brasília). O MeuPluggy atualiza a cada 24h.
-    - cron: "0 9 * * *"
+    # Duas vezes por dia: 10:00 e 19:00 UTC (07:00 e 16:00 em Brasília).
+    # O MeuPluggy atualiza a cada 24h; as duas execuções reduzem a espera.
+    - cron: "0 10,19 * * *"
   workflow_dispatch:
 
 jobs:

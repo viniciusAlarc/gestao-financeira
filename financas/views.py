@@ -593,9 +593,18 @@ def importar_pluggy_tarefa(request):
     if not conta:
         return JsonResponse({"erro": "IMPORT_CONTA não configurada"}, status=500)
 
+    # A rotina é incremental: a Pluggy relê os últimos 4 a 7 dias, então pedir
+    # 7 dias basta e evita reprocessar todo o histórico a cada execução.
+    desde = (timezone.localdate() - timedelta(days=7)).isoformat()
     saida = StringIO()
     try:
-        call_command("importar_pluggy", conta=conta, stdout=saida, stderr=saida)
+        call_command(
+            "importar_pluggy",
+            conta=conta,
+            desde=desde,
+            stdout=saida,
+            stderr=saida,
+        )
     except Exception as erro:
         return JsonResponse({"erro": str(erro)}, status=500)
     return JsonResponse({"ok": True, "resumo": saida.getvalue()})

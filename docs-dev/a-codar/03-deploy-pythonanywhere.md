@@ -181,9 +181,10 @@ E **Reload** na aba Web. O PythonAnywhere não recarrega sozinho.
 ## Importação automática (GitHub Actions)
 
 O endpoint `POST /tarefas/importar-pluggy/` dispara o `importar_pluggy` para a conta de
-`IMPORT_CONTA`. Ele exige o header `X-Import-Token` igual a `IMPORT_TOKEN` do `.env`. O workflow
-`.github/workflows/importar-pluggy.yml` roda uma vez por dia (09:00 UTC) e pode ser disparado à mão
-em **Actions → Importar Pluggy → Run workflow**.
+`IMPORT_CONTA`, limitado aos últimos 7 dias (a Pluggy relê 4 a 7 dias; o `id_externo` evita
+duplicata). Ele exige o header `X-Import-Token` igual a `IMPORT_TOKEN` do `.env`. O workflow
+`.github/workflows/importar-pluggy.yml` roda duas vezes por dia (10:00 e 19:00 UTC, 07:00 e 16:00
+em Brasília) e pode ser disparado à mão em **Actions → Importar Pluggy → Run workflow**.
 
 - No `.env` do servidor: `IMPORT_TOKEN` (valor aleatório, não versionado) e `IMPORT_CONTA` (nome
   exato da conta no app).

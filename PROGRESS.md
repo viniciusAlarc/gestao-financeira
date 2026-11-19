@@ -3,6 +3,25 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-19 — Rotina automática validada (P2-21 fechado)
+
+**Resultado:** o workflow `Importar Pluggy` rodou à mão no GitHub Actions e o endpoint respondeu
+`200`. O primeiro teste deu `404` porque o servidor ainda não tinha o `git pull` + Reload; depois
+disso, a rotina funcionou sem criar duplicata (os movimentos já estavam importados).
+
+**O que ficou pronto:**
+- Endpoint `POST /tarefas/importar-pluggy/` com `IMPORT_TOKEN` e `IMPORT_CONTA` no `.env` do
+  servidor; o secret `IMPORT_TOKEN` no GitHub.
+- Workflow duas vezes por dia (10:00 e 19:00 UTC = 07:00 e 16:00 em Brasília), com
+  `workflow_dispatch` para rodar à mão. O endpoint importa os últimos 7 dias para reduzir o consumo
+  de CPU do plano grátis.
+- O MeuPluggy atualiza a cada 24h; a rotina diária é o teto útil.
+
+**Aberto:** P2-15 (categorias automáticas), P3-9 (uso real), P3-12 (backup), P2-14/P2-16 (banco do
+PC).
+
+**Testes:** 218, OK.
+
 ## 2026-11-18 — Rotina automática de importação (P2-21 implementado, falta o deploy)
 
 **Escolha do dono:** GitHub Actions (R$ 0), em vez do PythonAnywhere Developer (US$ 10/mês).

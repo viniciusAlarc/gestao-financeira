@@ -912,6 +912,7 @@ class ImportarPluggyTarefaTests(TestCase):
         chamada.assert_called_once()
         self.assertEqual(chamada.call_args.args[0], "importar_pluggy")
         self.assertEqual(chamada.call_args.kwargs["conta"], "Carteira")
+        self.assertIn("desde", chamada.call_args.kwargs)
 
     def test_conta_ausente_erro(self):
         with patch.dict(os.environ, {"IMPORT_TOKEN": "token-certo"}):
