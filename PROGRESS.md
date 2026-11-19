@@ -3,6 +3,21 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-19 — Categorização e recategorização do histórico concluídas (P2-15 fechado)
+
+**Resultado:** o `importar_pluggy` rodou sem `--dry-run` e recategorizou o histórico; o relatório do
+mês deixou de mostrar "Não categorizado" e passou a exibir as categorias do app (Compras, Moradia,
+Transporte, Alimentação etc.). As transferências e o investimento ficaram fora do gasto.
+
+**O que ficou pronto:**
+- Mapa das 23 categorias da Pluggy, regras por descrição e fallback.
+- A recategorização dos movimentos em "Não categorizado"; os já categorizados à mão foram preservados.
+- A rotina de 2x/dia aplica o mapa aos novos movimentos.
+
+**Aberto:** P3-9 (uso real), P3-10 (renovação), P3-12 (backup), P2-14/P2-16 (banco do PC).
+
+**Testes:** 231, OK.
+
 ## 2026-11-19 — Mapa completo de categorias implementado (P2-15 em fechamento)
 
 **Pedido do dono:** ampliar o mapa com as 23 categorias do histórico e recategorizar.
