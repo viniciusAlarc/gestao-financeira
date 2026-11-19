@@ -456,6 +456,38 @@ class CategoriaMappingTests(BaseImportacao):
             tipo=TipoValor.RECEITA,
             entra_no_gasto=False,
         )
+        self.compras = Categoria.objects.create(
+            nome="Compras", tipo=TipoValor.DESPESA
+        )
+        self.transporte = Categoria.objects.create(
+            nome="Transporte", tipo=TipoValor.DESPESA
+        )
+        self.saude = Categoria.objects.create(
+            nome="Saúde", tipo=TipoValor.DESPESA
+        )
+        self.pets = Categoria.objects.create(
+            nome="Pets", tipo=TipoValor.DESPESA
+        )
+        self.moradia = Categoria.objects.create(
+            nome="Moradia", tipo=TipoValor.DESPESA
+        )
+        self.cartao = Categoria.objects.create(
+            nome="Cartão de crédito", tipo=TipoValor.DESPESA
+        )
+        self.investimento = Categoria.objects.create(
+            nome="Investimento",
+            tipo=TipoValor.DESPESA,
+            entra_no_gasto=False,
+        )
+        self.salario = Categoria.objects.create(
+            nome="Salário", tipo=TipoValor.RECEITA
+        )
+        self.rendimentos = Categoria.objects.create(
+            nome="Rendimentos", tipo=TipoValor.RECEITA
+        )
+        self.lazer = Categoria.objects.create(
+            nome="Lazer", tipo=TipoValor.DESPESA
+        )
         self.autor = get_user_model().objects.create_user(
             username="dono", password="senha-de-teste"
         )
@@ -553,8 +585,7 @@ class CategoriaMappingTests(BaseImportacao):
         self.assertEqual(Movimento.objects.get().categoria, self.alimentacao)
 
     def test_importacao_nao_sobrescreve_categoria_manual(self):
-        lazer = Categoria.objects.create(nome="Lazer", tipo=TipoValor.DESPESA)
-        self._movimento_existente(lazer)
+        self._movimento_existente(self.lazer)
 
         relatorio = importar_transacoes(
             [self.transacao(category="Food delivery")], self.conta
@@ -562,7 +593,7 @@ class CategoriaMappingTests(BaseImportacao):
 
         self.assertEqual(relatorio.atualizados, [])
         self.assertEqual(len(relatorio.pulados), 1)
-        self.assertEqual(Movimento.objects.get().categoria, lazer)
+        self.assertEqual(Movimento.objects.get().categoria, self.lazer)
 
     def test_dry_run_conta_atualizacao_sem_gravar(self):
         padrao = Categoria.objects.create(
@@ -579,3 +610,75 @@ class CategoriaMappingTests(BaseImportacao):
         self.assertEqual(relatorio.atualizados, ["ID-1"])
         self.assertEqual(relatorio.criados, [])
         self.assertEqual(Movimento.objects.get().categoria, padrao)
+
+    def test_mapa_completo_das_despesas(self):
+        casos = [
+            ("Food delivery", self.alimentacao),
+            ("Groceries", self.alimentacao),
+            ("Eating out", self.alimentacao),
+            ("Electronics", self.compras),
+            ("Shopping", self.compras),
+            ("Clothing", self.compras),
+            ("Gas stations", self.transporte),
+            ("Parking", self.transporte),
+            ("Pharmacy", self.saude),
+            ("Dentist", self.saude),
+            ("Hospital clinics and labs", self.saude),
+            ("Pet supplies and vet", self.pets),
+            ("Services", self.moradia),
+            ("Telecommunications", self.moradia),
+            ("Credit card payment", self.cartao),
+            ("Income taxes", self.impostos),
+            ("Digital services", self.lazer),
+        ]
+        for indice, (categoria_pluggy, esperada) in enumerate(casos):
+            with self.subTest(categoria_pluggy=categoria_pluggy):
+                Movimento.objects.all().delete()
+                importar_transacoes(
+                    [self.transacao(id=f"ID-D{indice}", category=categoria_pluggy)],
+                    self.conta,
+                )
+                self.assertEqual(Movimento.objects.get().categoria, esperada)
+
+    def test_mapa_de_investimento_fica_fora_do_gasto(self):
+        importar_transacoes(
+            [self.transacao(category="Investments")], self.conta
+        )
+        movimento = Movimento.objects.get()
+        self.assertEqual(movimento.categoria, self.investimento)
+        self.assertFalse(movimento.categoria.entra_no_gasto)
+
+    def test_mapa_de_receitas(self):
+        casos = [
+            ("Salary", self.salario),
+            ("Proceeds interests and dividends", self.rendimentos),
+        ]
+        for indice, (categoria_pluggy, esperada) in enumerate(casos):
+            with self.subTest(categoria_pluggy=categoria_pluggy):
+                Movimento.objects.all().delete()
+                importar_transacoes(
+                    [
+                        self.transacao(
+                            id=f"ID-R{indice}",
+                            type="CREDIT",
+                            amount=100.0,
+                            category=categoria_pluggy,
+                        )
+                    ],
+                    self.conta,
+                )
+                self.assertEqual(Movimento.objects.get().categoria, esperada)
+
+    def test_mapa_das_transferencias_fica_fora_do_gasto(self):
+        for indice, categoria_pluggy in enumerate(
+            ["Transfers", "Transfer - PIX", "Same person transfer"]
+        ):
+            with self.subTest(categoria_pluggy=categoria_pluggy):
+                Movimento.objects.all().delete()
+                importar_transacoes(
+                    [self.transacao(id=f"ID-T{indice}", category=categoria_pluggy)],
+                    self.conta,
+                )
+                movimento = Movimento.objects.get()
+                self.assertEqual(movimento.categoria, self.transferencia_despesa)
+                self.assertFalse(movimento.categoria.entra_no_gasto)

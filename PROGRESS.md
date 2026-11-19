@@ -3,6 +3,34 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-19 — Mapa completo de categorias implementado (P2-15 em fechamento)
+
+**Pedido do dono:** ampliar o mapa com as 23 categorias do histórico e recategorizar.
+
+**O que mudou:**
+- `MAPA_CATEGORIAS_PLUGGY` completo: Alimentação (Food delivery, Groceries, Eating out), Compras
+  (Electronics, Shopping, Clothing), Transporte (Gas stations, Parking), Saúde (Pharmacy, Dentist,
+  Hospital), Pets, Moradia (Services, Telecommunications), Cartão de crédito, Impostos, Investimento
+  (fora do gasto), Salário, Rendimentos, Lazer (Digital services) e Transferência (Transfer - PIX,
+  Same person transfer, Transfers; fora do gasto).
+- Testes do mapa completo, das receitas, do investimento e das transferências; a suíte está em 231.
+
+**Falta:** o deploy e a recategorização do histórico com backup antes; depois o relatório confirma.
+
+**Testes:** 231, OK.
+
+## 2026-11-19 — Recategorização do histórico ficou parcial (P2-15 em andamento)
+
+**Resultado:** o comando rodou, mas o relatório do mês continuou com a maior parte em "Não
+categorizado" e só uma transação em "Alimentação".
+
+**Causa:** o mapa foi montado com as 3 categorias dos últimos 7 dias (Food delivery, Income taxes,
+Transfers); o histórico tem outras categorias da Pluggy, que caíram no fallback. As regras por
+descrição não cobriram as descrições do histórico.
+
+**Próximo:** rodar o dry-run sem `--desde` para listar todas as categorias da Pluggy do histórico,
+ampliar o mapa/regras e recategorizar de novo (com backup antes). O P2-15 continua em andamento.
+
 ## 2026-11-19 — Categorização automática implementada (P2-15 em fechamento)
 
 **Pedido do dono:** categorizar automaticamente, sem retrabalho.

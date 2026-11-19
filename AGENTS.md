@@ -37,9 +37,9 @@ PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso
 (Meu Pluggy + conector 200). O código do Inter foi removido do projeto em 2026-11-09; as credenciais da Demo App
 e o item do MeuPluggy estão no `.env` do servidor e a importação da Pluggy foi validada em 2026-11-18
 (dry-run, importação real, idempotência e fuso: P2-13 fechado). O mapeamento de categorias (P2-15)
-está implementado; falta criar as categorias no app, o deploy e a recategorização do histórico. A
-rotina automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0005 estão
-aplicadas no banco real. A suíte tem 227 testes passando. O lançamento
+está implementado com as 23 categorias do histórico; falta o deploy e a recategorização. A rotina
+automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0005 estão
+aplicadas no banco real. A suíte tem 231 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
 `https://viniciusapps.pythonanywhere.com` (commit `3c71e26`); a conta, as categorias e os gastos
@@ -76,7 +76,7 @@ lançou. Falta o uso real a dois (P3-9). O que foi feito fica em `PROGRESS.md`; 
 4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
    oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; em 2026-11-19 a suíte está em 227, todos passando.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-19 a suíte está em 231, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
@@ -100,9 +100,9 @@ O caminho é o **Pluggy em modo pessoal gratuito** (Meu Pluggy + conector 200), 
 2026-11-09. O cliente (`financas/pluggy_api.py`), o importador (`importacao_pluggy.py`) e o comando
 `importar_pluggy` estão escritos e testados. As credenciais da Demo App e o item do MeuPluggy estão
 no `.env` do servidor; dry-run, importação real, idempotência e fuso foram validados em 2026-11-18
-(P2-13 fechado). O mapeamento de categorias (P2-15) está implementado; falta criar as
-categorias no app, o deploy e a recategorização do histórico. A rotina automática (P2-21) está
-validada e roda duas vezes por dia. **A
+(P2-13 fechado). O mapeamento de categorias (P2-15) está implementado com as 23 categorias do
+histórico; falta o deploy e a recategorização. A rotina automática (P2-21) está validada e roda
+duas vezes por dia. **A
 `api.pluggy.ai` está na allowlist de saída do plano grátis**, então a importação pode rodar no
 servidor; o `requests` aplica o proxy da conta automaticamente.
 

@@ -20,9 +20,10 @@ Mapeamento decidido em 2026-11-10, sobre a documentação oficial de
 - chave antiduplicidade: campo `id` em `Movimento.id_externo`. Transação sem id
   é recusada.
 - descrição: `description`; se vazia, `descriptionRaw`; truncada em 120.
-- categoria: mapa da `category` da Pluggy para as categorias do app
-  (`Food delivery` → Alimentação, `Income taxes` → Impostos, `Transfers` →
-  Transferência fora do gasto), depois regras por descrição e, por fim,
+- categoria: mapa da `category` da Pluggy para as categorias do app (as 23
+  categorias do histórico: Alimentação, Compras, Transporte, Saúde, Pets,
+  Moradia, Cartão de crédito, Impostos, Investimento, Salário, Rendimentos,
+  Lazer e Transferência), depois regras por descrição e, por fim,
   `Não categorizado` do tipo. Uma categoria mapeada só é usada se existir no
   app com o tipo da transação. Movimentos já importados que estão em
   `Não categorizado` são atualizados quando a transação é revista, preservando
@@ -53,7 +54,27 @@ CATEGORIA_PADRAO = "Não categorizado"
 # no app com o tipo da transação; senão, o importador cai no fallback.
 MAPA_CATEGORIAS_PLUGGY = {
     "Food delivery": ("Alimentação", True),
+    "Groceries": ("Alimentação", True),
+    "Eating out": ("Alimentação", True),
+    "Electronics": ("Compras", True),
+    "Shopping": ("Compras", True),
+    "Clothing": ("Compras", True),
+    "Gas stations": ("Transporte", True),
+    "Parking": ("Transporte", True),
+    "Pharmacy": ("Saúde", True),
+    "Dentist": ("Saúde", True),
+    "Hospital clinics and labs": ("Saúde", True),
+    "Pet supplies and vet": ("Pets", True),
+    "Services": ("Moradia", True),
+    "Telecommunications": ("Moradia", True),
+    "Credit card payment": ("Cartão de crédito", True),
     "Income taxes": ("Impostos", True),
+    "Investments": ("Investimento", False),
+    "Salary": ("Salário", True),
+    "Proceeds interests and dividends": ("Rendimentos", True),
+    "Digital services": ("Lazer", True),
+    "Transfer - PIX": ("Transferência", False),
+    "Same person transfer": ("Transferência", False),
     "Transfers": ("Transferência", False),
 }
 # Regras por descrição, usadas quando a Pluggy não manda uma categoria mapeada.
