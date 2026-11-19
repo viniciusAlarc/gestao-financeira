@@ -20,9 +20,13 @@ Mapeamento decidido em 2026-11-10, sobre a documentação oficial de
 - chave antiduplicidade: campo `id` em `Movimento.id_externo`. Transação sem id
   é recusada.
 - descrição: `description`; se vazia, `descriptionRaw`; truncada em 120.
-- categoria: `Não categorizado` do tipo da transação. O mapeamento das
-  categorias da Pluggy (campo `category`) é decisão própria e ficou para o
-  P2-15; por ora o relatório conta as categorias vistas para servir à decisão.
+- categoria: mapa da `category` da Pluggy para as categorias do app
+  (`Food delivery` → Alimentação, `Income taxes` → Impostos, `Transfers` →
+  Transferência fora do gasto), depois regras por descrição e, por fim,
+  `Não categorizado` do tipo. Uma categoria mapeada só é usada se existir no
+  app com o tipo da transação. Movimentos já importados que estão em
+  `Não categorizado` são atualizados quando a transação é revista, preservando
+  os que o dono categorizou à mão.
 - autoria: usuário técnico `Pluggy`, sem senha utilizável e sem privilégio.
 - origem: `Movimento.Origem.PLUGGY`.
 
@@ -32,6 +36,7 @@ cliente (`pluggy_api.py`). Isso permite testar o mapeamento sem rede.
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
@@ -44,6 +49,20 @@ from .models import Categoria, Movimento, TipoValor
 USUARIO_TECNICO = "Pluggy"
 TAMANHO_MAXIMO_DESCRICAO = 120
 CATEGORIA_PADRAO = "Não categorizado"
+# Categoria da Pluggy -> (nome no app, entra no gasto). O nome precisa existir
+# no app com o tipo da transação; senão, o importador cai no fallback.
+MAPA_CATEGORIAS_PLUGGY = {
+    "Food delivery": ("Alimentação", True),
+    "Income taxes": ("Impostos", True),
+    "Transfers": ("Transferência", False),
+}
+# Regras por descrição, usadas quando a Pluggy não manda uma categoria mapeada.
+# As palavras são comparadas sem acento e em minúsculas.
+REGRAS_DESCRICAO = (
+    (("ifood", "rappi", "uber eats"), "Alimentação", True),
+    (("darf", "receita federal"), "Impostos", True),
+    (("transferencia entre contas", "ted"), "Transferência", False),
+)
 TIPOS_POR_TRANSACAO = {
     "DEBIT": TipoValor.DESPESA,
     "CREDIT": TipoValor.RECEITA,
@@ -73,6 +92,7 @@ class RelatorioImportacao:
 
     dry_run: bool = False
     criados: list[str] = field(default_factory=list)
+    atualizados: list[str] = field(default_factory=list)
     pulados: list[TransacaoPulada] = field(default_factory=list)
     erros: list[TransacaoComErro] = field(default_factory=list)
     # Quantas transações de cada `category` da Pluggy vieram no payload; serve à
@@ -81,8 +101,13 @@ class RelatorioImportacao:
 
     @property
     def total(self) -> int:
-        """Quantas transações foram lidas (cada uma cai em criados, pulados ou erros)."""
-        return len(self.criados) + len(self.pulados) + len(self.erros)
+        """Quantas transações foram lidas (cada uma cai em criados, atualizados, pulados ou erros)."""
+        return (
+            len(self.criados)
+            + len(self.atualizados)
+            + len(self.pulados)
+            + len(self.erros)
+        )
 
 
 def importar_transacoes(transacoes, conta, usuario=None, dry_run=False):
@@ -151,12 +176,6 @@ def _importar_uma(
         return
     ids_vistos.add(id_transacao)
 
-    if Movimento.objects.filter(conta=conta, id_externo=id_transacao).exists():
-        relatorio.pulados.append(
-            TransacaoPulada(id_transacao, "já importado nesta conta")
-        )
-        return
-
     status = _texto(bruta.get("status")).upper()
     if status not in STATUS_QUE_ENTRAM:
         if status == "PENDING":
@@ -199,15 +218,45 @@ def _importar_uma(
         )
         return
 
+    descricao = _montar_descricao(bruta)
+    nome_categoria, entra_no_gasto = _escolher_categoria(
+        bruta, tipo, descricao, cache_categorias
+    )
+
+    existente = (
+        Movimento.objects.filter(conta=conta, id_externo=id_transacao)
+        .select_related("categoria")
+        .first()
+    )
+    if existente is not None:
+        if (
+            existente.categoria.nome == CATEGORIA_PADRAO
+            and existente.categoria.tipo == tipo
+            and nome_categoria != CATEGORIA_PADRAO
+        ):
+            if dry_run:
+                relatorio.atualizados.append(id_transacao)
+                return
+            existente.categoria = _garantir_categoria(
+                cache_categorias, nome_categoria, tipo, entra_no_gasto
+            )
+            existente.save(update_fields=["categoria"])
+            relatorio.atualizados.append(id_transacao)
+            return
+        relatorio.pulados.append(
+            TransacaoPulada(id_transacao, "já importado nesta conta")
+        )
+        return
+
     if dry_run:
         relatorio.criados.append(id_transacao)
         return
 
     categoria = _garantir_categoria(
-        cache_categorias, CATEGORIA_PADRAO, tipo, entra_no_gasto=True
+        cache_categorias, nome_categoria, tipo, entra_no_gasto
     )
 
-    # A checagem acima já descarta o caso comum; o `atomic` existe para uma corrida
+    # A busca acima já descarta o caso comum; o `atomic` existe para uma corrida
     # entre a checagem e a gravação não derrubar a importação inteira.
     try:
         with transaction.atomic():
@@ -217,7 +266,7 @@ def _importar_uma(
                 tipo=tipo,
                 conta=conta,
                 categoria=categoria,
-                descricao=_montar_descricao(bruta),
+                descricao=descricao,
                 origem=Movimento.Origem.PLUGGY,
                 criado_por=autor,
                 id_externo=id_transacao,
@@ -236,9 +285,44 @@ def _contar_categoria(relatorio, categoria):
     relatorio.categorias_vistas[nome] = relatorio.categorias_vistas.get(nome, 0) + 1
 
 
-def _garantir_categoria(cache, nome, tipo, entra_no_gasto):
+def _escolher_categoria(bruta, tipo, descricao, cache):
+    """Nome e `entra_no_gasto` da categoria do app para a transação.
+
+    Ordem: mapa da `category` da Pluggy, regras por descrição e, por último,
+    `Não categorizado`. Uma categoria mapeada só é usada se existir no app com
+    o tipo da transação; senão, o fallback evita criar categoria por engano.
+    """
+    escolha = MAPA_CATEGORIAS_PLUGGY.get(_texto(bruta.get("category")))
+    if escolha is not None:
+        nome, entra_no_gasto = escolha
+        if _categoria_existente(cache, nome, tipo) is not None:
+            return nome, entra_no_gasto
+
+    descricao_normalizada = _normalizar_texto(descricao)
+    for palavras, nome, entra_no_gasto in REGRAS_DESCRICAO:
+        if any(palavra in descricao_normalizada for palavra in palavras):
+            if _categoria_existente(cache, nome, tipo) is not None:
+                return nome, entra_no_gasto
+    return CATEGORIA_PADRAO, True
+
+
+def _categoria_existente(cache, nome, tipo):
     chave = (nome, tipo)
     if chave not in cache:
+        cache[chave] = Categoria.objects.filter(nome=nome, tipo=tipo).first()
+    return cache[chave]
+
+
+def _normalizar_texto(texto):
+    decomposto = unicodedata.normalize("NFKD", texto)
+    return "".join(
+        caractere for caractere in decomposto if not unicodedata.combining(caractere)
+    ).casefold()
+
+
+def _garantir_categoria(cache, nome, tipo, entra_no_gasto):
+    chave = (nome, tipo)
+    if chave not in cache or cache[chave] is None:
         categoria, _ = Categoria.objects.get_or_create(
             nome=nome, tipo=tipo, defaults={"entra_no_gasto": entra_no_gasto}
         )

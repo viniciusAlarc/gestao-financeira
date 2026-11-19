@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
-from .importacao_pluggy import importar_transacoes
+from .importacao_pluggy import CATEGORIA_PADRAO, importar_transacoes
 from .models import Categoria, Conta, Movimento, TipoValor
 from .pluggy_api import ErroPluggy
 
@@ -433,3 +433,149 @@ class ComandoImportarPluggyTests(BaseImportacao):
 
         self.assertIn("Erros: 1", self.saida.getvalue())
         self.assertIn("ID-1", self.erros.getvalue())
+
+
+class CategoriaMappingTests(BaseImportacao):
+    """P2-15: mapa da Pluggy, regras por descrição e recategorização."""
+
+    def setUp(self):
+        super().setUp()
+        self.alimentacao = Categoria.objects.create(
+            nome="Alimentação", tipo=TipoValor.DESPESA
+        )
+        self.impostos = Categoria.objects.create(
+            nome="Impostos", tipo=TipoValor.DESPESA
+        )
+        self.transferencia_despesa = Categoria.objects.create(
+            nome="Transferência",
+            tipo=TipoValor.DESPESA,
+            entra_no_gasto=False,
+        )
+        self.transferencia_receita = Categoria.objects.create(
+            nome="Transferência",
+            tipo=TipoValor.RECEITA,
+            entra_no_gasto=False,
+        )
+        self.autor = get_user_model().objects.create_user(
+            username="dono", password="senha-de-teste"
+        )
+
+    def _movimento_existente(self, categoria, id_externo="ID-1"):
+        return Movimento.objects.create(
+            data=date(2026, 11, 5),
+            valor=Decimal("10.50"),
+            tipo=TipoValor.DESPESA,
+            conta=self.conta,
+            categoria=categoria,
+            descricao="Lançamento antigo",
+            origem=Movimento.Origem.PLUGGY,
+            criado_por=self.autor,
+            id_externo=id_externo,
+        )
+
+    def test_mapeia_food_delivery_para_alimentacao(self):
+        importar_transacoes(
+            [self.transacao(category="Food delivery")], self.conta
+        )
+        self.assertEqual(Movimento.objects.get().categoria, self.alimentacao)
+
+    def test_mapeia_income_taxes_para_impostos(self):
+        importar_transacoes(
+            [self.transacao(category="Income taxes")], self.conta
+        )
+        self.assertEqual(Movimento.objects.get().categoria, self.impostos)
+
+    def test_mapeia_transfers_para_transferencia_fora_do_gasto(self):
+        importar_transacoes(
+            [self.transacao(category="Transfers")], self.conta
+        )
+        movimento = Movimento.objects.get()
+        self.assertEqual(movimento.categoria, self.transferencia_despesa)
+        self.assertFalse(movimento.categoria.entra_no_gasto)
+
+    def test_mapeia_transferencia_de_receita_para_a_categoria_do_tipo(self):
+        importar_transacoes(
+            [
+                self.transacao(
+                    id="ID-C",
+                    type="CREDIT",
+                    amount=100.0,
+                    category="Transfers",
+                )
+            ],
+            self.conta,
+        )
+        self.assertEqual(
+            Movimento.objects.get().categoria, self.transferencia_receita
+        )
+
+    def test_regra_por_descricao_quando_a_pluggy_nao_manda_categoria(self):
+        importar_transacoes(
+            [
+                self.transacao(
+                    category=None,
+                    description="iFood pedido 123",
+                    descriptionRaw="iFood pedido 123",
+                )
+            ],
+            self.conta,
+        )
+        self.assertEqual(Movimento.objects.get().categoria, self.alimentacao)
+
+    def test_sem_mapa_nem_regra_usa_nao_categorizado(self):
+        importar_transacoes(
+            [
+                self.transacao(
+                    category="Outros",
+                    description="Loja X",
+                    descriptionRaw="Loja X",
+                )
+            ],
+            self.conta,
+        )
+        movimento = Movimento.objects.get()
+        self.assertEqual(movimento.categoria.nome, CATEGORIA_PADRAO)
+        self.assertEqual(movimento.categoria.tipo, TipoValor.DESPESA)
+
+    def test_importacao_atualiza_existente_em_nao_categorizado(self):
+        padrao = Categoria.objects.create(
+            nome=CATEGORIA_PADRAO, tipo=TipoValor.DESPESA
+        )
+        self._movimento_existente(padrao)
+
+        relatorio = importar_transacoes(
+            [self.transacao(category="Food delivery")], self.conta
+        )
+
+        self.assertEqual(relatorio.criados, [])
+        self.assertEqual(relatorio.atualizados, ["ID-1"])
+        self.assertEqual(Movimento.objects.count(), 1)
+        self.assertEqual(Movimento.objects.get().categoria, self.alimentacao)
+
+    def test_importacao_nao_sobrescreve_categoria_manual(self):
+        lazer = Categoria.objects.create(nome="Lazer", tipo=TipoValor.DESPESA)
+        self._movimento_existente(lazer)
+
+        relatorio = importar_transacoes(
+            [self.transacao(category="Food delivery")], self.conta
+        )
+
+        self.assertEqual(relatorio.atualizados, [])
+        self.assertEqual(len(relatorio.pulados), 1)
+        self.assertEqual(Movimento.objects.get().categoria, lazer)
+
+    def test_dry_run_conta_atualizacao_sem_gravar(self):
+        padrao = Categoria.objects.create(
+            nome=CATEGORIA_PADRAO, tipo=TipoValor.DESPESA
+        )
+        self._movimento_existente(padrao)
+
+        relatorio = importar_transacoes(
+            [self.transacao(category="Food delivery")],
+            self.conta,
+            dry_run=True,
+        )
+
+        self.assertEqual(relatorio.atualizados, ["ID-1"])
+        self.assertEqual(relatorio.criados, [])
+        self.assertEqual(Movimento.objects.get().categoria, padrao)

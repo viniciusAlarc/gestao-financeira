@@ -3,6 +3,29 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-19 — Categorização automática implementada (P2-15 em fechamento)
+
+**Pedido do dono:** categorizar automaticamente, sem retrabalho.
+
+**Decisões do dono:** `Food delivery` → Alimentação; `Transfers` → Transferência fora do gasto;
+recategorizar os já importados.
+
+**O que mudou:**
+- `financas/importacao_pluggy.py`: mapa da `category` da Pluggy (`Food delivery` → Alimentação,
+  `Income taxes` → Impostos, `Transfers` → Transferência com `entra_no_gasto=False`), regras por
+  descrição (`ifood`/`rappi`/`uber eats`, `darf`/`receita federal`, `transferencia entre contas`/
+  `ted`) e fallback `Não categorizado`.
+- O importador atualiza a categoria dos movimentos existentes que estão em `Não categorizado`
+  quando revê a transação; preserva os categorizados à mão. O relatório ganhou `Atualizados`.
+- O comando mostra `Atualizados`/`Seriam atualizados`.
+- Testes: 9 novos em `CategoriaMappingTests`; a suíte está em 227.
+
+**Falta:** criar as categorias "Alimentação" (despesa) e "Transferência" (despesa e receita, fora
+do gasto) no app; o deploy; rodar o `importar_pluggy` sem `--desde` com `--dry-run` e depois com o
+"pode" (G3) para recategorizar o histórico. O backup vem antes.
+
+**Testes:** 227, OK.
+
 ## 2026-11-19 — Rotina automática validada (P2-21 fechado)
 
 **Resultado:** o workflow `Importar Pluggy` rodou à mão no GitHub Actions e o endpoint respondeu

@@ -154,6 +154,10 @@ class Command(BaseCommand):
         self.stdout.write(f"Transações lidas: {relatorio.total}")
         rotulo_criados = "Seriam criados" if relatorio.dry_run else "Criados"
         self.stdout.write(f"{rotulo_criados}: {len(relatorio.criados)}")
+        rotulo_atualizados = (
+            "Seriam atualizados" if relatorio.dry_run else "Atualizados"
+        )
+        self.stdout.write(f"{rotulo_atualizados}: {len(relatorio.atualizados)}")
         self.stdout.write(f"Pulados: {len(relatorio.pulados)}")
         self.stdout.write(f"Erros: {len(relatorio.erros)}")
         for pulo in relatorio.pulados:
