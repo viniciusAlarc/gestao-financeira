@@ -747,6 +747,26 @@ class RelatorioTests(BaseFinancas):
         self.assertEqual(resposta.context["total_despesas"], Decimal("0.00"))
         self.assertContains(resposta, "Nenhum gasto neste mês")
 
+    def test_expande_os_gastos_de_cada_categoria(self):
+        self.lancar(
+            TipoValor.DESPESA,
+            "60.00",
+            data=self.hoje,
+            descricao="Mercado do mês",
+        )
+        self.lancar(
+            TipoValor.DESPESA,
+            "40.00",
+            data=self.hoje,
+            categoria=self.transporte,
+            descricao="Uber",
+        )
+        resposta = self._abrir()
+        self.assertContains(resposta, "<details")
+        self.assertContains(resposta, "Mercado do mês")
+        self.assertContains(resposta, "Uber")
+        self.assertContains(resposta, "R$ 60,00")
+
 
 class ForaDoGastoTests(BaseFinancas):
     """Categoria marcada como fora do gasto (ex.: Investimento), decisão de 2026-11-05."""

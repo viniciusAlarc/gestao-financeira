@@ -540,26 +540,34 @@ def relatorio(request):
         data__month=mes.month,
         categoria__entra_no_gasto=True,
     )
-    total_despesas = despesas.aggregate(total=Sum("valor"))["total"] or ZERO
-    por_categoria = (
-        despesas.values("categoria__nome")
-        .annotate(total=Sum("valor"))
-        .order_by("-total", "categoria__nome")
+    movimentos = list(
+        despesas.select_related("categoria").order_by(
+            "categoria__nome", "-data", "-id"
+        )
     )
+    total_despesas = sum((movimento.valor for movimento in movimentos), ZERO)
+
+    por_categoria: dict[str, list[Movimento]] = {}
+    for movimento in movimentos:
+        por_categoria.setdefault(movimento.categoria.nome, []).append(movimento)
+
     linhas = []
-    for linha in por_categoria:
+    for nome, itens in por_categoria.items():
+        total = sum((item.valor for item in itens), ZERO)
         percentual = (
-            (linha["total"] / total_despesas * 100).quantize(Decimal("0.1"))
+            (total / total_despesas * 100).quantize(Decimal("0.1"))
             if total_despesas
             else ZERO
         )
         linhas.append(
             {
-                "nome": linha["categoria__nome"],
-                "total": linha["total"],
+                "nome": nome,
+                "total": total,
                 "percentual": percentual,
+                "movimentos": itens,
             }
         )
+    linhas.sort(key=lambda linha: (-linha["total"], linha["nome"]))
 
     return render(
         request,

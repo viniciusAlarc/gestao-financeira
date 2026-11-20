@@ -16,10 +16,23 @@
   {% if linhas %}
     <ul class="movimentos">
       {% for linha in linhas %}
-      <li class="movimento">
-        <span class="movimento-descricao">{{ linha.nome }}</span>
-        <span class="movimento-percentual">{{ linha.percentual|porcentagem }}</span>
-        <span class="movimento-valor valor-despesa">{{ linha.total|dinheiro }}</span>
+      <li class="movimento relatorio-categoria">
+        <details>
+          <summary class="relatorio-resumo">
+            <span class="movimento-descricao">{{ linha.nome }}</span>
+            <span class="movimento-percentual">{{ linha.percentual|porcentagem }}</span>
+            <span class="movimento-valor valor-despesa">{{ linha.total|dinheiro }}</span>
+          </summary>
+          <ul class="relatorio-movimentos">
+            {% for m in linha.movimentos %}
+            <li class="relatorio-movimento">
+              <span class="relatorio-data">{{ m.data|date:"d/m" }}</span>
+              <span class="relatorio-descricao">{{ m.descricao|default:m.categoria.nome }}</span>
+              <span class="movimento-valor valor-despesa">{{ m.valor|dinheiro }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </details>
       </li>
       {% endfor %}
     </ul>

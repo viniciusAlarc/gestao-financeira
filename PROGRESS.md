@@ -3,6 +3,23 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-19 — Relatório expande os gastos de cada categoria
+
+**Pedido do dono:** na tela de relatórios, expandir cada categoria e ver os gastos que a compõem.
+
+**O que mudou:**
+- `financas/views.py`: o relatório agora carrega os movimentos do mês por categoria, com
+  `select_related("categoria")`, mantendo a soma e o percentual por categoria.
+- `templates/relatorio.html`: cada categoria é um `<details>` nativo (abre e fecha sem JS), com a
+  data, a descrição e o valor de cada gasto.
+- `financas/static/financas/app.css`: resumo com alvo de toque, chevron que gira ao abrir e lista
+  interna discreta.
+- `financas/tests.py`: teste de expansão (categoria, descrição e valor presentes no HTML).
+
+**Testes:** 232, OK.
+
+**Aberto:** o deploy (`git pull`, `collectstatic` e Reload) e a conferência no celular.
+
 ## 2026-11-19 — Categorização e recategorização do histórico concluídas (P2-15 fechado)
 
 **Resultado:** o `importar_pluggy` rodou sem `--dry-run` e recategorizou o histórico; o relatório do

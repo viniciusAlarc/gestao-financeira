@@ -518,6 +518,78 @@ a {
   font-size: 0.8125rem;
 }
 
+/* Relatório: cada categoria expande e mostra os gastos que a compõem. */
+.relatorio-categoria {
+  display: block;
+  padding: 0;
+}
+
+.relatorio-resumo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.relatorio-resumo::-webkit-details-marker {
+  display: none;
+}
+
+.relatorio-resumo::after {
+  content: "▾";
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  transition: transform 0.15s ease;
+}
+
+details[open] > .relatorio-resumo::after {
+  transform: rotate(180deg);
+}
+
+.relatorio-resumo .movimento-descricao {
+  flex: 1;
+}
+
+.relatorio-movimentos {
+  margin: 0;
+  padding: 0 1rem 0.75rem;
+  border-top: 1px solid var(--borda-suave);
+  list-style: none;
+}
+
+.relatorio-movimento {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--borda-suave);
+}
+
+.relatorio-movimento:first-child {
+  border-top: 0;
+}
+
+.relatorio-data {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.relatorio-descricao {
+  flex: 1;
+  min-width: 0;
+  color: var(--texto-medio);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.relatorio-movimento .movimento-valor {
+  font-size: 0.875rem;
+}
+
 .acao {
   display: inline-flex;
   align-items: center;

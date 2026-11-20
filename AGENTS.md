@@ -39,12 +39,13 @@ e o item do MeuPluggy estão no `.env` do servidor e a importação da Pluggy fo
 (dry-run, importação real, idempotência e fuso: P2-13 fechado). A categorização com as 23 categorias
 da Pluggy e a recategorização do histórico foram concluídas em 2026-11-19 (P2-15 fechado). A rotina
 automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0005 estão
-aplicadas no banco real. A suíte tem 231 testes passando. O lançamento
+aplicadas no banco real. A suíte tem 232 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
 `https://viniciusapps.pythonanywhere.com` (commit `3c71e26`); a conta, as categorias e os gastos
 fixos foram importados do banco do PC. Em 2026-11-18 a lista de lançamentos passou a mostrar quem
-lançou. Falta o uso real a dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
+lançou; em 2026-11-19 o relatório passou a expandir os gastos de cada categoria. Falta o uso real a
+dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
 `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
@@ -76,7 +77,7 @@ lançou. Falta o uso real a dois (P3-9). O que foi feito fica em `PROGRESS.md`; 
 4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
    oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; em 2026-11-19 a suíte está em 231, todos passando.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-19 a suíte está em 232, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 
