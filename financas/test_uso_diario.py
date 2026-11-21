@@ -374,11 +374,20 @@ class IgnorarPrevistoTests(BaseUsoDiario):
         )
         previsto.refresh_from_db()
         self.assertEqual(previsto.status, Previsto.Status.IGNORADO)
-        self.assertContains(resposta, "Ignorado: Aluguel")
-        self.assertContains(resposta, "Ignorados")
+        self.assertContains(resposta, "Resolvido: Aluguel")
+        self.assertContains(resposta, "Resolvidos")
+        self.assertContains(resposta, "Desfazer")
         inicio = self.client.get(reverse("financas:inicio"))
         self.assertEqual(inicio.context["previsto_aberto"], Decimal("0.00"))
         self.assertFalse(Movimento.objects.exists())
+
+    def test_tela_abre_com_check_sem_botoes_de_pagar_ou_ignorar(self):
+        previsto = self.criar_previsto()
+        resposta = self.client.get(reverse("financas:previstos"))
+        self.assertContains(resposta, f'id="resolver-{previsto.pk}"')
+        self.assertContains(resposta, 'aria-label="Resolver: Aluguel"')
+        self.assertNotContains(resposta, "Paguei")
+        self.assertNotContains(resposta, ">Ignorar<")
 
     def test_reabrir_devolve_para_aberto(self):
         previsto = self.criar_previsto()
@@ -391,14 +400,14 @@ class IgnorarPrevistoTests(BaseUsoDiario):
         )
         previsto.refresh_from_db()
         self.assertEqual(previsto.status, Previsto.Status.ABERTO)
-        self.assertContains(resposta, "Reaberto: Aluguel")
+        self.assertContains(resposta, "De volta aos abertos: Aluguel")
 
     def test_ignorar_e_reabrir_sao_idempotentes(self):
         previsto = self.criar_previsto()
         ignorar = reverse("financas:ignorar_previsto", args=[previsto.pk])
         self.client.post(ignorar)
         resposta = self.client.post(ignorar, follow=True)
-        self.assertContains(resposta, "já está ignorado")
+        self.assertContains(resposta, "já está resolvido")
 
         reabrir = reverse("financas:reabrir_previsto", args=[previsto.pk])
         self.client.post(reabrir)
@@ -416,7 +425,7 @@ class IgnorarPrevistoTests(BaseUsoDiario):
         )
         previsto.refresh_from_db()
         self.assertEqual(previsto.status, Previsto.Status.PAGO)
-        self.assertContains(resposta, "Só um previsto ignorado")
+        self.assertContains(resposta, "Só um previsto resolvido")
 
     def test_get_nao_ignora_nem_reabre(self):
         previsto = self.criar_previsto()

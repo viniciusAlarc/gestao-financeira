@@ -275,9 +275,11 @@ def previstos(request):
     """Fase 4: gastos fixos mensais, instâncias do mês e previstos avulsos.
 
     Decisão de 2026-11-08: o previsto nasce de um cadastro fixo e cada mês gera
-    a instância daquele mês; o avulso continua como opção secundária. Ignorar e
-    reabrir seguem a máquina de estados (par simétrico, G10). A tela fecha a
-    lista de fixos com o total mensal dos ativos (2026-11-08).
+    a instância daquele mês; o avulso continua como opção secundária. Resolver
+    (check) e desfazer seguem a máquina de estados (par simétrico, G10): o check
+    da tela usa o status ignorado desde 2026-11-20, porque o app não faz
+    transação e quem lança o gasto real é a importação. A tela fecha a lista de
+    fixos com o total mensal dos ativos (2026-11-08).
     """
     garantir_previstos_do_mes()
     conta_padrao = Conta.objects.filter(padrao=True, ativa=True).first()
@@ -334,7 +336,7 @@ def previstos(request):
         .select_related("categoria", "conta", "fixo")
         .order_by("vencimento", "id")
     )
-    previstos_ignorados = (
+    previstos_resolvidos = (
         Previsto.objects.filter(
             status=Previsto.Status.IGNORADO, tipo=TipoValor.DESPESA
         )
@@ -351,7 +353,7 @@ def previstos(request):
             "gastos_fixos": gastos_fixos,
             "total_fixos": total_fixos,
             "previstos": previstos_abertos,
-            "ignorados": previstos_ignorados,
+            "resolvidos": previstos_resolvidos,
             "conta_padrao": conta_padrao,
             "tem_categoria_despesa_ativa": tem_categoria_despesa_ativa,
         },
@@ -481,19 +483,22 @@ def pagar_previsto(request, pk):
 def ignorar_previsto(request, pk):
     """Tira um previsto em aberto da lista sem criar movimento (2026-11-08).
 
-    Par simétrico de `reabrir_previsto` (G10) e idempotente.
+    É a ação do check "resolver" da tela (2026-11-20): o app não faz transação,
+    então o gasto real entra pela importação. O status continua "ignorado" no
+    banco e a lista mostra "Resolvidos". Par simétrico de `reabrir_previsto`
+    (G10) e idempotente.
     """
     previsto = get_object_or_404(Previsto.objects.select_for_update(), pk=pk)
     if previsto.status == Previsto.Status.IGNORADO:
-        messages.info(request, "Este previsto já está ignorado.")
+        messages.info(request, "Este previsto já está resolvido.")
     elif previsto.status != Previsto.Status.ABERTO:
-        messages.error(request, "Só um previsto em aberto pode ser ignorado.")
+        messages.error(request, "Só um previsto em aberto pode ser resolvido.")
     else:
         previsto.status = Previsto.Status.IGNORADO
         previsto.save(update_fields=["status"])
         messages.success(
             request,
-            f"Ignorado: {previsto.descricao} · {dinheiro(previsto.valor)}",
+            f"Resolvido: {previsto.descricao} · {dinheiro(previsto.valor)}",
         )
     return redirect("financas:previstos")
 
@@ -502,14 +507,14 @@ def ignorar_previsto(request, pk):
 @require_POST
 @transaction.atomic
 def reabrir_previsto(request, pk):
-    """Devolve um previsto ignorado para aberto (par do `ignorar_previsto`)."""
+    """Desfaz a resolução de um previsto, devolvendo-o para aberto."""
     previsto = get_object_or_404(Previsto.objects.select_for_update(), pk=pk)
     if previsto.status == Previsto.Status.ABERTO:
         messages.info(request, "Este previsto já está aberto.")
     elif previsto.status != Previsto.Status.IGNORADO:
         messages.error(
             request,
-            "Só um previsto ignorado pode ser reaberto. Para desfazer um pagamento, "
+            "Só um previsto resolvido pode ser desfeito. Para desfazer um pagamento, "
             "use o desfazer do lançamento.",
         )
     else:
@@ -517,7 +522,7 @@ def reabrir_previsto(request, pk):
         previsto.save(update_fields=["status"])
         messages.success(
             request,
-            f"Reaberto: {previsto.descricao} · {dinheiro(previsto.valor)}",
+            f"De volta aos abertos: {previsto.descricao} · {dinheiro(previsto.valor)}",
         )
     return redirect("financas:previstos")
 

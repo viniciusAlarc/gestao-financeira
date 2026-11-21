@@ -3,6 +3,43 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-20 — Os 3 itens P2 fechados: celular, migration 0006 e conta Inter→Itaú
+
+**Pedido do dono (rodada do maestro):** fechar P2-9, P2-16 e P2-14, nesta ordem, com o "pode"
+nomeando cada mudança.
+
+**Feito:**
+- **P2-9 (celular) — fechado como obsoleto (decisão do dono, 2026-11-20):** o item nasceu
+  em 2026-11-05, quando o plano era hospedar a versão de produção no PC; a produção foi para
+  o PythonAnywhere em 2026-11-17 e o uso diário não depende mais disso. A linha
+  `DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.10.15` foi gravada no `.env` (as outras
+  variáveis intactas, nenhum segredo impresso ou criado) e fica, inofensiva, para quando
+  alguém rodar o app localmente; não há teste no celular a fazer.
+- **P2-16 (migration):** `.venv/bin/python manage.py migrate financas` aplicou a 0006 no
+  banco do PC; `showmigrations` mostra `[X] 0006_origem_pluggy`. A cópia de segurança não
+  foi feita: o Bash da rodada bloqueia `cp` e o dono optou por seguir (a 0006 só muda
+  `choices`, não altera dado). No servidor não se mexeu.
+- **P2-14 (conta):** decisão do dono em 2026-11-20: renomear "Inter" para "Itaú". Comando
+  via ORM aplicado (`Conta.objects.filter(nome='Inter').update(nome='Itaú')`), 1 conta
+  renomeada; os lançamentos seguem ligados à conta, então o histórico foi junto.
+
+**Testes:** 233 antes e depois, OK.
+
+**Aberto:** nada no `PENDENCIAS.md`.
+
+## 2026-11-20 — Pendências enxugadas a pedido do dono
+
+**Decisões do dono:** P3-9 (verificação da fase 6) encerrada — o uso real a dois já está
+ocorrendo no servidor. P3-10 (renovação mensal) e P3-12 (backup semanal) não são pendências:
+são rotina recorrente, e foram para `docs-dev/guias/OPERACAO.md` na seção "Rotina recorrente".
+P4-4 (conferi visual a 375px) e P4-6 (descartáveis da conferência) fechadas.
+
+**Feito:** `PENDENCIAS.md` só tem agora os 3 itens P2 (P2-9, P2-14, P2-16). Removido
+`config/settings_visual.py` (settings descartável da rodada de 05/11; nada o importa;
+`/tmp/gestao-visual/` já não existia). Suíte conferida no fechamento: 233 testes passando
+(linha de base commitada: 232; +1 vem de mudança não commitada de outra sessão na árvore).
+Foco daqui em diante: os 3 itens P2.
+
 ## 2026-11-19 — Relatório expande os gastos de cada categoria
 
 **Pedido do dono:** na tela de relatórios, expandir cada categoria e ver os gastos que a compõem.

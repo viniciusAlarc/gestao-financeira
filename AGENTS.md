@@ -38,7 +38,7 @@ PJ e não atende MEI) e o caminho escolhido é a **Pluggy pelo Open Finance, uso
 e o item do MeuPluggy estão no `.env` do servidor e a importação da Pluggy foi validada em 2026-11-18
 (dry-run, importação real, idempotência e fuso: P2-13 fechado). A categorização com as 23 categorias
 da Pluggy e a recategorização do histórico foram concluídas em 2026-11-19 (P2-15 fechado). A rotina
-automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0005 estão
+automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0006 estão
 aplicadas no banco real. A suíte tem 232 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
@@ -111,7 +111,7 @@ servidor; o `requests` aplica o proxy da conta automaticamente.
 
 O comando `importar_pluggy` (com `--dry-run`) está no projeto. A idempotência é por
 `Movimento.id_externo`, com o id da transação da Pluggy. A migration 0006 (novo valor `pluggy` em
-`Movimento.origem`) está escrita e ainda não foi aplicada no banco real (P2-16).
+`Movimento.origem`) está aplicada no banco real, no PC e no servidor (P2-16 fechado em 2026-11-20).
 
 ## Onde este projeto roda (desenvolvimento no WSL; produção no PythonAnywhere)
 

@@ -69,51 +69,44 @@
 
 <section class="lista-mes">
   <h2 class="subtitulo">Abertos</h2>
-  {% for previsto in previstos %}
-    <div class="dia">
-      <p class="dia-cabecalho">Vence {{ previsto.vencimento|date:"d/m/Y" }}</p>
-      <ul class="movimentos">
-        <li class="movimento">
+  {% if previstos %}
+  <ul class="movimentos">
+    {% for previsto in previstos %}
+    <li class="movimento-compacto">
+      <form method="post" action="{% url 'financas:ignorar_previsto' previsto.pk %}" class="check-previsto">
+        {% csrf_token %}
+        <input type="checkbox" id="resolver-{{ previsto.pk }}" onchange="this.form.submit()" aria-label="Resolver: {{ previsto.descricao }}">
+        <label for="resolver-{{ previsto.pk }}" class="check-previsto-rotulo">
           <span class="movimento-descricao">{{ previsto.descricao }}</span>
-          <div class="movimento-valor">
-            <span>{{ previsto.valor|dinheiro }}</span>
-            <form method="post" action="{% url 'financas:pagar_previsto' previsto.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="botao-primario" aria-label="Paguei: {{ previsto.descricao }}">Paguei</button>
-            </form>
-            <form method="post" action="{% url 'financas:ignorar_previsto' previsto.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="botao-secundario" aria-label="Ignorar: {{ previsto.descricao }}">Ignorar</button>
-            </form>
-          </div>
-        </li>
-      </ul>
-    </div>
-  {% empty %}
+          <span class="movimento-data">vence {{ previsto.vencimento|date:"d/m" }}</span>
+        </label>
+        <span class="movimento-valor">{{ previsto.valor|dinheiro }}</span>
+        <noscript><button type="submit" class="acao">Resolver</button></noscript>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
     <p class="vazio">Nenhum gasto previsto em aberto.</p>
-  {% endfor %}
+  {% endif %}
 </section>
 
-{% if ignorados %}
+{% if resolvidos %}
 <section class="lista-mes">
-  <h2 class="subtitulo">Ignorados</h2>
-  {% for previsto in ignorados %}
-    <div class="dia">
-      <p class="dia-cabecalho">Vencia {{ previsto.vencimento|date:"d/m/Y" }}</p>
-      <ul class="movimentos">
-        <li class="movimento">
-          <span class="movimento-descricao">{{ previsto.descricao }}</span>
-          <div class="movimento-valor">
-            <span>{{ previsto.valor|dinheiro }}</span>
-            <form method="post" action="{% url 'financas:reabrir_previsto' previsto.pk %}">
-              {% csrf_token %}
-              <button type="submit" class="botao-secundario" aria-label="Reabrir: {{ previsto.descricao }}">Reabrir</button>
-            </form>
-          </div>
-        </li>
-      </ul>
-    </div>
-  {% endfor %}
+  <h2 class="subtitulo">Resolvidos</h2>
+  <ul class="movimentos">
+    {% for previsto in resolvidos %}
+    <li class="movimento-compacto movimento-resolvido">
+      <span class="movimento-descricao">{{ previsto.descricao }}</span>
+      <span class="movimento-data">vencia {{ previsto.vencimento|date:"d/m" }}</span>
+      <span class="movimento-valor">{{ previsto.valor|dinheiro }}</span>
+      <form method="post" action="{% url 'financas:reabrir_previsto' previsto.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="acao" aria-label="Desfazer: {{ previsto.descricao }}">Desfazer</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
 </section>
 {% endif %}
 

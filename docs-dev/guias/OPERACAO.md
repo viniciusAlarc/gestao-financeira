@@ -21,6 +21,13 @@ O passo a passo completo (conta, WSGI, estáticos, banco e backup) está em
 `docs-dev/a-codar/03-deploy-pythonanywhere.md`. Para publicar uma atualização: `git pull`,
 `collectstatic` quando mudar estático, `migrate` só com o "pode" do dono e **Reload** na aba Web.
 
+### Rotina recorrente (hábito do dono, não é pendência)
+
+| Quando | O quê | Onde |
+| ------ | ----- | ---- |
+| Quando o e-mail do PythonAnywhere avisar (mensal) | Renovar o web app. Sem o clique, o app fica fora do ar até a renovação (os arquivos não são apagados) | aba **Web** |
+| Toda semana | Baixar o `db.sqlite3` e guardar no PC com a data. O plano grátis não tem tarefa agendada nem backup automático | aba **Files** |
+
 ## O que digitar no celular
 
 Escutar em `0.0.0.0` não basta: no celular, `localhost` é o próprio celular. O endereço é

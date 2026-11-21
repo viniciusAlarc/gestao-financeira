@@ -512,10 +512,71 @@ a {
   margin: 0;
 }
 
-.movimento-valor .botao-primario {
-  margin: 0.375rem 0 0;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.8125rem;
+/* Gastos previstos: uma linha por item, resolvido pelo check (2026-11-20). */
+.movimento-compacto {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+}
+
+.movimento-compacto + .movimento-compacto {
+  border-top: 1px solid var(--borda-suave);
+}
+
+.movimento-compacto form {
+  margin: 0;
+}
+
+.check-previsto {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.check-previsto input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--acento);
+  cursor: pointer;
+}
+
+.check-previsto-rotulo {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.movimento-compacto .movimento-descricao {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movimento-data {
+  flex-shrink: 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.movimento-compacto .movimento-valor {
+  flex-shrink: 0;
+  font-size: 0.9375rem;
+}
+
+.movimento-resolvido .movimento-descricao,
+.movimento-resolvido .movimento-valor {
+  color: var(--texto-suave);
 }
 
 /* Relatório: cada categoria expande e mostra os gastos que a compõem. */
