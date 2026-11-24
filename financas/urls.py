@@ -27,6 +27,27 @@ urlpatterns = [
         name="editar_gasto_fixo",
     ),
     path("relatorio/", views.relatorio, name="relatorio"),
+    path("rotina/", views.rotina, name="rotina"),
+    path(
+        "rotina/<int:pk>/concluir/",
+        views.concluir_tarefa,
+        name="concluir_tarefa",
+    ),
+    path(
+        "rotina/<int:pk>/desfazer/",
+        views.desfazer_conclusao_tarefa,
+        name="desfazer_conclusao_tarefa",
+    ),
+    path(
+        "rotina/<int:pk>/editar/",
+        views.editar_tarefa,
+        name="editar_tarefa",
+    ),
+    path(
+        "rotina/<int:pk>/excluir/",
+        views.excluir_tarefa,
+        name="excluir_tarefa",
+    ),
     path(
         "tarefas/importar-pluggy/",
         views.importar_pluggy_tarefa,

@@ -13,7 +13,7 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Categoria, GastoFixo, Movimento, Previsto, TipoValor
+from .models import Categoria, GastoFixo, Movimento, Previsto, Tarefa, TipoValor
 
 
 def _chave_alfabetica(categoria):
@@ -263,3 +263,21 @@ class PrevistoForm(forms.ModelForm):
             self.fields["categoria"],
             Categoria.objects.filter(ativa=True, tipo=TipoValor.DESPESA),
         )
+
+
+class TarefaForm(forms.ModelForm):
+    """Título da tarefa da rotina; o dono vem da sessão, nunca do formulário."""
+
+    class Meta:
+        model = Tarefa
+        fields = ["titulo"]
+        labels = {"titulo": "Tarefa"}
+        widgets = {
+            "titulo": forms.TextInput(
+                attrs={
+                    "class": "campo",
+                    "autocomplete": "off",
+                    "placeholder": "Ex.: tomar água",
+                }
+            )
+        }

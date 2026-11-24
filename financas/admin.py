@@ -5,7 +5,15 @@ A tela de verdade vem nas fases 2 e 3. Até lá, é aqui que o modelo é testado
 
 from django.contrib import admin
 
-from .models import Categoria, Conta, GastoFixo, Movimento, Previsto
+from .models import (
+    Categoria,
+    ConclusaoTarefa,
+    Conta,
+    GastoFixo,
+    Movimento,
+    Previsto,
+    Tarefa,
+)
 
 
 @admin.register(Conta)
@@ -73,6 +81,20 @@ class GastoFixoAdmin(admin.ModelAdmin):
     )
     list_filter = ("ativo", "categoria", "conta")
     search_fields = ("descricao",)
+
+
+@admin.register(Tarefa)
+class TarefaAdmin(admin.ModelAdmin):
+    list_display = ("titulo", "dono", "criada_em")
+    list_filter = ("dono",)
+    search_fields = ("titulo",)
+
+
+@admin.register(ConclusaoTarefa)
+class ConclusaoTarefaAdmin(admin.ModelAdmin):
+    list_display = ("tarefa", "data", "concluida_em")
+    list_filter = ("data", "tarefa__dono")
+    date_hierarchy = "data"
 
 
 @admin.register(Previsto)

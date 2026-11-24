@@ -13,11 +13,12 @@ from itertools import groupby
 from operator import attrgetter
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.core.management import call_command
 from django.db import transaction
-from django.db.models import Q, Sum
-from django.http import JsonResponse
+from django.db.models import Exists, OuterRef, Q, Sum
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -30,22 +31,36 @@ from .forms import (
     GastoFixoForm,
     MovimentoRapidoForm,
     PrevistoForm,
+    TarefaForm,
 )
 from .gastos_fixos import atualizar_previsto_do_mes, garantir_previstos_do_mes
-from .models import Categoria, Conta, GastoFixo, Movimento, Previsto, TipoValor
+from .models import (
+    Categoria,
+    ConclusaoTarefa,
+    Conta,
+    GastoFixo,
+    Movimento,
+    Previsto,
+    Tarefa,
+    TipoValor,
+)
 from .templatetags.financas_extra import dinheiro
 
 ZERO = Decimal("0.00")
 
 
-def _mes_da_querystring(request):
-    """Mês pedido em `?mes=AAAA-MM`; ausente ou inválido cai no mês corrente."""
-    valor = request.GET.get("mes", "")
+def _mes_de_valor(valor):
+    """`AAAA-MM` vira o primeiro dia do mês; ausente ou inválido cai no corrente."""
     try:
         ano, mes = (int(parte) for parte in valor.split("-"))
         return date(ano, mes, 1)
     except (TypeError, ValueError, OverflowError):
         return timezone.localdate().replace(day=1)
+
+
+def _mes_da_querystring(request):
+    """Mês pedido em `?mes=AAAA-MM`; ausente ou inválido cai no mês corrente."""
+    return _mes_de_valor(request.GET.get("mes", ""))
 
 
 def _mes_anterior(primeiro_dia):
@@ -62,6 +77,25 @@ def _url_do_mes(nome_rota, quando):
     if quando.replace(day=1) == timezone.localdate().replace(day=1):
         return url
     return f"{url}?mes={quando:%Y-%m}"
+
+
+def _previstos_do_mes(mes, tipo=None):
+    """Previstos que pertencem a um mês (decisão do dono de 2026-11-22).
+
+    O previsto gerado de gasto fixo pertence ao mês da `competencia`; o
+    vencimento dele é do mesmo mês por construção, mas quem manda é a
+    competência. O previsto avulso não tem competência e pertence ao mês do
+    `vencimento`. `tipo=None` traz despesa e receita; a tela de previstos pede
+    só despesa por enquanto.
+    """
+    seguinte = _mes_seguinte(mes)
+    consulta = Previsto.objects.filter(
+        Q(competencia=mes)
+        | Q(competencia__isnull=True, vencimento__gte=mes, vencimento__lt=seguinte)
+    )
+    if tipo is not None:
+        consulta = consulta.filter(tipo=tipo)
+    return consulta
 
 
 @login_required
@@ -586,6 +620,148 @@ def relatorio(request):
             "mes_seguinte": _mes_seguinte(mes),
         },
     )
+
+
+# Rotina diária (2026-11-22): cada login tem as suas tarefas; o outro perfil
+# entra só para consultar. O check é por dia (`ConclusaoTarefa`), então a mesma
+# lista reaparece em aberto à meia-noite sem perder o histórico.
+
+
+def _nome_de_perfil(usuario):
+    """Nome para a tela: nome completo quando existe, senão o login."""
+    return usuario.get_full_name() or usuario.get_username()
+
+
+@login_required
+def rotina(request):
+    """Minhas tarefas de hoje e, em modo leitura, as do outro perfil.
+
+    `?perfil=<id>` abre a rotina da outra pessoa sem formulário e sem check:
+    o dono da tarefa sai sempre da sessão em toda ação de escrita (G9).
+    """
+    hoje = timezone.localdate()
+    outros = get_user_model().objects.filter(is_active=True).exclude(
+        pk=request.user.pk
+    )
+    perfis = [
+        {"pk": usuario.pk, "nome": _nome_de_perfil(usuario)}
+        for usuario in outros.order_by("first_name", "username")
+    ]
+
+    dono = request.user
+    somente_leitura = False
+    perfil_pedido = request.GET.get("perfil", "").strip()
+    if perfil_pedido and perfil_pedido != str(request.user.pk):
+        # Id não numérico também é "não existe": 404, nunca 500 (G9).
+        if not perfil_pedido.isdigit():
+            raise Http404("Perfil não encontrado.")
+        dono = get_object_or_404(outros, pk=int(perfil_pedido))
+        somente_leitura = True
+
+    if request.method == "POST":
+        if somente_leitura:
+            messages.error(request, "A rotina do outro perfil é somente leitura.")
+            return redirect(f"{reverse('financas:rotina')}?perfil={dono.pk}")
+        form = TarefaForm(request.POST)
+        if form.is_valid():
+            tarefa = form.save(commit=False)
+            tarefa.dono = request.user
+            tarefa.save()
+            messages.success(request, f"Tarefa criada: {tarefa.titulo}")
+            return redirect("financas:rotina")
+    else:
+        form = None if somente_leitura else TarefaForm()
+
+    tarefas = list(
+        Tarefa.objects.filter(dono=dono)
+        .annotate(
+            concluida_hoje=Exists(
+                ConclusaoTarefa.objects.filter(tarefa=OuterRef("pk"), data=hoje)
+            )
+        )
+        .order_by("id")
+    )
+    concluidas = sum(1 for tarefa in tarefas if tarefa.concluida_hoje)
+
+    return render(
+        request,
+        "rotina.html",
+        {
+            "perfis": perfis,
+            "perfil_visto": dono,
+            "nome_perfil_visto": _nome_de_perfil(dono),
+            "somente_leitura": somente_leitura,
+            "form": form,
+            "tarefas": tarefas,
+            "total": len(tarefas),
+            "concluidas": concluidas,
+            "hoje": hoje,
+        },
+    )
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def concluir_tarefa(request, pk):
+    """Marca a tarefa do próprio usuário como concluída hoje (idempotente)."""
+    tarefa = get_object_or_404(
+        Tarefa.objects.select_for_update().filter(pk=pk, dono=request.user)
+    )
+    _, criada = ConclusaoTarefa.objects.get_or_create(
+        tarefa=tarefa, data=timezone.localdate()
+    )
+    if criada:
+        messages.success(request, f"Concluída: {tarefa.titulo}")
+    else:
+        messages.info(request, "Esta tarefa já estava concluída hoje.")
+    return redirect("financas:rotina")
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def desfazer_conclusao_tarefa(request, pk):
+    """Desmarca a tarefa de hoje, preservando os dias anteriores (idempotente)."""
+    tarefa = get_object_or_404(
+        Tarefa.objects.select_for_update().filter(pk=pk, dono=request.user)
+    )
+    apagadas, _ = ConclusaoTarefa.objects.filter(
+        tarefa=tarefa, data=timezone.localdate()
+    ).delete()
+    if apagadas:
+        messages.success(request, f"Reaberta: {tarefa.titulo}")
+    else:
+        messages.info(request, "Esta tarefa já estava em aberto.")
+    return redirect("financas:rotina")
+
+
+@login_required
+def editar_tarefa(request, pk):
+    """Renomeia uma tarefa do próprio usuário; a do outro responde 404 (G9)."""
+    tarefa = get_object_or_404(Tarefa, pk=pk, dono=request.user)
+    form = TarefaForm(request.POST or None, instance=tarefa)
+    if request.method == "POST" and form.is_valid():
+        tarefa = form.save()
+        messages.success(request, f"Tarefa atualizada: {tarefa.titulo}")
+        return redirect("financas:rotina")
+    return render(
+        request,
+        "editar_tarefa.html",
+        {"form": form, "tarefa": tarefa},
+    )
+
+
+@login_required
+@require_POST
+@transaction.atomic
+def excluir_tarefa(request, pk):
+    """Exclui a tarefa e o histórico dela; só o dono pode (G9)."""
+    tarefa = get_object_or_404(Tarefa, pk=pk, dono=request.user)
+    titulo = tarefa.titulo
+    tarefa.delete()
+    messages.success(request, f"Tarefa excluída: {titulo}")
+    return redirect("financas:rotina")
 
 
 @csrf_exempt

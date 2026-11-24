@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F3EEE4">
+<title>Direção A — Papel e tinta · amostra</title>
+<style>
+  /* ===== Amostra estática — sem rede, sem fonte externa, sem framework =====
+     Direção A — Papel e tinta. Editorial e quente: papel, tinta e verde,
+     hierarquia pela tipografia e pelas linhas. Nenhum gradiente, nenhuma
+     faixa colorida em aresta, nenhum chip de ícone em indicador (G19). */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; }
+  svg { display: block; }
+  button, input, select { font: inherit; color: inherit; }
+  ul, ol { margin: 0; padding: 0; list-style: none; }
+  p, h1, h2, h3, dl, dt, dd { margin: 0; }
+  a { color: inherit; }
+
+  .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+  .icone { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== Capa da amostra (moldura neutra, igual nas três direções) ===== */
+  body {
+    background: #E7E8E2;
+    color: #24271F;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .capa {
+    background: #F7F7F2;
+    border-bottom: 1px solid #D6D8CF;
+    padding: 20px 16px 18px;
+  }
+
+  .capa-conteudo { display: grid; gap: 10px; max-width: 1080px; margin: 0 auto; }
+
+  .capa-olho {
+    color: #6A6E62;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .capa h1 { font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.1; letter-spacing: -0.02em; }
+
+  .capa-resumo { max-width: 62ch; color: #4B5045; font-size: 0.9375rem; }
+
+  .capa-tokens { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+
+  .token { display: inline-flex; align-items: center; gap: 6px; color: #55594E; font-size: 0.75rem; }
+  .token-cor { width: 18px; height: 18px; border: 1px solid rgba(0, 0, 0, 0.18); border-radius: 2px; }
+  .token code { color: #33372E; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.71875rem; }
+
+  .capa-tipo { color: #4B5045; font-size: 0.8125rem; }
+  .capa-tipo strong { color: #24271F; }
+  .capa-nota { color: #65695D; font-size: 0.8125rem; }
+
+  .capa-links { display: flex; flex-wrap: wrap; gap: 0 14px; font-size: 0.8125rem; font-weight: 600; }
+  .capa-links a { display: inline-flex; align-items: center; min-height: 44px; color: #2C3B32; text-decoration: underline; text-underline-offset: 2px; }
+
+  /* ===== Galeria ===== */
+  .galeria { display: grid; gap: 30px; padding: 18px 0 44px; }
+
+  .tela { display: grid; gap: 8px; }
+
+  .tela-cabecalho { display: grid; gap: 1px; padding: 0 16px; }
+  .tela-nome { font-size: 1rem; font-weight: 700; line-height: 1.2; color: #24271F; }
+  .tela-nota { max-width: 76ch; color: #5B6054; font-size: 0.8125rem; }
+
+  @media (min-width: 860px) {
+    .galeria { gap: 40px; padding: 26px 16px 60px; }
+    .tela-cabecalho { max-width: 1080px; width: 100%; margin: 0 auto; }
+  }
+
+  /* ===== O app amostrado ===== */
+  .app {
+    --fundo: #F3EEE4;
+    --superficie: #FBF8F1;
+    --superficie-alta: #EDE5D6;
+    --linha: #D8CFBD;
+    --linha-fraca: #E6DFD2;
+    --linha-forte: #B9AD96;
+    --texto: #211D16;
+    --texto-medio: #5A5244;
+    --texto-suave: #6E6454;
+    --acento: #2F5D45;
+    --acento-fraco: #E2E9DF;
+    --positivo: #256B4E;
+    --negativo: #A23B2A;
+    --atencao: #8A5A12;
+    --atencao-fundo: #F5E7CC;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+
+    max-width: 1080px;
+    margin: 0 auto;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media (min-width: 860px) {
+    .app { border: 1px solid #C7CBC0; border-radius: 6px; overflow: hidden; }
+  }
+
+  /* Topo: marca; no desktop, os seis destinos. */
+  .app-topo {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 56px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--linha);
+    background: var(--superficie);
+  }
+
+  .marca {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--texto);
+    font-family: var(--serif);
+    font-size: 1.1875rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .marca-ponto { width: 7px; height: 7px; background: var(--acento); }
+
+  .app-nav, .app-sair { display: none; }
+
+  .app-barra {
+    display: flex;
+    margin-top: 20px;
+    padding: 4px 4px 6px;
+    border-top: 1px solid var(--linha);
+    background: var(--superficie);
+  }
+
+  .app-barra a {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    min-height: 54px;
+    padding: 5px 2px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    color: var(--texto-suave);
+    text-decoration: none;
+  }
+
+  .app-barra a[aria-current="page"] {
+    border-color: var(--linha);
+    background: var(--superficie-alta);
+    color: var(--texto);
+  }
+
+  .app-barra .rotulo {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 860px) {
+    .app-topo { padding: 0 28px; min-height: 64px; }
+    .app-nav { display: flex; align-items: center; gap: 2px; }
+    .app-nav a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      color: var(--texto-suave);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .app-nav a:hover { color: var(--texto); }
+    .app-nav a[aria-current="page"] {
+      border-color: var(--linha);
+      background: var(--acento-fraco);
+      color: var(--texto);
+    }
+    .app-sair {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      margin-left: auto;
+      color: var(--texto-suave);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .app-sair:hover { color: var(--texto); }
+    .app-barra { display: none; }
+  }
+
+  .app-conteudo { display: grid; gap: 22px; padding: 20px 16px 10px; }
+
+  @media (min-width: 860px) {
+    .app-conteudo { max-width: 1000px; margin: 0 auto; padding: 32px 32px 18px; gap: 28px; }
+  }
+
+  /* Cabeçalho de tela: o mês é o título; o nome da tela é o olho. */
+  .pagina-cabecalho {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+
+  .olho { color: var(--acento); font-family: var(--serif); font-size: 0.9375rem; font-style: italic; }
+
+  .mes-atual {
+    font-family: var(--serif);
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+
+  .mes-controle { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+
+  .mes-seta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--linha);
+    border-radius: 2px;
+    color: var(--texto-medio);
+    text-decoration: none;
+  }
+
+  .mes-seta:hover { border-color: var(--linha-forte); background: var(--superficie); color: var(--texto); }
+
+  /* Indicadores: superfície por função, não o mesmo cartão em tudo. */
+  .rotulo-bloco {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--texto-medio);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .tag {
+    padding: 0 6px;
+    border: 1px solid var(--linha);
+    border-radius: 2px;
+    color: var(--texto-suave);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+
+  .saldo { padding-bottom: 20px; border-bottom: 1px solid var(--linha); }
+  .saldo .rotulo-bloco { font-size: 0.875rem; color: var(--texto-medio); }
+
+  .saldo-numero {
+    font-family: var(--serif);
+    font-size: clamp(2.375rem, 9vw, 3.25rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+
+  .nota { max-width: 54ch; color: var(--texto-suave); font-size: 0.8125rem; line-height: 1.45; }
+
+  .fixo {
+    padding: 16px;
+    border: 1px solid var(--linha);
+    border-radius: 2px;
+    background: var(--superficie);
+  }
+
+  .fixo-cabecalho { display: grid; gap: 2px; margin-bottom: 4px; }
+  .fixo-cabecalho .nota { font-size: 0.75rem; }
+
+  .fixo-grade { display: grid; }
+
+  .fixo-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+  }
+
+  .fixo-item + .fixo-item { border-top: 1px solid var(--linha-fraca); }
+
+  .fixo-rotulo { color: var(--texto-medio); font-size: 0.8125rem; }
+
+  .fixo-valor {
+    color: var(--texto);
+    font-size: 1.25rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .positivo { color: var(--positivo); }
+
+  .resumo-grade { display: grid; gap: 18px; }
+
+  .bloco { padding-top: 16px; border-top: 1px solid var(--linha); }
+
+  .valor-grande {
+    font-size: 1.625rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+
+  .bloco .nota { margin-top: 4px; }
+
+  .alerta { color: var(--negativo); font-weight: 600; }
+
+  @media (min-width: 860px) {
+    .fixo { padding: 18px 20px; }
+    .fixo-grade { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .fixo-item { display: grid; gap: 2px; padding: 0 18px; }
+    .fixo-item:first-child { padding-left: 0; }
+    .fixo-item + .fixo-item { border-top: 0; border-left: 1px solid var(--linha-fraca); }
+    .resumo-grade { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 36px; }
+  }
+
+  /* Lançamentos: formulário e lista. */
+  .lancar-grade { display: grid; gap: 22px; }
+
+  .form {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid var(--linha);
+    border-radius: 2px;
+    background: var(--superficie);
+  }
+
+  .form-titulo { font-family: var(--serif); font-size: 1.125rem; font-weight: 600; }
+
+  .campo { display: grid; gap: 3px; color: var(--texto-medio); font-size: 0.75rem; font-weight: 600; }
+
+  .campo input, .campo select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px solid var(--linha-forte);
+    border-radius: 2px;
+    background: var(--superficie);
+    color: var(--texto);
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  .campo input::placeholder { color: var(--texto-suave); }
+
+  .campo-duplo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .campo-opcional { color: var(--texto-suave); font-weight: 400; }
+
+  .botao {
+    min-height: 44px;
+    margin-top: 2px;
+    padding: 10px 16px;
+    border: 1px solid var(--acento);
+    border-radius: 2px;
+    background: var(--acento);
+    color: #FFFFFF;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .botao:hover { background: #254B37; border-color: #254B37; }
+
+  .lista { min-width: 0; }
+
+  .dia { padding: 14px 0 2px; border-top: 1px solid var(--linha); }
+  .dia:first-child { padding-top: 0; border-top: 0; }
+
+  .dia-titulo { margin-bottom: 2px; color: var(--texto-suave); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.02em; }
+
+  .linha { display: flex; align-items: baseline; gap: 12px; min-width: 0; min-height: 44px; padding: 9px 0; }
+  .linha + .linha { border-top: 1px solid var(--linha-fraca); }
+
+  .linha-texto { flex: 1; min-width: 0; }
+
+  .linha-titulo { font-size: 0.9375rem; line-height: 1.35; overflow-wrap: anywhere; }
+  .linha-meta { color: var(--texto-suave); font-size: 0.75rem; line-height: 1.35; overflow-wrap: anywhere; }
+
+  .linha-valor {
+    flex-shrink: 0;
+    color: var(--texto);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .receita { color: var(--positivo); }
+
+  .total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--linha-forte);
+    color: var(--texto-medio);
+    font-size: 0.8125rem;
+  }
+
+  .total strong { color: var(--texto); font-size: 1rem; font-variant-numeric: tabular-nums; }
+
+  .contagem { margin-top: 6px; color: var(--texto-suave); font-size: 0.75rem; }
+
+  @media (min-width: 860px) {
+    .lancar-grade { grid-template-columns: 320px minmax(0, 1fr); gap: 36px; align-items: start; }
+    .form { position: sticky; top: 16px; }
+    .linha { padding: 10px 0; }
+    .linha-titulo { font-size: 0.9375rem; }
+  }
+
+  /* Previstos: lista única do mês, em ordem de vencimento. */
+  .previstos { border-top: 1px solid var(--linha); }
+
+  .previsto {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    min-height: 52px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--linha-fraca);
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border: 1px solid var(--linha-forte);
+    border-radius: 50%;
+    color: transparent;
+  }
+
+  .check .icone { width: 12px; height: 12px; stroke-width: 2.6; }
+
+  .previsto-texto { min-width: 0; }
+
+  .previsto-titulo { font-size: 0.9375rem; line-height: 1.3; overflow-wrap: anywhere; }
+
+  .previsto-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 2px;
+    color: var(--texto-suave);
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .separador { color: var(--linha-forte); }
+
+  .estado {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 6px;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1.6;
+    white-space: nowrap;
+  }
+
+  .estado-pago { color: var(--positivo); }
+  .estado-atraso { color: var(--negativo); }
+  .estado-hoje { color: var(--atencao); background: var(--atencao-fundo); }
+
+  .previsto-valor {
+    color: var(--texto);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .previsto.pago .check { border-color: var(--positivo); background: var(--positivo); color: #FFFFFF; }
+  .previsto.pago .previsto-titulo,
+  .previsto.pago .previsto-valor { color: var(--positivo); }
+  .previsto.entrada .previsto-valor { color: var(--positivo); }
+
+  .total-previstos {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--linha-forte);
+  }
+
+  .total-previstos .rotulo { color: var(--texto-medio); font-size: 0.8125rem; }
+  .total-previstos .contas { color: var(--texto-suave); font-size: 0.75rem; }
+
+  .total-previstos strong {
+    color: var(--texto);
+    font-size: 1.25rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .rodape-tela { margin-top: 10px; color: var(--texto-suave); font-size: 0.75rem; }
+
+  /* Foco visível em todo controle. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-inicio" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5"/><path d="M6 9.5V20h12V9.5"/><path d="M9.5 20v-5.5h5V20"/></symbol>
+  <symbol id="i-lancar" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8.5v7M8.5 12h7"/></symbol>
+  <symbol id="i-previstos" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3v4M16 3v4M3.5 9.5h17"/><path d="m9 14.5 2 2 4-4"/></symbol>
+  <symbol id="i-rotina" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12.2 2.5 2.5L16 9.2"/></symbol>
+  <symbol id="i-mais" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-esq" viewBox="0 0 24 24"><path d="m14.5 6-6 6 6 6"/></symbol>
+  <symbol id="i-dir" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+</svg>
+
+<header class="capa">
+  <div class="capa-conteudo">
+    <p class="capa-olho">Direção A · proposta</p>
+    <h1>Papel e tinta</h1>
+    <p class="capa-resumo">Editorial e quente: papel, tinta e verde. A hierarquia vem da tipografia e das linhas, não de cartões iguais. Menos caixas, mais leitura.</p>
+    <div class="capa-tokens" aria-label="Paleta da direção">
+      <span class="token"><span class="token-cor" style="background:#F3EEE4"></span>Fundo <code>#F3EEE4</code></span>
+      <span class="token"><span class="token-cor" style="background:#FBF8F1"></span>Superfície <code>#FBF8F1</code></span>
+      <span class="token"><span class="token-cor" style="background:#211D16"></span>Tinta <code>#211D16</code></span>
+      <span class="token"><span class="token-cor" style="background:#2F5D45"></span>Acento <code>#2F5D45</code></span>
+      <span class="token"><span class="token-cor" style="background:#256B4E"></span>Positivo <code>#256B4E</code></span>
+      <span class="token"><span class="token-cor" style="background:#A23B2A"></span>Negativo <code>#A23B2A</code></span>
+      <span class="token"><span class="token-cor" style="background:#8A5A12"></span>Atenção <code>#8A5A12</code></span>
+      <span class="token"><span class="token-cor" style="background:#D8CFBD"></span>Linha <code>#D8CFBD</code></span>
+    </div>
+    <p class="capa-tipo"><strong>Tipografia proposta:</strong> Fraunces nos títulos (SIL OFL 1.1, para self-host; não baixada nesta tarefa). Texto e números na fonte do sistema, com números tabulares. A amostra substitui a Fraunces por Georgia/Palatino.</p>
+    <p class="capa-nota">Amostra estática, sem rede e sem controles ativos. Dados inventados. Abaixo de 860px aparece a barra inferior; a partir de 860px, a navegação do topo. Nenhum recurso externo.</p>
+    <nav class="capa-links" aria-label="Telas da amostra">
+      <a href="#navegacao">Navegação</a>
+      <a href="#inicio">Tela inicial</a>
+      <a href="#lancamentos">Lançamentos</a>
+      <a href="#previstos">Previstos</a>
+    </nav>
+  </div>
+</header>
+
+<main class="galeria">
+
+  <!-- ===== 1. Navegação ===== -->
+  <section class="tela" id="navegacao" aria-labelledby="t-navegacao">
+    <div class="tela-cabecalho">
+      <h2 class="tela-nome" id="t-navegacao">Navegação</h2>
+      <p class="tela-nota">Cinco destinos no celular; “Mais” reúne Relatório, Categorias e Sair. No desktop, os seis destinos ficam no topo. O item ativo é o único tingido.</p>
+    </div>
+    <div class="app" aria-label="Amostra da navegação">
+      <header class="app-topo">
+        <a class="marca" href="#navegacao"><span class="marca-ponto" aria-hidden="true"></span>Finanças</a>
+        <nav class="app-nav" aria-label="Principal">
+          <a href="#inicio" aria-current="page">Início</a>
+          <a href="#lancamentos">Lançamentos</a>
+          <a href="#previstos">Previstos</a>
+          <a href="#navegacao">Relatório</a>
+          <a href="#navegacao">Rotina</a>
+          <a href="#navegacao">Categorias</a>
+        </nav>
+        <a class="app-sair" href="#navegacao">Sair</a>
+      </header>
+      <nav class="app-barra" aria-label="Navegação principal">
+        <a href="#inicio" aria-current="page"><svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg><span class="rotulo">Início</span></a>
+        <a href="#lancamentos"><svg class="icone" aria-hidden="true"><use href="#i-lancar"/></svg><span class="rotulo">Lançamentos</span></a>
+        <a href="#previstos"><svg class="icone" aria-hidden="true"><use href="#i-previstos"/></svg><span class="rotulo">Previstos</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-rotina"/></svg><span class="rotulo">Rotina</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-mais"/></svg><span class="rotulo">Mais</span></a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ===== 2. Tela inicial ===== -->
+  <section class="tela" id="inicio" aria-labelledby="t-inicio">
+    <div class="tela-cabecalho">
+      <h2 class="tela-nome" id="t-inicio">Tela inicial</h2>
+      <p class="tela-nota">Saldo → Fixo do mês (“combinado”) → Gasto do mês (“realizado”) → Previsto em aberto (só despesas). O fixo e o gasto do mês não se somam.</p>
+    </div>
+    <div class="app" aria-label="Tela inicial da direção A">
+      <header class="app-topo">
+        <a class="marca" href="#inicio"><span class="marca-ponto" aria-hidden="true"></span>Finanças</a>
+        <nav class="app-nav" aria-label="Principal">
+          <a href="#inicio" aria-current="page">Início</a>
+          <a href="#lancamentos">Lançamentos</a>
+          <a href="#previstos">Previstos</a>
+          <a href="#navegacao">Relatório</a>
+          <a href="#navegacao">Rotina</a>
+          <a href="#navegacao">Categorias</a>
+        </nav>
+        <a class="app-sair" href="#navegacao">Sair</a>
+      </header>
+
+      <div class="app-conteudo">
+        <header class="pagina-cabecalho">
+          <div>
+            <p class="olho">Início</p>
+            <p class="mes-atual">Novembro de 2026</p>
+          </div>
+          <div class="mes-controle" aria-label="Navegação de mês">
+            <a class="mes-seta" href="#inicio" aria-label="Mês anterior"><svg class="icone" aria-hidden="true"><use href="#i-esq"/></svg></a>
+            <a class="mes-seta" href="#inicio" aria-label="Próximo mês"><svg class="icone" aria-hidden="true"><use href="#i-dir"/></svg></a>
+          </div>
+        </header>
+
+        <section class="saldo" aria-label="Saldo das contas">
+          <h2 class="rotulo-bloco">Saldo das contas</h2>
+          <p class="saldo-numero">R$ 4.320,18</p>
+          <p class="nota">Conta conjunta · atualizado pela importação de hoje</p>
+        </section>
+
+        <section class="fixo" aria-label="Fixo do mês">
+          <div class="fixo-cabecalho">
+            <h2 class="rotulo-bloco">Fixo do mês <span class="tag">combinado</span></h2>
+            <p class="nota">O que entra e o que sai sem depender do dia a dia.</p>
+          </div>
+          <dl class="fixo-grade">
+            <div class="fixo-item"><dt class="fixo-rotulo">Entra fixo</dt><dd class="fixo-valor positivo">R$ 7.400,00</dd></div>
+            <div class="fixo-item"><dt class="fixo-rotulo">Sai fixo</dt><dd class="fixo-valor">−R$ 4.984,15</dd></div>
+            <div class="fixo-item"><dt class="fixo-rotulo">Sobra fixa</dt><dd class="fixo-valor positivo">R$ 2.415,85</dd></div>
+          </dl>
+        </section>
+
+        <div class="resumo-grade">
+          <section class="bloco" aria-label="Gasto do mês">
+            <h2 class="rotulo-bloco">Gasto do mês <span class="tag">realizado</span></h2>
+            <p class="valor-grande">R$ 5.890,42</p>
+            <p class="nota">O que já saiu, incluindo os fixos pagos. Não somar com o fixo.</p>
+          </section>
+          <section class="bloco" aria-label="Previsto em aberto">
+            <h2 class="rotulo-bloco">Previsto em aberto <span class="tag">só despesas</span></h2>
+            <p class="valor-grande">R$ 3.414,15</p>
+            <p class="nota">5 contas de novembro. <strong class="alerta">1 atrasada</strong>.</p>
+          </section>
+        </div>
+      </div>
+
+      <nav class="app-barra" aria-label="Navegação principal">
+        <a href="#inicio" aria-current="page"><svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg><span class="rotulo">Início</span></a>
+        <a href="#lancamentos"><svg class="icone" aria-hidden="true"><use href="#i-lancar"/></svg><span class="rotulo">Lançamentos</span></a>
+        <a href="#previstos"><svg class="icone" aria-hidden="true"><use href="#i-previstos"/></svg><span class="rotulo">Previstos</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-rotina"/></svg><span class="rotulo">Rotina</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-mais"/></svg><span class="rotulo">Mais</span></a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ===== 3. Lançamentos ===== -->
+  <section class="tela" id="lancamentos" aria-labelledby="t-lancamentos">
+    <div class="tela-cabecalho">
+      <h2 class="tela-nome" id="t-lancamentos">Lançamentos</h2>
+      <p class="tela-nota">Navegação de mês, formulário em cartão e lista agrupada por dia. Cada linha traz título, categoria, quem lançou e valor.</p>
+    </div>
+    <div class="app" aria-label="Lançamentos da direção A">
+      <header class="app-topo">
+        <a class="marca" href="#inicio"><span class="marca-ponto" aria-hidden="true"></span>Finanças</a>
+        <nav class="app-nav" aria-label="Principal">
+          <a href="#inicio">Início</a>
+          <a href="#lancamentos" aria-current="page">Lançamentos</a>
+          <a href="#previstos">Previstos</a>
+          <a href="#navegacao">Relatório</a>
+          <a href="#navegacao">Rotina</a>
+          <a href="#navegacao">Categorias</a>
+        </nav>
+        <a class="app-sair" href="#navegacao">Sair</a>
+      </header>
+
+      <div class="app-conteudo">
+        <header class="pagina-cabecalho">
+          <div>
+            <p class="olho">Lançamentos</p>
+            <p class="mes-atual">Novembro de 2026</p>
+          </div>
+          <div class="mes-controle" aria-label="Navegação de mês">
+            <a class="mes-seta" href="#lancamentos" aria-label="Mês anterior"><svg class="icone" aria-hidden="true"><use href="#i-esq"/></svg></a>
+            <a class="mes-seta" href="#lancamentos" aria-label="Próximo mês"><svg class="icone" aria-hidden="true"><use href="#i-dir"/></svg></a>
+          </div>
+        </header>
+
+        <div class="lancar-grade">
+          <form class="form" autocomplete="off" aria-label="Novo lançamento">
+            <p class="form-titulo">Novo lançamento</p>
+            <div class="campo-duplo">
+              <label class="campo">Data
+                <input type="date" value="2026-11-22">
+              </label>
+              <label class="campo">Valor
+                <input inputmode="decimal" placeholder="0,00">
+              </label>
+            </div>
+            <label class="campo">Categoria
+              <select>
+                <option>Alimentação</option>
+                <option>Transporte</option>
+                <option>Moradia</option>
+              </select>
+            </label>
+            <label class="campo">Descrição <span class="campo-opcional">(opcional)</span>
+              <input placeholder="Opcional">
+            </label>
+            <button class="botao" type="button">Salvar</button>
+          </form>
+
+          <section class="lista" aria-label="Lançamentos de novembro">
+            <div class="dia">
+              <p class="dia-titulo">Hoje · 22/11</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Padaria da esquina</p>
+                    <p class="linha-meta">Alimentação · Ana</p>
+                  </div>
+                  <p class="linha-valor">−R$ 28,50</p>
+                </li>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Farmácia</p>
+                    <p class="linha-meta">Saúde · Rafa</p>
+                  </div>
+                  <p class="linha-valor">−R$ 67,40</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="dia">
+              <p class="dia-titulo">21/11 · sábado</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Feira do bairro</p>
+                    <p class="linha-meta">Alimentação · Rafa</p>
+                  </div>
+                  <p class="linha-valor">−R$ 96,20</p>
+                </li>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Cinema</p>
+                    <p class="linha-meta">Lazer · Ana</p>
+                  </div>
+                  <p class="linha-valor">−R$ 74,00</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="dia">
+              <p class="dia-titulo">20/11 · sexta</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Supermercado Boa Praça</p>
+                    <p class="linha-meta">Alimentação · Ana</p>
+                  </div>
+                  <p class="linha-valor">−R$ 342,18</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="dia">
+              <p class="dia-titulo">19/11 · quinta</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Posto</p>
+                    <p class="linha-meta">Transporte · Rafa</p>
+                  </div>
+                  <p class="linha-valor">−R$ 180,00</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="dia">
+              <p class="dia-titulo">12/11 · quinta</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Escola</p>
+                    <p class="linha-meta">Educação · Ana</p>
+                  </div>
+                  <p class="linha-valor">−R$ 680,00</p>
+                </li>
+              </ul>
+            </div>
+
+            <div class="dia">
+              <p class="dia-titulo">08/11 · domingo</p>
+              <ul>
+                <li class="linha">
+                  <div class="linha-texto">
+                    <p class="linha-titulo">Plano de saúde</p>
+                    <p class="linha-meta">Saúde · Rafa</p>
+                  </div>
+                  <p class="linha-valor">−R$ 890,00</p>
+                </li>
+              </ul>
+            </div>
+
+            <p class="total"><span>Total de despesas do mês</span><strong>R$ 5.890,42</strong></p>
+            <p class="contagem">23 lançamentos no mês · 8 mostrados na amostra.</p>
+          </section>
+        </div>
+      </div>
+
+      <nav class="app-barra" aria-label="Navegação principal">
+        <a href="#inicio"><svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg><span class="rotulo">Início</span></a>
+        <a href="#lancamentos" aria-current="page"><svg class="icone" aria-hidden="true"><use href="#i-lancar"/></svg><span class="rotulo">Lançamentos</span></a>
+        <a href="#previstos"><svg class="icone" aria-hidden="true"><use href="#i-previstos"/></svg><span class="rotulo">Previstos</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-rotina"/></svg><span class="rotulo">Rotina</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-mais"/></svg><span class="rotulo">Mais</span></a>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ===== 4. Gastos previstos ===== -->
+  <section class="tela" id="previstos" aria-labelledby="t-previstos">
+    <div class="tela-cabecalho">
+      <h2 class="tela-nome" id="t-previstos">Gastos previstos</h2>
+      <p class="tela-nota">Lista única do mês, em ordem de vencimento. Pago fica verde com check e o rótulo “Pago”; atrasado e vence hoje têm estado próprio. Entradas fixas aparecem na mesma lista.</p>
+    </div>
+    <div class="app" aria-label="Gastos previstos da direção A">
+      <header class="app-topo">
+        <a class="marca" href="#inicio"><span class="marca-ponto" aria-hidden="true"></span>Finanças</a>
+        <nav class="app-nav" aria-label="Principal">
+          <a href="#inicio">Início</a>
+          <a href="#lancamentos">Lançamentos</a>
+          <a href="#previstos" aria-current="page">Previstos</a>
+          <a href="#navegacao">Relatório</a>
+          <a href="#navegacao">Rotina</a>
+          <a href="#navegacao">Categorias</a>
+        </nav>
+        <a class="app-sair" href="#navegacao">Sair</a>
+      </header>
+
+      <div class="app-conteudo">
+        <header class="pagina-cabecalho">
+          <div>
+            <p class="olho">Previstos</p>
+            <p class="mes-atual">Novembro de 2026</p>
+          </div>
+          <div class="mes-controle" aria-label="Navegação de mês">
+            <a class="mes-seta" href="#previstos" aria-label="Mês anterior"><svg class="icone" aria-hidden="true"><use href="#i-esq"/></svg></a>
+            <a class="mes-seta" href="#previstos" aria-label="Próximo mês"><svg class="icone" aria-hidden="true"><use href="#i-dir"/></svg></a>
+          </div>
+        </header>
+
+        <section aria-label="Contas de novembro">
+          <ul class="previstos">
+            <li class="previsto pago entrada">
+              <span class="check" aria-hidden="true"><svg class="icone"><use href="#i-check"/></svg></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Salário</p>
+                <p class="previsto-meta"><span>Entrada fixa</span><span class="separador">·</span><span>recebido em 05/11</span><span class="estado estado-pago">Pago</span></p>
+              </div>
+              <p class="previsto-valor">+R$ 7.400,00</p>
+            </li>
+            <li class="previsto pago">
+              <span class="check" aria-hidden="true"><svg class="icone"><use href="#i-check"/></svg></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Plano de saúde</p>
+                <p class="previsto-meta"><span>Saúde</span><span class="separador">·</span><span>pago em 08/11</span><span class="estado estado-pago">Pago</span></p>
+              </div>
+              <p class="previsto-valor">R$ 890,00</p>
+            </li>
+            <li class="previsto">
+              <span class="check" aria-hidden="true"></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Aluguel</p>
+                <p class="previsto-meta"><span>Moradia</span><span class="separador">·</span><span>venceu 10/11</span><span class="estado estado-atraso">Atrasado</span></p>
+              </div>
+              <p class="previsto-valor">R$ 1.850,00</p>
+            </li>
+            <li class="previsto pago">
+              <span class="check" aria-hidden="true"><svg class="icone"><use href="#i-check"/></svg></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Escola</p>
+                <p class="previsto-meta"><span>Educação</span><span class="separador">·</span><span>pago em 12/11</span><span class="estado estado-pago">Pago</span></p>
+              </div>
+              <p class="previsto-valor">R$ 680,00</p>
+            </li>
+            <li class="previsto">
+              <span class="check" aria-hidden="true"></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Internet</p>
+                <p class="previsto-meta"><span>Moradia</span><span class="separador">·</span><span>vence 22/11</span><span class="estado estado-hoje">Vence hoje</span></p>
+              </div>
+              <p class="previsto-valor">R$ 129,90</p>
+            </li>
+            <li class="previsto">
+              <span class="check" aria-hidden="true"></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Energia</p>
+                <p class="previsto-meta"><span>Moradia</span><span class="separador">·</span><span>vence 25/11</span></p>
+              </div>
+              <p class="previsto-valor">R$ 214,35</p>
+            </li>
+            <li class="previsto">
+              <span class="check" aria-hidden="true"></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Financiamento do carro</p>
+                <p class="previsto-meta"><span>Transporte</span><span class="separador">·</span><span>vence 28/11</span></p>
+              </div>
+              <p class="previsto-valor">R$ 1.180,00</p>
+            </li>
+            <li class="previsto">
+              <span class="check" aria-hidden="true"></span>
+              <div class="previsto-texto">
+                <p class="previsto-titulo">Assinatura de streaming</p>
+                <p class="previsto-meta"><span>Lazer</span><span class="separador">·</span><span>vence 28/11</span></p>
+              </div>
+              <p class="previsto-valor">R$ 39,90</p>
+            </li>
+          </ul>
+
+          <div class="total-previstos">
+            <p class="rotulo">Falta pagar <span class="contas">· 5 contas</span></p>
+            <strong>R$ 3.414,15</strong>
+          </div>
+          <p class="rodape-tela">3 pagos em novembro. Lista ordenada pelo vencimento.</p>
+        </section>
+      </div>
+
+      <nav class="app-barra" aria-label="Navegação principal">
+        <a href="#inicio"><svg class="icone" aria-hidden="true"><use href="#i-inicio"/></svg><span class="rotulo">Início</span></a>
+        <a href="#lancamentos"><svg class="icone" aria-hidden="true"><use href="#i-lancar"/></svg><span class="rotulo">Lançamentos</span></a>
+        <a href="#previstos" aria-current="page"><svg class="icone" aria-hidden="true"><use href="#i-previstos"/></svg><span class="rotulo">Previstos</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-rotina"/></svg><span class="rotulo">Rotina</span></a>
+        <a href="#navegacao"><svg class="icone" aria-hidden="true"><use href="#i-mais"/></svg><span class="rotulo">Mais</span></a>
+      </nav>
+    </div>
+  </section>
+
+</main>
+
+</body>
+</html>

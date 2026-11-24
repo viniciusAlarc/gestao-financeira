@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block titulo %}Editar tarefa{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Editar tarefa</h1>
+
+<form method="post" class="formulario-rapido">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+  <label for="{{ form.titulo.id_for_label }}">{{ form.titulo.label }}</label>
+  {{ form.titulo }}
+  {% if form.titulo.errors %}<p class="erro" id="{{ form.titulo.auto_id }}_error" role="alert">{{ form.titulo.errors|join:" " }}</p>{% endif %}
+  <button type="submit" class="botao-primario">Salvar tarefa</button>
+</form>
+
+<details class="zona-perigo">
+  <summary>Excluir tarefa</summary>
+  <p class="ajuda">A tarefa e o histórico de conclusões dela serão apagados.</p>
+  <form method="post" action="{% url 'financas:excluir_tarefa' tarefa.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="botao-perigo">Excluir tarefa</button>
+  </form>
+</details>
+
+<p class="voltar"><a href="{% url 'financas:rotina' %}">Voltar para a rotina</a></p>
+{% endblock %}

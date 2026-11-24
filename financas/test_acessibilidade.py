@@ -64,16 +64,21 @@ class LinkAtivoTests(BaseAcessibilidade):
             ("financas:lancamentos", "/lancamentos/", "Lançamentos"),
             ("financas:previstos", "/previstos/", "Previstos"),
             ("financas:relatorio", "/relatorio/", "Relatório"),
+            ("financas:rotina", "/rotina/", "Rotina"),
         ]
         for nome, href, rotulo in telas:
             with self.subTest(tela=nome):
                 corpo = self.corpo(self.client.get(reverse(nome)))
                 self.assertEqual(corpo.count('aria-current="page"'), 1)
-                self.assertIn(
-                    f'<a href="{href}" class="ativo" '
-                    f'aria-current="page">{rotulo}</a>',
-                    corpo,
+                # O link de Lançamentos carrega dois rótulos (longo e curto) para
+                # a barra do celular; o teste confere o href e o texto, não o HTML
+                # exato que muda quando a navegação ganha uma aba.
+                ativo = re.search(
+                    r'<a [^>]*aria-current="page"[^>]*>.*?</a>', corpo, re.S
                 )
+                self.assertIsNotNone(ativo)
+                self.assertIn(f'href="{href}"', ativo.group(0))
+                self.assertIn(rotulo, ativo.group(0))
 
 
 class ErroDeCampoTests(BaseAcessibilidade):

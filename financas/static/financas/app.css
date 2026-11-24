@@ -119,6 +119,11 @@ a {
   color: var(--texto);
 }
 
+/* O rótulo curto só aparece na barra inferior do celular (seis abas). */
+.rotulo-curto {
+  display: none;
+}
+
 .form-sair {
   margin-left: auto;
 }
@@ -579,6 +584,151 @@ a {
   color: var(--texto-suave);
 }
 
+/* Rotina diária (2026-11-22): abas de perfil neutras, check de 44px e texto
+   riscado no concluído. A cor não vira faixa nem fundo vivo. */
+.seletor-perfil {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0 0 1.25rem;
+}
+
+.seletor-perfil a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
+  color: var(--texto-medio);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.seletor-perfil a:hover {
+  border-color: var(--borda-forte);
+  color: var(--texto);
+}
+
+.seletor-perfil a.ativo {
+  border-color: var(--borda-forte);
+  background: #eef0f3;
+  color: var(--texto);
+}
+
+.rotina-aviso {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: var(--superficie-suave);
+  color: var(--texto-medio);
+  font-size: 0.875rem;
+}
+
+.rotina-resumo {
+  margin: 0 0 1.25rem;
+  color: var(--texto-medio);
+  font-size: 0.9375rem;
+}
+
+.rotina-resumo strong {
+  color: var(--texto);
+  font-variant-numeric: tabular-nums;
+}
+
+.check-tarefa {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.check-tarefa input[type="checkbox"],
+.check-leitura {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  accent-color: var(--acento);
+  cursor: pointer;
+}
+
+.check-leitura {
+  cursor: default;
+}
+
+.check-tarefa-rotulo {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Título de tarefa pode ser longo: quebra em vez de cortar com reticências. */
+.lista-tarefas .movimento-descricao {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.tarefa-concluida .movimento-descricao {
+  color: var(--texto-suave);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.zona-perigo {
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--borda);
+}
+
+.zona-perigo summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--texto-medio);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.zona-perigo summary:hover {
+  color: var(--texto);
+}
+
+.zona-perigo form {
+  margin: 0.5rem 0 0;
+}
+
+.botao-perigo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #fecaca;
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
+  color: var(--negativo);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botao-perigo:hover {
+  border-color: var(--negativo);
+}
+
 /* Relatório: cada categoria expande e mostra os gastos que a compõem. */
 .relatorio-categoria {
   display: block;
@@ -886,7 +1036,8 @@ p.vazio {
     padding: 1.5rem;
   }
 
-  .formulario-rapido .botao-primario {
+  .formulario-rapido .botao-primario,
+  .botao-perigo {
     width: auto;
     min-width: 12rem;
     justify-self: start;
@@ -909,6 +1060,15 @@ p.vazio {
   .container.pagina-login {
     padding-top: 2rem;
     padding-bottom: 2rem;
+  }
+}
+
+/* Com seis abas, 720–899px é a faixa apertada do topo: fonte e respiro menores
+   antes de voltar ao tamanho cheio. */
+@media (min-width: 720px) and (max-width: 899px) {
+  .navegacao a {
+    padding: 0.5rem;
+    font-size: 0.8125rem;
   }
 }
 
@@ -935,12 +1095,20 @@ p.vazio {
     flex-direction: column;
     gap: 0.1875rem;
     min-height: 48px;
-    padding: 0.375rem 0.125rem;
+    padding: 0.375rem 0.0625rem;
     border-radius: 8px;
-    font-size: 0.6875rem;
+    font-size: 0.625rem;
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;
+  }
+
+  .rotulo-longo {
+    display: none;
+  }
+
+  .rotulo-curto {
+    display: inline;
   }
 
   .navegacao a:hover {

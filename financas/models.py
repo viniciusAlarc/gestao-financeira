@@ -350,3 +350,61 @@ class Previsto(models.Model):
 
     def __str__(self) -> str:
         return f"{self.descricao} · vence {self.vencimento:%d/%m/%Y} · {self.valor}"
+
+
+class Tarefa(models.Model):
+    """Tarefa da rotina diária de uma pessoa (2026-11-22).
+
+    A rotina é a mesma lista todo dia: a tarefa não é recriada e o check não mora
+    nela. Quem diz "concluída hoje" é `ConclusaoTarefa`, com uma linha por dia.
+    Sem linha na data de hoje, a tarefa aparece em aberto; é isso que faz o check
+    reiniciar à meia-noite sem apagar o histórico dos dias anteriores.
+    """
+
+    dono = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tarefas",
+        verbose_name="dono",
+    )
+    titulo = models.CharField("título", max_length=120)
+    criada_em = models.DateTimeField("criada em", auto_now_add=True)
+
+    class Meta:
+        ordering = ["id"]
+        verbose_name = "tarefa"
+        verbose_name_plural = "tarefas"
+
+    def __str__(self) -> str:
+        return self.titulo
+
+
+class ConclusaoTarefa(models.Model):
+    """Marca que uma tarefa foi concluída em um dia (2026-11-22).
+
+    O par (tarefa, data) é único: marcar duas vezes no mesmo dia não duplica.
+    Desmarcar apaga a linha do dia; o check de ontem continua no histórico.
+    """
+
+    tarefa = models.ForeignKey(
+        Tarefa,
+        on_delete=models.CASCADE,
+        related_name="conclusoes",
+        verbose_name="tarefa",
+    )
+    data = models.DateField("data")
+    concluida_em = models.DateTimeField("concluída em", auto_now_add=True)
+
+    class Meta:
+        ordering = ["data", "id"]
+        verbose_name = "conclusão de tarefa"
+        verbose_name_plural = "conclusões de tarefa"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["tarefa", "data"],
+                name="conclusao_tarefa_unica_por_dia",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tarefa.titulo} · {self.data:%d/%m/%Y}"

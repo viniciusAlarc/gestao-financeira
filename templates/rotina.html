@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block titulo %}Rotina{% endblock %}
+
+{% block conteudo %}
+<h1 class="titulo-pagina">Rotina</h1>
+
+{% if perfis %}
+<nav class="seletor-perfil" aria-label="Rotinas">
+  <a href="{% url 'financas:rotina' %}"{% if not somente_leitura %} class="ativo" aria-current="page"{% endif %}>Minhas</a>
+  {% for perfil in perfis %}
+  <a href="{% url 'financas:rotina' %}?perfil={{ perfil.pk }}"{% if somente_leitura and perfil_visto.pk == perfil.pk %} class="ativo" aria-current="page"{% endif %}>{{ perfil.nome }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
+
+{% if somente_leitura %}
+<p class="rotina-aviso">Você está vendo a rotina de {{ nome_perfil_visto }}. Somente leitura.</p>
+{% endif %}
+
+<p class="rotina-resumo">
+  {% if total %}
+  <strong>{{ concluidas }} de {{ total }}</strong> {% if total == 1 %}concluída{% else %}concluídas{% endif %} hoje
+  {% else %}
+  Nenhuma tarefa ainda.
+  {% endif %}
+</p>
+
+{% if form %}
+<section class="lista-mes">
+  <h2 class="subtitulo">Nova tarefa</h2>
+  <form method="post" class="formulario-rapido">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<p class="erro" role="alert">{{ form.non_field_errors|join:" " }}</p>{% endif %}
+    <label for="{{ form.titulo.id_for_label }}">{{ form.titulo.label }}</label>
+    {{ form.titulo }}
+    {% if form.titulo.errors %}<p class="erro" id="{{ form.titulo.auto_id }}_error" role="alert">{{ form.titulo.errors|join:" " }}</p>{% endif %}
+    <button type="submit" class="botao-primario">Adicionar tarefa</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="lista-mes">
+  {% if tarefas %}
+  <ul class="movimentos lista-tarefas">
+    {% for tarefa in tarefas %}
+    <li class="movimento-compacto tarefa{% if tarefa.concluida_hoje %} tarefa-concluida{% endif %}">
+      {% if somente_leitura %}
+        <input type="checkbox" class="check-leitura" disabled{% if tarefa.concluida_hoje %} checked{% endif %} aria-label="{{ tarefa.titulo }}: {% if tarefa.concluida_hoje %}concluída{% else %}em aberto{% endif %}">
+        <span class="movimento-descricao">{{ tarefa.titulo }}</span>
+      {% else %}
+        {% if tarefa.concluida_hoje %}
+        <form method="post" action="{% url 'financas:desfazer_conclusao_tarefa' tarefa.pk %}" class="check-tarefa">
+          {% csrf_token %}
+          <input type="checkbox" id="tarefa-{{ tarefa.pk }}" checked onchange="this.form.submit()" aria-label="Desmarcar: {{ tarefa.titulo }}">
+          <label for="tarefa-{{ tarefa.pk }}" class="check-tarefa-rotulo"><span class="movimento-descricao">{{ tarefa.titulo }}</span></label>
+          <noscript><button type="submit" class="acao">Desmarcar</button></noscript>
+        </form>
+        {% else %}
+        <form method="post" action="{% url 'financas:concluir_tarefa' tarefa.pk %}" class="check-tarefa">
+          {% csrf_token %}
+          <input type="checkbox" id="tarefa-{{ tarefa.pk }}" onchange="this.form.submit()" aria-label="Concluir: {{ tarefa.titulo }}">
+          <label for="tarefa-{{ tarefa.pk }}" class="check-tarefa-rotulo"><span class="movimento-descricao">{{ tarefa.titulo }}</span></label>
+          <noscript><button type="submit" class="acao">Concluir</button></noscript>
+        </form>
+        {% endif %}
+        <a class="acao" href="{% url 'financas:editar_tarefa' tarefa.pk %}" aria-label="Editar tarefa {{ tarefa.titulo }}">Editar</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="vazio">{% if somente_leitura %}{{ nome_perfil_visto }} ainda não cadastrou tarefas.{% else %}Nenhuma tarefa ainda. Adicione a primeira acima.{% endif %}</p>
+  {% endif %}
+</section>
+{% endblock %}

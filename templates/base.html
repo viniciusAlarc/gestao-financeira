@@ -23,9 +23,10 @@
       {% if user.is_authenticated %}
       <nav class="navegacao" aria-label="Principal">
         <a href="{% url 'financas:inicio' %}"{% if request.resolver_match.url_name == 'inicio' %} class="ativo" aria-current="page"{% endif %}>Início</a>
-        <a href="{% url 'financas:lancamentos' %}"{% if request.resolver_match.url_name == 'lancamentos' %} class="ativo" aria-current="page"{% endif %}>Lançamentos</a>
+        <a href="{% url 'financas:lancamentos' %}" aria-label="Lançamentos"{% if request.resolver_match.url_name == 'lancamentos' %} class="ativo" aria-current="page"{% endif %}><span class="rotulo-longo">Lançamentos</span><span class="rotulo-curto">Lançar</span></a>
         <a href="{% url 'financas:previstos' %}"{% if request.resolver_match.url_name == 'previstos' %} class="ativo" aria-current="page"{% endif %}>Previstos</a>
         <a href="{% url 'financas:relatorio' %}"{% if request.resolver_match.url_name == 'relatorio' %} class="ativo" aria-current="page"{% endif %}>Relatório</a>
+        <a href="{% url 'financas:rotina' %}"{% if request.resolver_match.url_name == 'rotina' or request.resolver_match.url_name == 'editar_tarefa' %} class="ativo" aria-current="page"{% endif %}>Rotina</a>
         <a href="{% url 'financas:categorias' %}"{% if request.resolver_match.url_name == 'categorias' or request.resolver_match.url_name == 'editar_categoria' %} class="ativo" aria-current="page"{% endif %}>Categorias</a>
       </nav>
       <form method="post" action="{% url 'financas:logout' %}" class="form-sair">
