@@ -193,7 +193,9 @@ class TelaInicialTests(BaseFinancas):
             self.assertContains(resposta, rotulo)
         # a fixture já tem 1 conta com saldo inicial de 100,00
         self.assertContains(resposta, "R$ 100,00")
-        self.assertContains(resposta, "R$ 0,00", count=2)
+        # Decisão de 2026-11-22: o bloco "Fixo do mês" acrescentou entra fixo,
+        # sai fixo e sobra fixa; com a tela sem dado, os três são R$ 0,00.
+        self.assertContains(resposta, "R$ 0,00", count=5)
 
     def test_saldo_consolida_todas_as_contas(self):
         Conta.objects.create(nome="Banco", saldo_inicial=Decimal("25.00"))
@@ -218,7 +220,9 @@ class TelaInicialTests(BaseFinancas):
 
     def test_previsto_em_aberto_soma_so_despesas_abertas(self):
         hoje = timezone.localdate()
-        vencimento = hoje + timedelta(days=8)
+        # Decisão de 2026-11-22: o total é só do mês corrente. Day 28 existe em
+        # qualquer mês, então o dado de teste nunca escorrega para o mês seguinte.
+        vencimento = hoje.replace(day=28)
         for valor in ["200.00", "300.00"]:
             Previsto.objects.create(
                 descricao=f"Previsto {valor}",
@@ -439,17 +443,33 @@ class GastosPrevistosTests(BaseFinancas):
         self.assertEqual(resposta.status_code, 302)
         self.assertIn(reverse("financas:login"), resposta.url)
 
-    def test_formulario_mostra_somente_categorias_de_despesa_ativas(self):
-        receita = Categoria.objects.create(
+    def test_formularios_separam_despesa_e_receita_ativas(self):
+        Categoria.objects.create(
             nome="Salário previsto", tipo=TipoValor.RECEITA
         )
-        inativa = Categoria.objects.create(
+        Categoria.objects.create(
             nome="Categoria velha", tipo=TipoValor.DESPESA, ativa=False
         )
         resposta = self._abrir()
-        self.assertContains(resposta, "Mercado")
-        self.assertNotContains(resposta, "Salário previsto")
-        self.assertNotContains(resposta, "Categoria velha")
+
+        def rotulos(form):
+            return [
+                str(rotulo) for _, rotulo in form.fields["categoria"].choices
+            ]
+
+        # A t3 acrescentou o formulário de entrada fixa com as receitas. O de
+        # despesa (gasto fixo e previsto avulso) continua só com despesa ativa.
+        for form in (
+            resposta.context["form"],
+            resposta.context["form_fixo"],
+        ):
+            self.assertIn("Mercado (despesa)", rotulos(form))
+            self.assertNotIn("Salário previsto (receita)", rotulos(form))
+            self.assertNotIn("Categoria velha (despesa)", rotulos(form))
+        self.assertIn(
+            "Salário previsto (receita)",
+            rotulos(resposta.context["form_entrada"]),
+        )
 
     def test_formulario_rejeita_categoria_de_receita(self):
         form = PrevistoForm(
@@ -501,47 +521,66 @@ class GastosPrevistosTests(BaseFinancas):
         self.assertContains(resposta, "categoria de despesa ativa")
         self.assertFalse(Previsto.objects.exists())
 
-    def test_lista_somente_previstos_de_despesa_abertos_em_ordem(self):
-        hoje = timezone.localdate()
+    def test_lista_do_mes_traz_aberto_e_pago_na_mesma_lista_em_ordem(self):
+        """Decisão de 2026-11-22: lista única do mês; "Pago" é o status `ignorado`.
+
+        O pagamento manual antigo (`status=pago`, com Movimento) fica de fora:
+        ele já aparece em Lançamentos. A receita (entrada fixa) entrou na t3.
+        """
+        primeiro_dia = timezone.localdate().replace(day=1)
         primeiro = Previsto.objects.create(
             descricao="Primeiro",
             valor=Decimal("10.00"),
-            vencimento=hoje + timedelta(days=2),
+            vencimento=primeiro_dia + timedelta(days=1),
             categoria=self.categoria_despesa,
             conta=self.conta,
         )
         segundo = Previsto.objects.create(
             descricao="Segundo",
             valor=Decimal("20.00"),
-            vencimento=hoje + timedelta(days=5),
+            vencimento=primeiro_dia + timedelta(days=2),
             categoria=self.categoria_despesa,
             conta=self.conta,
         )
-        movimento = self.lancar(TipoValor.DESPESA, "30.00", descricao="Pago")
+        pago = Previsto.objects.create(
+            descricao="Ja pago",
+            valor=Decimal("25.00"),
+            vencimento=primeiro_dia + timedelta(days=3),
+            categoria=self.categoria_despesa,
+            conta=self.conta,
+            status=Previsto.Status.IGNORADO,
+        )
+        movimento = self.lancar(
+            TipoValor.DESPESA, "30.00", descricao="Pagamento manual"
+        )
         Previsto.objects.create(
-            descricao="Pago",
+            descricao="Pagamento manual",
             valor=Decimal("30.00"),
-            vencimento=hoje + timedelta(days=3),
+            vencimento=primeiro_dia + timedelta(days=4),
             categoria=self.categoria_despesa,
             conta=self.conta,
             status=Previsto.Status.PAGO,
             movimento=movimento,
         )
-        Previsto.objects.create(
+        receita = Previsto.objects.create(
             descricao="Receita",
             valor=Decimal("40.00"),
-            vencimento=hoje + timedelta(days=4),
+            vencimento=primeiro_dia + timedelta(days=5),
             tipo=TipoValor.RECEITA,
             categoria=self.categoria_receita,
             conta=self.conta,
         )
 
         resposta = self._abrir()
-        self.assertEqual(list(resposta.context["previstos"]), [primeiro, segundo])
+        self.assertEqual(
+            list(resposta.context["previstos"]),
+            [primeiro, segundo, pago, receita],
+        )
         self.assertContains(resposta, "Primeiro")
         self.assertContains(resposta, "Segundo")
-        self.assertNotContains(resposta, "Pago")
-        self.assertNotContains(resposta, "Receita")
+        self.assertContains(resposta, "Pago")
+        self.assertContains(resposta, "Receita")
+        self.assertNotContains(resposta, "Pagamento manual")
 
     def test_paguei_cria_um_movimento_na_data_real_e_marca_como_pago(self):
         previsto = Previsto.objects.create(
@@ -649,11 +688,13 @@ class GastosPrevistosTests(BaseFinancas):
         self.assertFalse(Movimento.objects.exists())
 
     def test_previsto_futuro_aberto_nao_entra_no_gasto_do_mes(self):
-        hoje = timezone.localdate()
+        # Dia 28 fica no mês corrente em qualquer mês (decisão de 2026-11-22:
+        # o previsto em aberto é do mês; o teste não pode escorregar de mês).
+        hoje = timezone.localdate().replace(day=28)
         Previsto.objects.create(
             descricao="Internet futura",
             valor=Decimal("89.90"),
-            vencimento=hoje + timedelta(days=10),
+            vencimento=hoje,
             categoria=self.categoria_despesa,
             conta=self.conta,
         )
@@ -666,7 +707,7 @@ class GastosPrevistosTests(BaseFinancas):
         previsto = Previsto.objects.create(
             descricao="Internet",
             valor=Decimal("89.90"),
-            vencimento=timezone.localdate() + timedelta(days=10),
+            vencimento=timezone.localdate().replace(day=28),
             categoria=self.categoria_despesa,
             conta=self.conta,
         )

@@ -13,7 +13,15 @@ from django import forms
 from django.db.models import Q
 from django.utils import timezone
 
-from .models import Categoria, GastoFixo, Movimento, Previsto, Tarefa, TipoValor
+from .models import (
+    Categoria,
+    EntradaFixa,
+    GastoFixo,
+    Movimento,
+    Previsto,
+    Tarefa,
+    TipoValor,
+)
 
 
 def _chave_alfabetica(categoria):
@@ -162,6 +170,70 @@ class GastoFixoForm(forms.ModelForm):
                 | Q(pk=self.instance.categoria_id)
             )
         _opcoes_de_categoria(self.fields["categoria"], categorias)
+
+
+class EntradaFixaForm(forms.ModelForm):
+    """Cadastro da entrada mensal fixa; o previsto de receita nasce dele (2026-11-22)."""
+
+    valor = ValorBrasileiroField(
+        label="Valor",
+        max_digits=15,
+        decimal_places=2,
+        min_value=Decimal("0.01"),
+        widget=forms.TextInput(
+            attrs={
+                "class": "campo",
+                "inputmode": "decimal",
+                "autocomplete": "off",
+                "placeholder": "0,00",
+            }
+        ),
+    )
+
+    class Meta:
+        model = EntradaFixa
+        fields = ["descricao", "valor", "dia_recebimento", "categoria", "ativo"]
+        labels = {
+            "descricao": "Descrição",
+            "dia_recebimento": "Dia do recebimento",
+            "categoria": "Categoria",
+            "ativo": "Ativo",
+        }
+        widgets = {
+            "descricao": forms.TextInput(attrs={"class": "campo"}),
+            "dia_recebimento": forms.NumberInput(
+                attrs={
+                    "class": "campo",
+                    "inputmode": "numeric",
+                    "min": 1,
+                    "max": 31,
+                }
+            ),
+            "categoria": forms.Select(attrs={"class": "campo"}),
+            "ativo": forms.CheckboxInput(attrs={"class": "caixa"}),
+        }
+        help_texts = {
+            "dia_recebimento": "Em mês mais curto, cai no último dia.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        categorias = Categoria.objects.filter(
+            ativa=True, tipo=TipoValor.RECEITA
+        )
+        if self.instance.pk and self.instance.categoria_id:
+            categorias = Categoria.objects.filter(
+                Q(ativa=True, tipo=TipoValor.RECEITA)
+                | Q(pk=self.instance.categoria_id)
+            )
+        _opcoes_de_categoria(self.fields["categoria"], categorias)
+
+    def clean_categoria(self):
+        """Só categoria de receita: despesa é recusada (decisão de 2026-11-22)."""
+        categoria = self.cleaned_data["categoria"]
+        if categoria.tipo != TipoValor.RECEITA:
+            raise forms.ValidationError("Escolha uma categoria de receita.")
+        return categoria
 
 
 AJUDA_ENTRA_NO_GASTO = (

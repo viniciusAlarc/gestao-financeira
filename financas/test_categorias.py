@@ -144,8 +144,11 @@ class CriacaoCategoriaTests(BaseCategorias):
         resposta = self.client.get(self.url)
         corpo = resposta.content.decode()
         self.assertEqual(corpo.count('aria-current="page"'), 1)
+        # Direção A (2026-11-25): Categorias é link completo no desktop e entra
+        # no menu "Mais" no celular; o link canônico do topo é o que carrega o
+        # `aria-current`, e o summary do "Mais" só ganha a classe `ativo`.
         self.assertIn(
-            f'<a href="{self.url}" class="ativo" '
+            f'<a class="nav-completo ativo" href="{self.url}" '
             f'aria-current="page">Categorias</a>',
             corpo,
         )

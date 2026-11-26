@@ -7,6 +7,7 @@ Dado inventado; nenhum banco real é aberto. A suíte compartilhada continua em
 
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
@@ -14,7 +15,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Categoria, Conta, Movimento, Previsto, TipoValor
+from .gastos_fixos import garantir_previstos_do_mes
+from .models import Categoria, Conta, GastoFixo, Movimento, Previsto, TipoValor
 
 
 class BaseUsoDiario(TestCase):
@@ -51,10 +53,12 @@ class BaseUsoDiario(TestCase):
         return Movimento.objects.create(**padrao)
 
     def criar_previsto(self, **extra):
+        # Dia 1 do mês corrente: a tela de previstos passou a ser por mês
+        # (decisão de 2026-11-22) e o dado de teste não pode escorregar de mês.
         padrao = {
             "descricao": "Aluguel",
             "valor": Decimal("100.00"),
-            "vencimento": timezone.localdate() + timedelta(days=5),
+            "vencimento": timezone.localdate().replace(day=1),
             "tipo": TipoValor.DESPESA,
             "categoria": self.despesa,
             "conta": self.conta,
@@ -196,6 +200,227 @@ class NavegacaoDeMesTests(BaseUsoDiario):
         self.assertEqual(resposta.context["total_despesas"], Decimal("10.00"))
         self.assertContains(resposta, "R$ 10,00")
         self.assertNotContains(resposta, "R$ 20,00")
+
+
+class PrevistosDoMesTests(BaseUsoDiario):
+    """Tela de previstos por mês e total da tela inicial (decisão de 2026-11-22)."""
+
+    def setUp(self):
+        super().setUp()
+        self.mes_atual = timezone.localdate().replace(day=1)
+        self.mes_anterior = (self.mes_atual - timedelta(days=1)).replace(day=1)
+        self.mes_seguinte = (
+            self.mes_atual.replace(day=28) + timedelta(days=4)
+        ).replace(day=1)
+
+    def _abrir(self, mes):
+        return self.client.get(
+            reverse("financas:previstos"), {"mes": mes.strftime("%Y-%m")}
+        )
+
+    def test_lista_mostra_so_o_mes_pedido_fixo_por_competencia_e_avulso_por_vencimento(self):
+        GastoFixo.objects.create(
+            descricao="Aluguel fixo",
+            valor=Decimal("1800.00"),
+            dia_vencimento=5,
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        garantir_previstos_do_mes(self.mes_atual)
+        garantir_previstos_do_mes(self.mes_anterior)
+        Previsto.objects.create(
+            descricao="Conserto atual",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_atual + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        Previsto.objects.create(
+            descricao="Conserto anterior",
+            valor=Decimal("200.00"),
+            vencimento=self.mes_anterior + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+
+        atual = self._abrir(self.mes_atual)
+        descricoes = [p.descricao for p in atual.context["previstos"]]
+        self.assertIn("Aluguel fixo", descricoes)
+        self.assertIn("Conserto atual", descricoes)
+        self.assertNotIn("Conserto anterior", descricoes)
+        self.assertContains(atual, "Conserto atual")
+        self.assertNotContains(atual, "Conserto anterior")
+
+        anterior = self._abrir(self.mes_anterior)
+        descricoes = [p.descricao for p in anterior.context["previstos"]]
+        self.assertIn("Aluguel fixo", descricoes)
+        self.assertIn("Conserto anterior", descricoes)
+        self.assertNotIn("Conserto atual", descricoes)
+        self.assertContains(anterior, "Conserto anterior")
+        self.assertNotContains(anterior, "Conserto atual")
+
+    def test_aberto_do_mes_anterior_fica_no_mes_dele_e_nao_soma_na_tela_inicial(self):
+        Previsto.objects.create(
+            descricao="Conta antiga",
+            valor=Decimal("300.00"),
+            vencimento=self.mes_anterior + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        Previsto.objects.create(
+            descricao="Conta atual",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_atual + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+
+        inicio = self.client.get(reverse("financas:inicio"))
+        self.assertEqual(inicio.context["previsto_aberto"], Decimal("100.00"))
+
+        atual = self._abrir(self.mes_atual)
+        self.assertContains(atual, "Conta atual")
+        self.assertNotContains(atual, "Conta antiga")
+        anterior = self._abrir(self.mes_anterior)
+        self.assertContains(anterior, "Conta antiga")
+        self.assertNotContains(anterior, "Conta atual")
+
+    def test_marcar_e_desmarcar_voltam_para_o_mes_pedido_sem_criar_movimento(self):
+        previsto = Previsto.objects.create(
+            descricao="Aluguel antigo",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_anterior + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        url_anterior = (
+            f"{reverse('financas:previstos')}?mes={self.mes_anterior:%Y-%m}"
+        )
+
+        resposta = self.client.post(
+            reverse("financas:ignorar_previsto", args=[previsto.pk]),
+            follow=True,
+        )
+        self.assertEqual(resposta.redirect_chain[-1][0], url_anterior)
+        self.assertContains(resposta, "Aluguel antigo")
+        self.assertFalse(Movimento.objects.exists())
+
+        resposta = self.client.post(
+            reverse("financas:reabrir_previsto", args=[previsto.pk]),
+            follow=True,
+        )
+        self.assertEqual(resposta.redirect_chain[-1][0], url_anterior)
+        previsto.refresh_from_db()
+        self.assertEqual(previsto.status, Previsto.Status.ABERTO)
+
+    def test_tela_inicial_soma_so_o_aberto_do_mes_corrente(self):
+        for mes, valor in [
+            (self.mes_anterior, "200.00"),
+            (self.mes_atual, "100.00"),
+            (self.mes_seguinte, "300.00"),
+        ]:
+            Previsto.objects.create(
+                descricao=f"Previsto {valor}",
+                valor=Decimal(valor),
+                vencimento=mes + timedelta(days=10),
+                categoria=self.despesa,
+                conta=self.conta,
+            )
+
+        inicio = self.client.get(reverse("financas:inicio"))
+        self.assertEqual(inicio.context["previsto_aberto"], Decimal("100.00"))
+
+    def test_pago_sai_do_total_e_continua_na_lista_do_mes(self):
+        previsto = Previsto.objects.create(
+            descricao="Internet",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_atual + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        self.client.post(
+            reverse("financas:ignorar_previsto", args=[previsto.pk])
+        )
+
+        inicio = self.client.get(reverse("financas:inicio"))
+        self.assertEqual(inicio.context["previsto_aberto"], Decimal("0.00"))
+        tela = self._abrir(self.mes_atual)
+        self.assertContains(tela, "Internet")
+        self.assertContains(tela, "Pago")
+
+    def test_mostra_atrasado_vence_hoje_e_pago(self):
+        with patch(
+            "financas.views.timezone.localdate",
+            return_value=date(2026, 11, 15),
+        ):
+            for descricao, vencimento, status in [
+                ("Conta atrasada", date(2026, 11, 10), Previsto.Status.ABERTO),
+                ("Conta de hoje", date(2026, 11, 15), Previsto.Status.ABERTO),
+                ("Conta paga", date(2026, 11, 10), Previsto.Status.IGNORADO),
+            ]:
+                Previsto.objects.create(
+                    descricao=descricao,
+                    valor=Decimal("100.00"),
+                    vencimento=vencimento,
+                    categoria=self.despesa,
+                    conta=self.conta,
+                    status=status,
+                )
+            resposta = self._abrir(date(2026, 11, 1))
+
+        self.assertContains(resposta, "Conta atrasada")
+        self.assertContains(resposta, "Atrasado")
+        self.assertContains(resposta, "Conta de hoje")
+        self.assertContains(resposta, "Vence hoje")
+        self.assertContains(resposta, "Conta paga")
+        self.assertContains(resposta, "Pago")
+
+    def test_total_falta_pagar_soma_so_despesas_abertas_do_mes(self):
+        Previsto.objects.create(
+            descricao="Despesa aberta",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_atual + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+        Previsto.objects.create(
+            descricao="Despesa paga",
+            valor=Decimal("200.00"),
+            vencimento=self.mes_atual + timedelta(days=11),
+            categoria=self.despesa,
+            conta=self.conta,
+            status=Previsto.Status.IGNORADO,
+        )
+        Previsto.objects.create(
+            descricao="Entrada",
+            valor=Decimal("5000.00"),
+            vencimento=self.mes_atual + timedelta(days=12),
+            tipo=TipoValor.RECEITA,
+            categoria=self.receita,
+            conta=self.conta,
+        )
+
+        resposta = self._abrir(self.mes_atual)
+
+        self.assertEqual(resposta.context["total_aberto"], Decimal("100.00"))
+        self.assertEqual(resposta.context["qtd_aberta"], 1)
+        self.assertEqual(resposta.context["qtd_paga"], 1)
+        self.assertContains(resposta, "Falta pagar")
+        self.assertContains(resposta, "R$ 100,00")
+        self.assertNotContains(resposta, "R$ 5.100,00")
+
+    def test_nao_existe_botao_paguei(self):
+        Previsto.objects.create(
+            descricao="Internet",
+            valor=Decimal("100.00"),
+            vencimento=self.mes_atual + timedelta(days=10),
+            categoria=self.despesa,
+            conta=self.conta,
+        )
+
+        tela = self._abrir(self.mes_atual)
+        self.assertNotContains(tela, "Paguei")
+        self.assertNotContains(tela, "paguei")
 
 
 class EditarLancamentoTests(BaseUsoDiario):
@@ -366,7 +591,7 @@ class DesfazerLancamentoTests(BaseUsoDiario):
 
 
 class IgnorarPrevistoTests(BaseUsoDiario):
-    def test_ignorar_tira_da_lista_e_do_total_sem_criar_movimento(self):
+    def test_ignorar_marca_pago_e_tira_do_total_sem_criar_movimento(self):
         previsto = self.criar_previsto(valor="100.00")
         resposta = self.client.post(
             reverse("financas:ignorar_previsto", args=[previsto.pk]),
@@ -374,9 +599,14 @@ class IgnorarPrevistoTests(BaseUsoDiario):
         )
         previsto.refresh_from_db()
         self.assertEqual(previsto.status, Previsto.Status.IGNORADO)
-        self.assertContains(resposta, "Resolvido: Aluguel")
-        self.assertContains(resposta, "Resolvidos")
-        self.assertContains(resposta, "Desfazer")
+        self.assertContains(resposta, "Pago: Aluguel")
+        # Decisão de 2026-11-22: o pago continua na lista do mês, agora com o
+        # estado "Pago"; o que ele deixa é o total em aberto.
+        self.assertContains(resposta, "Aluguel")
+        self.assertContains(
+            resposta,
+            f'id="pago-{previsto.pk}" onchange="this.form.submit()" checked',
+        )
         inicio = self.client.get(reverse("financas:inicio"))
         self.assertEqual(inicio.context["previsto_aberto"], Decimal("0.00"))
         self.assertFalse(Movimento.objects.exists())
@@ -384,8 +614,8 @@ class IgnorarPrevistoTests(BaseUsoDiario):
     def test_tela_abre_com_check_sem_botoes_de_pagar_ou_ignorar(self):
         previsto = self.criar_previsto()
         resposta = self.client.get(reverse("financas:previstos"))
-        self.assertContains(resposta, f'id="resolver-{previsto.pk}"')
-        self.assertContains(resposta, 'aria-label="Resolver: Aluguel"')
+        self.assertContains(resposta, f'id="pago-{previsto.pk}"')
+        self.assertContains(resposta, 'aria-label="Marcar como pago: Aluguel"')
         self.assertNotContains(resposta, "Paguei")
         self.assertNotContains(resposta, ">Ignorar<")
 
@@ -407,7 +637,7 @@ class IgnorarPrevistoTests(BaseUsoDiario):
         ignorar = reverse("financas:ignorar_previsto", args=[previsto.pk])
         self.client.post(ignorar)
         resposta = self.client.post(ignorar, follow=True)
-        self.assertContains(resposta, "já está resolvido")
+        self.assertContains(resposta, "já está pago")
 
         reabrir = reverse("financas:reabrir_previsto", args=[previsto.pk])
         self.client.post(reabrir)

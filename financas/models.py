@@ -264,6 +264,54 @@ class GastoFixo(models.Model):
         return f"{self.descricao} · todo dia {self.dia_vencimento} · {self.valor}"
 
 
+class EntradaFixa(models.Model):
+    """Entrada mensal fixa cadastrada uma vez (decisão de 2026-11-22).
+
+    Espelha o `GastoFixo` do lado da receita: cada mês gera um `Previsto` de
+    receita a partir deste cadastro (o salário é o caso típico). Editar atualiza
+    o mês corrente se ele ainda estiver aberto; desativar para de gerar os
+    seguintes. O cadastro não é apagado: o histórico dos meses já gerados fica.
+
+    Decisão futura registrada no `PENDENCIAS.md`: generalizar `GastoFixo` e
+    `EntradaFixa` num só modelo. Agora não, para não mexer no gasto fixo.
+    """
+
+    descricao = models.CharField("descrição", max_length=120)
+    valor = models.DecimalField(
+        "valor",
+        max_digits=15,
+        decimal_places=2,
+        validators=[MinValueValidator(VALOR_MINIMO)],
+    )
+    dia_recebimento = models.PositiveSmallIntegerField(
+        "dia do recebimento",
+        validators=[MinValueValidator(1), MaxValueValidator(31)],
+        help_text="Dia do mês (1 a 31); em mês mais curto, cai no último dia.",
+    )
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT,
+        related_name="entradas_fixas",
+        verbose_name="categoria",
+    )
+    conta = models.ForeignKey(
+        Conta,
+        on_delete=models.PROTECT,
+        related_name="entradas_fixas",
+        verbose_name="conta",
+    )
+    ativo = models.BooleanField("ativo", default=True)
+    criado_em = models.DateTimeField("criado em", auto_now_add=True)
+
+    class Meta:
+        ordering = ["descricao"]
+        verbose_name = "entrada fixa"
+        verbose_name_plural = "entradas fixas"
+
+    def __str__(self) -> str:
+        return f"{self.descricao} · todo dia {self.dia_recebimento} · {self.valor}"
+
+
 class Previsto(models.Model):
     """Conta a pagar com vencimento (D2). É o "comprometido à frente".
 
@@ -298,6 +346,15 @@ class Previsto(models.Model):
         null=True,
         blank=True,
         help_text="Preenchido quando o previsto foi gerado de um gasto fixo.",
+    )
+    entrada_fixa = models.ForeignKey(
+        EntradaFixa,
+        on_delete=models.PROTECT,
+        related_name="previstos",
+        verbose_name="entrada fixa",
+        null=True,
+        blank=True,
+        help_text="Preenchido quando o previsto foi gerado de uma entrada fixa.",
     )
     competencia = models.DateField(
         "competência",
@@ -345,6 +402,11 @@ class Previsto(models.Model):
                 fields=["fixo", "competencia"],
                 condition=Q(fixo__isnull=False),
                 name="previsto_fixo_competencia_unica",
+            ),
+            models.UniqueConstraint(
+                fields=["entrada_fixa", "competencia"],
+                condition=Q(entrada_fixa__isnull=False),
+                name="previsto_entrada_fixa_competencia_unica",
             ),
         ]
 

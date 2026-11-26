@@ -26,6 +26,11 @@ urlpatterns = [
         views.editar_gasto_fixo,
         name="editar_gasto_fixo",
     ),
+    path(
+        "previstos/entradas/<int:pk>/editar/",
+        views.editar_entrada_fixa,
+        name="editar_entrada_fixa",
+    ),
     path("relatorio/", views.relatorio, name="relatorio"),
     path("rotina/", views.rotina, name="rotina"),
     path(

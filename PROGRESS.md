@@ -3,6 +3,139 @@
 > Memória oficial do projeto (guardrail G5). Toda mudança de código entra aqui, na mesma
 > resposta que a produziu. Mais recente no topo.
 
+## 2026-11-25 — Migrations 0007 e 0008 aplicadas no banco do PC
+
+**Pedido do dono:** "pode seguir", depois de o front responder
+`OperationalError: no such column: financas_previsto.entrada_fixa_id`.
+
+**Feito:**
+- Backup do banco fora do repositório: `~/backups/gestao-financeira-2026-11-25.sqlite3`
+  (mesmo tamanho do original, 229.376 bytes).
+- `.venv/bin/python manage.py migrate financas` aplicou `0007_tarefa_conclusaotarefa` e
+  `0008_entradafixa_previsto_entrada_fixa_and_more`; `showmigrations` mostra `[X]` nas duas.
+- `manage.py check`: sem problemas. Nenhum código mudou; o front volta a abrir.
+
+**Testes:** não se aplica (só banco); a suíte de 288 já estava verde.
+
+**Aberto:** aplicar as mesmas migrations no servidor e publicar (P2-22 e P2-23).
+
+Falta conferir na vila.
+
+## 2026-11-25 — Direção A "Papel e tinta" implementada no app
+
+**Pedido do dono (2026-11-25):** "gostei da amostra A, pode seguir o trabalho." A direção A foi
+escolhida e a rodada 2, implementada.
+
+**O que mudou:**
+- `financas/static/financas/app.css`: tokens da direção (fundo `#F3EEE4`, superfície `#FBF8F1`,
+  tinta `#211D16`, acento `#2F5D45`, positivo `#256B4E`, negativo `#A23B2A`, atenção `#8A5A12`),
+  serifa nos títulos, raio de 2px, sem sombra, listas sem cartão, check redondo, estados "Pago",
+  "Atrasado" e "Vence hoje", total do mês e formulários de papel.
+- `templates/base.html`: sprite de ícones, navegação com cinco abas + "Mais" no celular
+  (Relatório, Categorias e Sair no menu) e seis destinos no desktop; `theme-color` `#f3eee4`.
+- `templates/inicio.html`: saldo em número, "Fixo do mês" em três partes (entra, sai, sobra) e o
+  resumo gasto/previsto.
+- `templates/lancamentos.html`: cabeçalho com o mês, formulário e lista em duas colunas no
+  desktop, data e valor lado a lado e a categoria na linha de autoria.
+- `templates/previstos.html`: lista única do mês com check redondo, estados, total "Falta pagar"
+  (só despesas abertas) e o rodapé de pagos.
+- `templates/relatorio.html`: mesmo cabeçalho de mês.
+- `financas/views.py`: `hoje` no contexto do início e do previstos; `total_aberto`, `qtd_aberta` e
+  `qtd_paga` no previstos.
+- `financas/static/financas/manifest.webmanifest`: cores do PWA.
+- `docs-dev/guias/DESIGN.md`: decisão A registrada; B fica como alternativa.
+- `financas/test_uso_diario.py`: dois testes novos (Atrasado/Vence hoje/Pago e o total do mês).
+
+**Testes:** 288, OK (linha de base: 286). `makemigrations --check`: sem mudanças.
+
+**Aberto:** P3-16 (conferir a direção no celular), P4-9 (Fraunces self-hosted) e P2-22/P2-23
+(migrations 0007 e 0008). A direção B fica como registro.
+
+Falta conferir na vila.
+
+## 2026-11-25 — Rodada do porão retomada: previstos do mês, entrada fixa, Fixo do mês e proposta visual
+
+**Contexto:** a rodada `20261122-2330-ux-entrada-previstos` do porão caiu em 22/11 com as três
+tarefas incompletas: a t1 tinha só a amostra A, a t2 tinha só o helper `_previstos_do_mes` e a t3
+não tinha começado. As decisões do dono de 22/11 foram seguidas; o trabalho de 24/11 (rotina), que
+mexeu na navegação e nos mesmos arquivos, foi integrado, não revertido.
+
+**t2 — Previstos do mês (decisão de 2026-11-22):**
+- `financas/views.py`: `previstos` filtra por `?mes=AAAA-MM` (fixo pela `competencia`, avulso pelo
+  `vencimento`), com a navegação de mês de Lançamentos/Relatório. A lista é única e ordenada por
+  vencimento: aberto e "Pago" juntos.
+- "Pago" na tela é o status `ignorado` no modelo, sem migration; marcar não cria `Movimento`. O
+  botão "paguei" não aparece; a rota `pagar_previsto` continua existindo.
+- `inicio` soma só o previsto aberto do mês corrente (só despesas).
+- `templates/previstos.html` e `app.css`: linha inteira como alvo de 44px, estado
+  `.movimento-pago` (verde + check) e o rótulo visível `.estado-pago` ("Pago").
+- Testes: `PrevistosDoMesTests` (6) e ajustes justificados em `IgnorarPrevistoTests`,
+  `TelaInicialTests` e `GastosPrevistosTests`.
+
+**t3 — Entrada fixa e Fixo do mês (decisão de 2026-11-22):**
+- `financas/models.py`: `EntradaFixa` (descrição, valor, dia de recebimento, categoria de receita,
+  conta, ativo) e `Previsto.entrada_fixa`, com restrição única `(entrada_fixa, competencia)`.
+- `financas/migrations/0008_entradafixa_previsto_entrada_fixa_and_more.py`: escrita e **não
+  aplicada** no banco real (P2-23).
+- `financas/gastos_fixos.py`: `garantir_previstos_do_mes` gera um previsto de receita por entrada
+  ativa e por mês, idempotente; `atualizar_previsto_da_entrada` acompanha a edição do mês aberto.
+- Cadastro, edição e desativação de entrada fixa na tela de previstos, com categoria de receita
+  exigida (despesa recusada). O previsto de receita entra na mesma lista e no mesmo check; não soma
+  no gasto do mês nem no aberto de despesas.
+- `templates/inicio.html`: ordem saldo → "Fixo do mês" (entra fixo, sai fixo, sobra fixa) → gasto
+  do mês → previsto em aberto, com o texto de que fixo e gasto do mês não se somam.
+- Testes: `financas/test_entrada_fixa.py` (19).
+
+**t1 — Proposta visual (decisão de 2026-11-22):**
+- `docs-dev/guias/DESIGN.md`: auditoria curta (hierarquia, abas de 10px, densidade, estados,
+  leitura do mês, tema do PWA), as direções A "Papel e tinta" e B "Noturno de bolso" (paleta com
+  hex, tipografia), princípios de componente e anti-patterns do G19.
+- Amostras estáticas `docs-dev/design/amostras/direcao-a.html` (já existia) e `direcao-b.html`
+  (nova), cada uma com navegação, tela inicial, lançamentos e previstos, sem rede nem CDN.
+- A escolha da direção é do dono (P3-14) e a implementação é a rodada 2 (P3-15).
+- **Não abri as amostras no navegador**: não há navegador headless instalado no WSL e instalar
+  fora do repositório exige o "pode" (WSL limpo). A conferência a 360 e 1280px fica na vila.
+
+**Testes:** 286, OK (linha de base desta sessão: 261). `makemigrations --check`: sem mudanças.
+
+**Aberto:** P2-22 (0007), P2-23 (0008), P3-14/P3-15 (direção visual) e P4-8 (generalização futura).
+A conferência visual das amostras e do uso no celular é do dono.
+
+Falta conferir na vila.
+
+## 2026-11-24 — Rotina diária: tarefas por pessoa, check que reinicia todo dia
+
+**Pedido do dono (2026-11-22):** uma aba nova de gerenciamento de rotina (tarefas dele e da
+esposa), cada perfil marca as próprias e pode consultar as do outro em somente leitura; as
+tarefas reiniciam todo dia; simples, como as tarefas do iPhone.
+
+**O que mudou (commit `78cb90b`):**
+- `financas/models.py`: `Tarefa` (dono e título) e `ConclusaoTarefa` (uma linha por tarefa e
+  dia, com par único no banco). Sem linha na data de hoje a tarefa aparece em aberto — é isso
+  que faz o check reiniciar à meia-noite sem apagar o histórico.
+- `financas/views.py` e `financas/urls.py`: `/rotina/` mostra minhas tarefas e o formulário de
+  nova; `?perfil=<id>` abre a rotina do outro perfil em leitura (id inválido responde 404).
+  Concluir e desfazer são idempotentes; editar e excluir só a própria tarefa — a do outro
+  responde 404 (G9).
+- `templates/rotina.html` e `templates/editar_tarefa.html`: lista com check que envia no
+  `onchange` (com `<noscript>`), seletor de perfil, resumo "X de Y concluídas hoje" e zona de
+  exclusão na edição.
+- `templates/base.html` e `app.css`: a navegação passou a ter seis abas; no celular,
+  "Lançamentos" vira "Lançar" para caber na barra inferior.
+- `financas/forms.py` (formulário só com o título; o dono vem da sessão), `financas/admin.py`
+  e `financas/migrations/0007_tarefa_conclusaotarefa.py` (escrita, **não aplicada** no banco).
+- `financas/test_rotina.py`: 28 testes (reset diário, histórico preservado, leitura do outro
+  perfil, escrita no perfil do outro bloqueada, título vazio e longo, POST obrigatório).
+- `financas/test_acessibilidade.py`: o teste do link ativo conferia o HTML exato e quebrou com
+  a sexta aba; passou a conferir o comportamento (href e rótulo do link com `aria-current`).
+
+**Testes:** 261, OK (linha de base da sessão: 233).
+
+**Aberto:** P2-22 (aplicar a migration 0007 no banco do PC e do servidor e publicar) e P3-13
+(conferir a rotina e a barra de seis abas no celular).
+
+Falta conferir na vila.
+
 ## 2026-11-20 — Os 3 itens P2 fechados: celular, migration 0006 e conta Inter→Itaú
 
 **Pedido do dono (rodada do maestro):** fechar P2-9, P2-16 e P2-14, nesta ordem, com o "pode"

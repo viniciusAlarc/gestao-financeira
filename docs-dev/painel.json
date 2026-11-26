@@ -16,6 +16,11 @@
   },
   "entregas": [
     {
+      "data": "2026-11-24",
+      "o_que": "Rotina diária: tarefas por pessoa, check que reinicia todo dia e leitura da rotina do outro perfil, com seis abas",
+      "como": "Tarefa + ConclusaoTarefa (migration 0007 escrita, não aplicada); check idempotente, editar/excluir só na própria tarefa e perfil do outro em leitura; 261 testes OK; falta aplicar a 0007 e publicar (P2-22)"
+    },
+    {
       "data": "2026-11-18",
       "o_que": "P2-13 fechado: importação da Pluggy validada (dry-run, importação real, idempotência e fuso)",
       "como": "segunda execução com Criados: 0; data conferida em transação conhecida; categorização (P2-15) e rotina (P2-21) ficam como próximos"

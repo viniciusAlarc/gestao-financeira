@@ -9,6 +9,7 @@ from .models import (
     Categoria,
     ConclusaoTarefa,
     Conta,
+    EntradaFixa,
     GastoFixo,
     Movimento,
     Previsto,
@@ -74,6 +75,20 @@ class GastoFixoAdmin(admin.ModelAdmin):
     list_display = (
         "descricao",
         "dia_vencimento",
+        "valor",
+        "categoria",
+        "conta",
+        "ativo",
+    )
+    list_filter = ("ativo", "categoria", "conta")
+    search_fields = ("descricao",)
+
+
+@admin.register(EntradaFixa)
+class EntradaFixaAdmin(admin.ModelAdmin):
+    list_display = (
+        "descricao",
+        "dia_recebimento",
         "valor",
         "categoria",
         "conta",

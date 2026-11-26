@@ -24,7 +24,7 @@ como web app responsivo (PWA), sem publicar em loja.
 Desenvolvimento da v1 por fases (8 no plano). O esqueleto do Django roda, o modelo de dado está
 pronto (`Conta`, `Categoria`, `Movimento`, `GastoFixo`, `Previsto`) e a tela inicial com saldo,
 gasto do mês e previsto em aberto está pronta e verificada a 375, 360, 768 e 1280px. As fases 4 e 5 estão concluídas
-e validadas por testes: gastos fixos mensais com botão "paguei" e relatório do mês por categoria. A
+e validadas por testes: gastos fixos mensais com check "Pago" e relatório do mês por categoria. A
 fase 6 está implementada: as duas contas veem tudo, o lançamento registra a autoria, há logout e o
 PWA tem manifest e ícones; falta a verificação de uso real (P3-9). Em 2026-11-08 entraram as funções
 de uso diário (data editável, editar/desfazer lançamento, ignorar/reabrir previsto e navegação
@@ -39,14 +39,26 @@ e o item do MeuPluggy estão no `.env` do servidor e a importação da Pluggy fo
 (dry-run, importação real, idempotência e fuso: P2-13 fechado). A categorização com as 23 categorias
 da Pluggy e a recategorização do histórico foram concluídas em 2026-11-19 (P2-15 fechado). A rotina
 automática (P2-21) está validada e roda duas vezes por dia. As migrations 0001 a 0006 estão
-aplicadas no banco real. A suíte tem 232 testes passando. O lançamento
+aplicadas no banco real. Em 2026-11-24 entrou a **rotina diária** (aba própria): tarefas por
+pessoa, check que reinicia todo dia sem apagar o histórico e leitura da rotina do outro perfil;
+a navegação ficou com seis abas. Em 2026-11-25, retomando a rodada do porão de 22/11, a tela de
+**gastos previstos** passou a ser uma lista única do mês, com navegação de mês e o check "Pago"
+(status `ignorado`, sem Movimento); entrou a **entrada fixa** (salário) na mesma lista e o bloco
+**"Fixo do mês"** (entra, sai e sobra) na tela inicial; o previsto em aberto passou a ser só do
+mês corrente. Em 2026-11-25 o dono escolheu a direção **A, "Papel e tinta"**, e ela foi
+implementada: paleta de papel e verde, serifa nos títulos, cinco abas + "Mais" no celular, início
+em número, lançamentos em duas colunas no desktop e previstos com os estados Pago, Atrasado e
+Vence hoje. A proposta e a alternativa B ficam em `docs-dev/guias/DESIGN.md`; falta conferir no
+celular (P3-16) e o self-host da fonte Fraunces (P4-9). As migrations 0007 (rotina) e 0008
+(entrada fixa) foram aplicadas no banco do PC em 2026-11-25; no servidor, continuam pendentes
+(P2-22 e P2-23). A suíte tem 288 testes passando. O lançamento
 rápido aceita uma descrição opcional (2026-11-08), que a lista usa no lugar do nome da categoria. Em
 2026-11-17 o app foi publicado no **PythonAnywhere, plano gratuito**, em
 `https://viniciusapps.pythonanywhere.com` (commit `3c71e26`); a conta, as categorias e os gastos
 fixos foram importados do banco do PC. Em 2026-11-18 a lista de lançamentos passou a mostrar quem
-lançou; em 2026-11-19 o relatório passou a expandir os gastos de cada categoria. Falta o uso real a
-dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
-`PENDENCIAS.md`.
+lançou; em 2026-11-19 o relatório passou a expandir os gastos de cada categoria. O uso real a dois
+está em andamento (P3-9 encerrada em 2026-11-20). O que foi feito fica em `PROGRESS.md`; o que
+está aberto, em `PENDENCIAS.md`.
 
 ## Documentos de referência — consultar antes de implementar
 
@@ -57,6 +69,7 @@ dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
 | `docs-dev/a-codar/01-plano-desenvolvimento.md` | O plano e as fases da v1                                        |
 | `docs-dev/a-codar/briefing-descoberta.md`      | Descoberta do produto, decisões D1–D6, perguntas em aberto (G7) |
 | `docs-dev/guias/OPERACAO.md`                   | Como subir, derrubar e o que olhar quando não sobe (G14)        |
+| `docs-dev/guias/DESIGN.md`                     | Antes de criar ou revisar peça visual (G19)                     |
 | `docs-dev/painel.json`                         | Fases e entregas do plano em andamento (G14)                    |
 | `docs-dev/a-codar/03-deploy-pythonanywhere.md` | Publicar, atualizar e fazer backup em produção                  |
 
@@ -77,7 +90,7 @@ dois (P3-9). O que foi feito fica em `PROGRESS.md`; o que está aberto, em
 4. **Não inventar endpoint nem campo (G1).** Os caminhos e campos da Pluggy seguem a documentação
    oficial (`docs.pluggy.ai`); rota ou campo fora da doc oficial é retrabalho, não iniciativa.
 5. **Testes (G4).** Rodar `.venv/bin/python manage.py test` antes e depois de mexer no modelo.
-   Linha de base em 2026-11-03: 62 testes; em 2026-11-19 a suíte está em 232, todos passando.
+   Linha de base em 2026-11-03: 62 testes; em 2026-11-25 a suíte está em 288, todos passando.
 6. **Idioma:** conversa e documentação em pt-BR; código, nome de lib e termo técnico no original.
 7. **Texto de interface:** só a primeira letra maiúscula ("Gastos previstos", não "Gastos Previstos").
 

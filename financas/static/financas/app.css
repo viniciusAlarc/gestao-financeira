@@ -1,30 +1,33 @@
-/* Gestão financeira — estilo único (revisto em 2026-11-08).
-   Direção: claro, neutro, espaçado, com hierarquia tipográfica e sombra discreta.
-   A cor vive no dinheiro (verde/vermelho) e no ponto da marca; o resto é neutro.
-   Anti-patterns evitados (G19): sem faixa colorida em aresta, sem gradiente em
-   card/header, sem chip de ícone em KPI, sem pílula grande de cor viva, sombra
-   discreta em lista. Mobile-first: barra inferior no celular, topo no desktop.
-   O anel de foco mantém #18181b por teste de acessibilidade. */
+/* Gestão financeira — direção A, "Papel e tinta" (escolhida em 2026-11-25).
+   Editorial e quente: papel, tinta e verde. A hierarquia vem da tipografia e
+   das linhas, não de cartões iguais; o número é o herói. Sem gradiente, sem
+   faixa colorida em aresta, sem chip de ícone em indicador e sem pílula grande.
+   Mobile-first: barra inferior no celular, topo no desktop. O anel de foco
+   mantém #18181b por teste de acessibilidade. */
 
 :root {
   color-scheme: light;
-  --fundo: #f6f7f9;
-  --superficie: #ffffff;
-  --superficie-suave: #f9fafb;
-  --borda: #e4e7ec;
-  --borda-forte: #d0d5dd;
-  --borda-suave: #f1f3f5;
-  --texto: #101828;
-  --texto-medio: #475467;
-  --texto-suave: #667085;
-  --acento: #18181b;
-  --positivo: #047857;
-  --negativo: #b42318;
-  --raio: 14px;
-  --raio-pequeno: 10px;
-  --sombra: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
-  --sombra-elevada: 0 4px 8px rgba(16, 24, 40, 0.04),
-    0 12px 32px rgba(16, 24, 40, 0.08);
+  --fundo: #f3eee4;
+  --superficie: #fbf8f1;
+  --superficie-suave: #ede5d6;
+  --borda: #d8cfbd;
+  --borda-forte: #b9ad96;
+  --borda-suave: #e6dfd2;
+  --texto: #211d16;
+  --texto-medio: #5a5244;
+  --texto-suave: #6e6454;
+  --acento: #2f5d45;
+  --acento-fraco: #e2e9df;
+  --positivo: #256b4e;
+  --negativo: #a23b2a;
+  --atencao: #8a5a12;
+  --atencao-fundo: #f5e7cc;
+  --raio: 2px;
+  --raio-pequeno: 2px;
+  --sombra: none;
+  --sombra-elevada: none;
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman",
+    serif;
   --barra-altura: 4.5rem;
 }
 
@@ -77,51 +80,129 @@ a {
   gap: 0.5rem;
   min-height: 44px;
   color: var(--texto);
-  font-size: 1.0625rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--serif);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
 }
 
 .marca-ponto {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
+  width: 7px;
+  height: 7px;
   background: var(--acento);
 }
 
 .navegacao {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.125rem;
 }
 
-.navegacao a {
+.navegacao .icone {
+  display: none;
+}
+
+.navegacao a,
+.mais summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   min-height: 44px;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  color: var(--texto-medio);
-  font-size: 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--raio-pequeno);
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
   font-weight: 600;
   text-decoration: none;
 }
 
-.navegacao a:hover {
+.navegacao a:hover,
+.mais summary:hover {
+  color: var(--texto);
+}
+
+.navegacao a.ativo,
+.mais summary.ativo {
+  border-color: var(--borda);
+  background: var(--acento-fraco);
+  color: var(--texto);
+}
+
+/* "Mais" só existe no celular; no desktop os seis destinos ficam no topo. */
+.mais {
+  display: none;
+  position: relative;
+}
+
+.mais summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.mais summary::-webkit-details-marker {
+  display: none;
+}
+
+.mais-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.5rem);
+  z-index: 30;
+  display: grid;
+  gap: 0.125rem;
+  min-width: 12rem;
+  padding: 0.375rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
+}
+
+.mais-menu a,
+.mais-menu button {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: var(--raio-pequeno);
+  background: none;
+  color: var(--texto-medio);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mais-menu a:hover,
+.mais-menu button:hover {
   background: var(--superficie-suave);
   color: var(--texto);
 }
 
-.navegacao a.ativo {
-  background: #eef0f3;
-  color: var(--texto);
+.mais-menu form {
+  margin: 0;
 }
 
-/* O rótulo curto só aparece na barra inferior do celular (seis abas). */
-.rotulo-curto {
-  display: none;
+/* O ícone do sprite fica oculto até a barra do celular. */
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icone {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .form-sair {
@@ -136,7 +217,7 @@ a {
   min-height: 44px;
   padding: 0 0.5rem;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--raio-pequeno);
   background: none;
   color: var(--texto-suave);
   font: inherit;
@@ -160,16 +241,20 @@ a {
 
 .titulo-pagina {
   margin: 0 0 1.5rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 5vw, 1.875rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
+/* Rótulo de seção: pequeno, sans, no tom do texto de apoio. */
 .subtitulo {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  margin: 0 0 0.5rem;
+  color: var(--texto-medio);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .lista-mes {
@@ -188,43 +273,43 @@ a {
 .mensagem {
   padding: 0.75rem 1rem;
   border: 1px solid var(--borda);
-  border-radius: 12px;
+  border-radius: var(--raio);
   background: var(--superficie);
   color: var(--texto-medio);
   font-size: 0.875rem;
 }
 
 .mensagem-success {
-  border-color: #a7f3d0;
-  background: #ecfdf5;
-  color: #065f46;
+  border-color: #b7cfc0;
+  background: var(--acento-fraco);
+  color: var(--positivo);
 }
 
 .mensagem-error {
-  border-color: #fecaca;
-  background: #fef2f2;
-  color: #991b1b;
+  border-color: #e0c0b9;
+  background: #f4e3df;
+  color: var(--negativo);
 }
 
 .mensagem-info {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1e40af;
+  border-color: var(--borda);
+  background: var(--superficie-suave);
+  color: var(--texto-medio);
 }
 
 .mensagem-warning {
-  border-color: #fde68a;
-  background: #fffbeb;
-  color: #92400e;
+  border-color: #e0c98f;
+  background: var(--atencao-fundo);
+  color: var(--atencao);
 }
 
 .aviso {
   margin: 0 0 1.25rem;
   padding: 0.875rem 1rem;
-  border: 1px solid #fde68a;
-  border-radius: 12px;
-  background: #fffbeb;
-  color: #92400e;
+  border: 1px solid #e0c98f;
+  border-radius: var(--raio);
+  background: var(--atencao-fundo);
+  color: var(--atencao);
   font-size: 0.875rem;
 }
 
@@ -251,42 +336,120 @@ a {
   margin: 0 0 1rem;
 }
 
-/* Tela inicial: três indicadores; no desktop, lado a lado. */
-.painel {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.75rem;
-  margin: 0;
+/* Tela inicial: saldo em número, fixo do mês em três partes e o resumo
+   realizado/comprometido. Nenhum cartão igual em tudo (decisão de 2026-11-25). */
+.saldo {
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--borda);
 }
 
-.card {
-  padding: 1.25rem 1.375rem;
+.rotulo-bloco {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.375rem;
+  color: var(--texto-medio);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.tag {
+  padding: 0 0.375rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pequeno);
+  color: var(--texto-suave);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+.saldo-numero {
+  font-family: var(--serif);
+  font-size: clamp(2.375rem, 9vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.nota {
+  max-width: 54ch;
+  color: var(--texto-suave);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.fixo {
+  padding: 1rem;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--superficie);
-  box-shadow: var(--sombra);
 }
 
-.rotulo {
-  margin: 0 0 0.5rem;
+.fixo-cabecalho {
+  display: grid;
+  gap: 0.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.fixo-grade {
+  display: grid;
+}
+
+.fixo-item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+}
+
+.fixo-item + .fixo-item {
+  border-top: 1px solid var(--borda-suave);
+}
+
+.fixo-rotulo {
   color: var(--texto-medio);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.8125rem;
 }
 
-.numero {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+.fixo-valor {
+  color: var(--texto);
+  font-size: 1.25rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-.painel .card:first-child .numero {
-  font-size: 2.25rem;
+.positivo {
+  color: var(--positivo);
+}
+
+.resumo-grade {
+  display: grid;
+  gap: 1.125rem;
+}
+
+.bloco {
+  padding-top: 1rem;
+  border-top: 1px solid var(--borda);
+}
+
+.valor-grande {
+  font-size: 1.625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.alerta {
+  color: var(--negativo);
+  font-weight: 600;
 }
 
 .numero-saldo-positivo {
@@ -297,30 +460,38 @@ a {
   color: var(--negativo);
 }
 
-.numero-gasto {
-  color: var(--negativo);
-}
-
-.numero-previsto {
-  color: var(--texto-medio);
-}
-
-/* Formulários: cartão com campos de 44px e botão de largura cheia. */
+/* Formulários: bloco de papel com campos de 44px e botão de largura cheia. */
 .formulario-rapido {
   display: grid;
   gap: 0.5rem;
   margin: 0 0 1.75rem;
-  padding: 1.25rem;
+  padding: 1rem;
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--superficie);
-  box-shadow: var(--sombra);
 }
 
 .formulario-rapido label {
   color: var(--texto-medio);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   font-weight: 600;
+}
+
+.form-titulo {
+  margin: 0 0 0.25rem;
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.campo-duplo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.625rem;
+}
+
+.campo-duplo > div {
+  min-width: 0;
 }
 
 /* Marca de campo opcional: fica no tom do texto de apoio, sem competir com o rótulo. */
@@ -389,12 +560,11 @@ a {
   font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
   transition: background-color 0.15s ease, transform 0.05s ease;
 }
 
 .botao-primario:hover {
-  background: #1d2939;
+  background: #254b37;
 }
 
 .botao-primario:active {
@@ -425,28 +595,41 @@ a {
   color: var(--texto);
 }
 
-/* Listas: um cartão por bloco, com divisória neutra entre as linhas. */
+/* Lançamentos: formulário e lista lado a lado no desktop (direção A). */
+.lancar-grade {
+  display: grid;
+  gap: 1.375rem;
+}
+
+.lancar-form .formulario-rapido {
+  margin-bottom: 0;
+}
+
+/* Listas: linhas separadas por fio neutro, sem cartão (direção A). */
 .dia {
-  margin-bottom: 1.25rem;
+  padding: 0.875rem 0 0.125rem;
+  border-top: 1px solid var(--borda);
+}
+
+.dia:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .dia-cabecalho {
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.125rem;
   color: var(--texto-suave);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .movimentos {
   margin: 0;
   padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie);
-  box-shadow: var(--sombra);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   list-style: none;
 }
 
@@ -455,7 +638,7 @@ a {
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
-  padding: 0.875rem 1rem;
+  padding: 0.625rem 0;
 }
 
 .movimento + .movimento {
@@ -517,12 +700,168 @@ a {
   margin: 0;
 }
 
-/* Gastos previstos: uma linha por item, resolvido pelo check (2026-11-20). */
+/* Lista de previstos: uma linha por item, check redondo e estado por texto. */
+.previstos {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--borda);
+  list-style: none;
+}
+
+.previsto {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--borda-suave);
+}
+
+.previsto:last-child {
+  border-bottom: 0;
+}
+
+.previsto-check {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.625rem;
+  align-items: start;
+  margin: 0;
+}
+
+/* Sem JS, o botão do <noscript> fica embaixo do rótulo, na segunda coluna. */
+.previsto-check noscript {
+  grid-column: 2;
+}
+
+.previsto-check noscript .acao {
+  margin-top: 0.25rem;
+}
+
+/* Check redondo da direção A: 20px, verde quando marcado, com o traço branco. */
+.previsto-check input[type="checkbox"],
+.check-tarefa input[type="checkbox"],
+.check-leitura {
+  position: relative;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  border: 1px solid var(--borda-forte);
+  border-radius: 50%;
+  background: var(--superficie);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.previsto-check input[type="checkbox"]:checked,
+.check-tarefa input[type="checkbox"]:checked,
+.check-leitura:checked {
+  border-color: var(--positivo);
+  background: var(--positivo);
+}
+
+.previsto-check input[type="checkbox"]:checked::after,
+.check-tarefa input[type="checkbox"]:checked::after,
+.check-leitura:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.check-leitura {
+  cursor: default;
+}
+
+.previsto-rotulo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: start;
+  min-width: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.previsto-texto {
+  min-width: 0;
+}
+
+.previsto-titulo {
+  color: var(--texto);
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.previsto-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.375rem;
+  margin-top: 0.125rem;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.separador {
+  color: var(--borda-forte);
+}
+
+.previsto-valor {
+  color: var(--texto);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.previsto.pago .previsto-titulo,
+.previsto.pago .previsto-valor {
+  color: var(--positivo);
+}
+
+.previsto.entrada .previsto-valor {
+  color: var(--positivo);
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.375rem;
+  border: 1px solid currentColor;
+  border-radius: var(--raio-pequeno);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+
+.estado-pago {
+  color: var(--positivo);
+}
+
+.estado-atraso {
+  color: var(--negativo);
+}
+
+.estado-hoje {
+  color: var(--atencao);
+  background: var(--atencao-fundo);
+}
+
+/* Linha compacta da rotina (e da lista de tarefas). */
 .movimento-compacto {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.625rem 0.875rem;
+  padding: 0.625rem 0;
 }
 
 .movimento-compacto + .movimento-compacto {
@@ -531,32 +870,6 @@ a {
 
 .movimento-compacto form {
   margin: 0;
-}
-
-.check-previsto {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  gap: 0.625rem;
-  min-width: 0;
-  cursor: pointer;
-}
-
-.check-previsto input[type="checkbox"] {
-  flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0;
-  accent-color: var(--acento);
-  cursor: pointer;
-}
-
-.check-previsto-rotulo {
-  display: flex;
-  flex: 1;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: 0;
 }
 
 .movimento-compacto .movimento-descricao {
@@ -577,11 +890,6 @@ a {
 .movimento-compacto .movimento-valor {
   flex-shrink: 0;
   font-size: 0.9375rem;
-}
-
-.movimento-resolvido .movimento-descricao,
-.movimento-resolvido .movimento-valor {
-  color: var(--texto-suave);
 }
 
 /* Rotina diária (2026-11-22): abas de perfil neutras, check de 44px e texto
@@ -614,8 +922,8 @@ a {
 }
 
 .seletor-perfil a.ativo {
-  border-color: var(--borda-forte);
-  background: #eef0f3;
+  border-color: var(--borda);
+  background: var(--acento-fraco);
   color: var(--texto);
 }
 
@@ -623,7 +931,7 @@ a {
   margin: 0 0 1.25rem;
   padding: 0.75rem 1rem;
   border: 1px solid var(--borda);
-  border-radius: 12px;
+  border-radius: var(--raio);
   background: var(--superficie-suave);
   color: var(--texto-medio);
   font-size: 0.875rem;
@@ -646,27 +954,14 @@ a {
   align-items: center;
   gap: 0.625rem;
   min-width: 0;
+  min-height: 44px;
   cursor: pointer;
-}
-
-.check-tarefa input[type="checkbox"],
-.check-leitura {
-  flex-shrink: 0;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin: 0;
-  accent-color: var(--acento);
-  cursor: pointer;
-}
-
-.check-leitura {
-  cursor: default;
 }
 
 .check-tarefa-rotulo {
   display: flex;
   flex: 1;
-  align-items: baseline;
+  align-items: center;
   gap: 0.5rem;
   min-width: 0;
 }
@@ -715,7 +1010,7 @@ a {
   width: 100%;
   min-height: 44px;
   padding: 0.75rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid #e0c0b9;
   border-radius: var(--raio-pequeno);
   background: var(--superficie);
   color: var(--negativo);
@@ -739,7 +1034,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 0;
   cursor: pointer;
   list-style: none;
 }
@@ -765,7 +1060,7 @@ details[open] > .relatorio-resumo::after {
 
 .relatorio-movimentos {
   margin: 0;
-  padding: 0 1rem 0.75rem;
+  padding: 0 0 0.75rem;
   border-top: 1px solid var(--borda-suave);
   list-style: none;
 }
@@ -834,22 +1129,61 @@ details[open] > .relatorio-resumo::after {
 .total-mes {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: 1rem;
-  margin: 0.75rem 0 0;
-  padding: 0.875rem 1rem;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie-suave);
+  margin: 0.5rem 0 0;
+  padding: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--borda-forte);
+  border-radius: 0;
+  background: transparent;
   color: var(--texto-medio);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
 .total-mes strong {
-  color: var(--negativo);
+  color: var(--texto);
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
+}
+
+/* Total dos previstos: falta pagar no mês (só despesas). */
+.total-previstos {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--borda-forte);
+}
+
+.total-previstos .rotulo {
+  color: var(--texto-medio);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.total-previstos .contas {
+  color: var(--texto-suave);
+  font-size: 0.75rem;
+}
+
+.total-previstos strong {
+  color: var(--texto);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rodape-tela {
+  margin: 0.5rem 0 0;
+  color: var(--texto-suave);
+  font-size: 0.75rem;
 }
 
 /* Bloco recolhível (2026-11-08): a lista longa fica atrás de um botão.
@@ -861,7 +1195,6 @@ details[open] > .relatorio-resumo::after {
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--superficie);
-  box-shadow: var(--sombra);
   color: var(--texto-medio);
   font-size: 0.9375rem;
   font-weight: 600;
@@ -884,37 +1217,57 @@ details[open] > .relatorio-resumo::after {
   margin-bottom: 1rem;
 }
 
-/* Navegação de mês: setas com alvo de 44px e o mês como título. */
-.navegacao-mes {
+/* Cabeçalho de tela: o nome é o olho, o mês é o título. */
+.pagina-cabecalho {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 0.5rem;
-  margin: 0 0 0.875rem;
+  flex-wrap: wrap;
+  gap: 0.625rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.olho {
+  margin: 0;
+  color: var(--acento);
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 .mes-atual {
   margin: 0;
-  text-align: center;
-  font-size: 1rem;
-  font-weight: 700;
+  font-family: var(--serif);
+  font-size: clamp(1.5rem, 5vw, 1.875rem);
+  font-weight: 600;
   letter-spacing: -0.01em;
+  line-height: 1.1;
 }
 
-.botao-mes {
+.mes-controle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.mes-seta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-pequeno);
+  background: var(--superficie);
   color: var(--texto-medio);
-  font-size: 1.25rem;
-  font-weight: 600;
   text-decoration: none;
 }
 
-.botao-mes:hover {
+.mes-seta:hover {
+  border-color: var(--borda-forte);
   background: var(--superficie-suave);
   color: var(--texto);
 }
@@ -980,7 +1333,6 @@ p.vazio {
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   background: var(--superficie);
-  box-shadow: var(--sombra-elevada);
 }
 
 .cartao-login label {
@@ -1021,19 +1373,49 @@ p.vazio {
   margin: 0 auto 1rem;
 }
 
-/* Desktop: mais respiro, navegação no topo e indicadores lado a lado. */
+/* Desktop: mais respiro, fixo em três colunas e lançamentos em duas. */
 @media (min-width: 680px) {
-  .painel {
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+  .fixo {
+    padding: 1.125rem 1.25rem;
   }
 
-  .painel .card:first-child {
-    grid-column: 1 / -1;
+  .fixo-grade {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .card {
-    padding: 1.5rem;
+  .fixo-item {
+    display: grid;
+    gap: 2px;
+    padding: 0 1.125rem;
+  }
+
+  .fixo-item:first-child {
+    padding-left: 0;
+  }
+
+  .fixo-item + .fixo-item {
+    border-top: 0;
+    border-left: 1px solid var(--borda-suave);
+  }
+
+  .resumo-grade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.25rem;
+  }
+
+  .lancar-grade {
+    grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .lancar-form {
+    align-self: stretch;
+  }
+
+  .lancar-form .formulario-rapido {
+    position: sticky;
+    top: 1rem;
   }
 
   .formulario-rapido .botao-primario,
@@ -1072,10 +1454,19 @@ p.vazio {
   }
 }
 
-/* Celular: a navegação vira barra inferior fixa, com o ponto no item ativo. */
+/* Celular: barra inferior com cinco destinos e "Mais" (Relatório, Categorias
+   e Sair). O item ativo tem fundo tingido, não só um ponto. */
 @media (max-width: 719px) {
   .topo-conteudo {
     padding: 0.5rem 1rem;
+  }
+
+  .form-sair {
+    display: none;
+  }
+
+  .nav-completo {
+    display: none;
   }
 
   .navegacao {
@@ -1090,42 +1481,44 @@ p.vazio {
     background: var(--superficie);
   }
 
-  .navegacao a {
+  .navegacao a,
+  .mais summary {
     flex: 1;
     flex-direction: column;
-    gap: 0.1875rem;
-    min-height: 48px;
-    padding: 0.375rem 0.0625rem;
-    border-radius: 8px;
-    font-size: 0.625rem;
+    gap: 3px;
+    min-height: 54px;
+    padding: 5px 2px;
+    border: 1px solid transparent;
+    border-radius: var(--raio-pequeno);
+    font-size: 0.6875rem;
     line-height: 1.1;
     text-align: center;
     white-space: nowrap;
   }
 
-  .rotulo-longo {
-    display: none;
+  .navegacao .icone {
+    display: block;
   }
 
-  .rotulo-curto {
-    display: inline;
-  }
-
-  .navegacao a:hover {
+  .navegacao a:hover,
+  .mais summary:hover {
     background: var(--superficie-suave);
   }
 
-  .navegacao a.ativo {
-    background: none;
+  .navegacao a.ativo,
+  .mais summary.ativo {
+    border-color: var(--borda);
+    background: var(--superficie-suave);
     color: var(--texto);
   }
 
-  .navegacao a.ativo::after {
-    content: "";
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background: var(--acento);
+  .mais {
+    display: block;
+    flex: 1;
+  }
+
+  .mais summary {
+    width: 100%;
   }
 }
 

@@ -4,13 +4,79 @@
 {% block titulo %}Gastos previstos{% endblock %}
 
 {% block conteudo %}
-<h1 class="titulo-pagina">Gastos previstos</h1>
+<header class="pagina-cabecalho">
+  <div>
+    <h1 class="olho">Gastos previstos</h1>
+    <p class="mes-atual">{{ mes_atual|date:"F"|capfirst }} de {{ mes_atual|date:"Y" }}</p>
+  </div>
+  <nav class="mes-controle" aria-label="Navegação de mês">
+    <a class="mes-seta" href="?mes={{ mes_anterior|date:'Y-m' }}" aria-label="Mês anterior"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-esq"/></svg></a>
+    <a class="mes-seta" href="?mes={{ mes_seguinte|date:'Y-m' }}" aria-label="Próximo mês"><svg class="icone" aria-hidden="true" focusable="false"><use href="#i-dir"/></svg></a>
+  </nav>
+</header>
 
 {% if not conta_padrao %}
   <p class="aviso">Nenhuma conta está marcada como padrão e ativa. Marque uma no <a href="{% url 'admin:financas_conta_changelist' %}">admin</a> para poder adicionar previsto.</p>
 {% elif not tem_categoria_despesa_ativa %}
   <p class="aviso">Nenhuma categoria de despesa ativa. Cadastre uma em <a href="{% url 'financas:categorias' %}">Categorias</a>.</p>
 {% endif %}
+
+<details class="lista-mes bloco-recolhivel"{% if form_entrada.errors %} open{% endif %}>
+  <summary>
+    <span>Entradas fixas</span>
+    {% if entradas_fixas %}<span class="resumo-detalhes">{{ total_entradas|dinheiro }} por mês</span>{% endif %}
+  </summary>
+
+  {% if form_entrada %}
+  <form method="post" class="formulario-rapido">
+    {% csrf_token %}
+    {% if form_entrada.non_field_errors %}<p class="erro" role="alert">{{ form_entrada.non_field_errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_entrada.descricao.id_for_label }}">{{ form_entrada.descricao.label }}</label>
+    {{ form_entrada.descricao }}
+    {% if form_entrada.descricao.errors %}<p class="erro" id="{{ form_entrada.descricao.auto_id }}_error" role="alert">{{ form_entrada.descricao.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_entrada.valor.id_for_label }}">{{ form_entrada.valor.label }}</label>
+    {{ form_entrada.valor }}
+    {% if form_entrada.valor.errors %}<p class="erro" id="{{ form_entrada.valor.auto_id }}_error" role="alert">{{ form_entrada.valor.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_entrada.dia_recebimento.id_for_label }}">{{ form_entrada.dia_recebimento.label }}</label>
+    {{ form_entrada.dia_recebimento }}
+    {% if form_entrada.dia_recebimento.help_text %}<p class="ajuda">{{ form_entrada.dia_recebimento.help_text }}</p>{% endif %}
+    {% if form_entrada.dia_recebimento.errors %}<p class="erro" id="{{ form_entrada.dia_recebimento.auto_id }}_error" role="alert">{{ form_entrada.dia_recebimento.errors|join:" " }}</p>{% endif %}
+    <label for="{{ form_entrada.categoria.id_for_label }}">{{ form_entrada.categoria.label }}</label>
+    {{ form_entrada.categoria }}
+    {% if form_entrada.categoria.errors %}<p class="erro" id="{{ form_entrada.categoria.auto_id }}_error" role="alert">{{ form_entrada.categoria.errors|join:" " }}</p>{% endif %}
+    <label class="campo-checkbox" for="{{ form_entrada.ativo.id_for_label }}">
+      {{ form_entrada.ativo }}
+      <span>{{ form_entrada.ativo.label }}</span>
+    </label>
+    {% if form_entrada.ativo.errors %}<p class="erro" id="{{ form_entrada.ativo.auto_id }}_error" role="alert">{{ form_entrada.ativo.errors|join:" " }}</p>{% endif %}
+    <button type="submit" class="botao-primario">Adicionar entrada fixa</button>
+  </form>
+  {% elif not tem_categoria_receita_ativa and conta_padrao %}
+    <p class="aviso">Nenhuma categoria de receita ativa. Cadastre uma em <a href="{% url 'financas:categorias' %}">Categorias</a>.</p>
+  {% endif %}
+
+  {% for entrada in entradas_fixas %}
+    <div class="dia">
+      <p class="dia-cabecalho">Todo dia {{ entrada.dia_recebimento }} · {{ entrada.categoria.nome }}{% if not entrada.ativo %} · inativa{% endif %}</p>
+      <ul class="movimentos">
+        <li class="movimento">
+          <div class="movimento-conteudo">
+            <div class="movimento-linha">
+              <span class="movimento-descricao">{{ entrada.descricao }}</span>
+              <span class="movimento-valor">{{ entrada.valor|dinheiro }}</span>
+            </div>
+            <div class="movimento-acoes">
+              <a class="acao" href="{% url 'financas:editar_entrada_fixa' entrada.pk %}">Editar</a>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  {% empty %}
+    <p class="vazio">Nenhuma entrada fixa cadastrada.</p>
+  {% endfor %}
+
+</details>
 
 <details class="lista-mes bloco-recolhivel"{% if form_fixo.errors %} open{% endif %}>
   <summary>
@@ -68,47 +134,42 @@
 </details>
 
 <section class="lista-mes">
-  <h2 class="subtitulo">Abertos</h2>
+  <h2 class="subtitulo">Previstos do mês</h2>
   {% if previstos %}
-  <ul class="movimentos">
+  <ul class="previstos">
     {% for previsto in previstos %}
-    <li class="movimento-compacto">
-      <form method="post" action="{% url 'financas:ignorar_previsto' previsto.pk %}" class="check-previsto">
+    <li class="previsto{% if previsto.status == 'ignorado' %} pago{% endif %}{% if previsto.tipo == 'receita' %} entrada{% endif %}">
+      <form method="post" action="{% if previsto.status == 'ignorado' %}{% url 'financas:reabrir_previsto' previsto.pk %}{% else %}{% url 'financas:ignorar_previsto' previsto.pk %}{% endif %}" class="previsto-check">
         {% csrf_token %}
-        <input type="checkbox" id="resolver-{{ previsto.pk }}" onchange="this.form.submit()" aria-label="Resolver: {{ previsto.descricao }}">
-        <label for="resolver-{{ previsto.pk }}" class="check-previsto-rotulo">
-          <span class="movimento-descricao">{{ previsto.descricao }}</span>
-          <span class="movimento-data">vence {{ previsto.vencimento|date:"d/m" }}</span>
+        <input type="checkbox" id="pago-{{ previsto.pk }}" onchange="this.form.submit()"{% if previsto.status == 'ignorado' %} checked{% endif %} aria-label="{% if previsto.status == 'ignorado' %}Desmarcar pago: {{ previsto.descricao }}{% else %}Marcar como pago: {{ previsto.descricao }}{% endif %}">
+        <label for="pago-{{ previsto.pk }}" class="previsto-rotulo">
+          <span class="previsto-texto">
+            <span class="previsto-titulo">{{ previsto.descricao }}</span>
+            <span class="previsto-meta">
+              <span>{{ previsto.categoria.nome }}</span>
+              <span class="separador" aria-hidden="true">·</span>
+              <span>vence {{ previsto.vencimento|date:"d/m" }}</span>
+              {% if previsto.status == 'ignorado' %}<span class="estado estado-pago">Pago</span>
+              {% elif previsto.vencimento < hoje %}<span class="estado estado-atraso">Atrasado</span>
+              {% elif previsto.vencimento == hoje %}<span class="estado estado-hoje">Vence hoje</span>{% endif %}
+            </span>
+          </span>
+          <span class="previsto-valor">{% if previsto.tipo == 'receita' %}+{% endif %}{{ previsto.valor|dinheiro }}</span>
         </label>
-        <span class="movimento-valor">{{ previsto.valor|dinheiro }}</span>
-        <noscript><button type="submit" class="acao">Resolver</button></noscript>
+        <noscript><button type="submit" class="acao">{% if previsto.status == 'ignorado' %}Desmarcar{% else %}Pago{% endif %}</button></noscript>
       </form>
     </li>
     {% endfor %}
   </ul>
+  <div class="total-previstos">
+    <p class="rotulo">Falta pagar{% if qtd_aberta %} <span class="contas">· {{ qtd_aberta }} conta{{ qtd_aberta|pluralize }}</span>{% endif %}</p>
+    <strong>{{ total_aberto|dinheiro }}</strong>
+  </div>
+  <p class="rodape-tela">{{ qtd_paga }} pago{{ qtd_paga|pluralize }} em {{ mes_atual|date:"F" }}. Lista ordenada pelo vencimento.</p>
   {% else %}
-    <p class="vazio">Nenhum gasto previsto em aberto.</p>
+    <p class="vazio">Nenhum gasto previsto neste mês.</p>
   {% endif %}
 </section>
-
-{% if resolvidos %}
-<section class="lista-mes">
-  <h2 class="subtitulo">Resolvidos</h2>
-  <ul class="movimentos">
-    {% for previsto in resolvidos %}
-    <li class="movimento-compacto movimento-resolvido">
-      <span class="movimento-descricao">{{ previsto.descricao }}</span>
-      <span class="movimento-data">vencia {{ previsto.vencimento|date:"d/m" }}</span>
-      <span class="movimento-valor">{{ previsto.valor|dinheiro }}</span>
-      <form method="post" action="{% url 'financas:reabrir_previsto' previsto.pk %}">
-        {% csrf_token %}
-        <button type="submit" class="acao" aria-label="Desfazer: {{ previsto.descricao }}">Desfazer</button>
-      </form>
-    </li>
-    {% endfor %}
-  </ul>
-</section>
-{% endif %}
 
 {% if form %}
 <details class="previsto-avulso">

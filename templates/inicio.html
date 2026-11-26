@@ -4,19 +4,50 @@
 {% block titulo %}Início{% endblock %}
 
 {% block conteudo %}
-<h1 class="titulo-pagina">Início</h1>
-<dl class="painel">
-  <div class="card">
-    <dt class="rotulo">Saldo</dt>
-    <dd class="numero {% if saldo < 0 %}numero-saldo-negativo{% else %}numero-saldo-positivo{% endif %}">{{ saldo|dinheiro }}</dd>
+<header class="pagina-cabecalho">
+  <div>
+    <h1 class="olho">Início</h1>
+    <p class="mes-atual">{{ hoje|date:"F"|capfirst }} de {{ hoje|date:"Y" }}</p>
   </div>
-  <div class="card">
-    <dt class="rotulo">Gasto do mês</dt>
-    <dd class="numero numero-gasto">{{ gasto_mes|dinheiro }}</dd>
+</header>
+
+<section class="saldo" aria-label="Saldo das contas">
+  <h2 class="rotulo-bloco">Saldo das contas</h2>
+  <p class="saldo-numero {% if saldo < 0 %}numero-saldo-negativo{% else %}numero-saldo-positivo{% endif %}">{{ saldo|dinheiro }}</p>
+  <p class="nota">Soma de todas as contas, calculada a cada leitura.</p>
+</section>
+
+<section class="fixo" aria-label="Fixo do mês">
+  <div class="fixo-cabecalho">
+    <h2 class="rotulo-bloco">Fixo do mês <span class="tag">combinado</span></h2>
+    <p class="nota">O que entra e o que sai sem depender do dia a dia.</p>
   </div>
-  <div class="card">
-    <dt class="rotulo">Previsto em aberto</dt>
-    <dd class="numero numero-previsto">{{ previsto_aberto|dinheiro }}</dd>
-  </div>
-</dl>
+  <dl class="fixo-grade">
+    <div class="fixo-item">
+      <dt class="fixo-rotulo">Entra fixo</dt>
+      <dd class="fixo-valor{% if entra_fixo %} positivo{% endif %}">{{ entra_fixo|dinheiro }}</dd>
+    </div>
+    <div class="fixo-item">
+      <dt class="fixo-rotulo">Sai fixo</dt>
+      <dd class="fixo-valor">{% if sai_fixo %}−{{ sai_fixo|dinheiro }}{% else %}{{ sai_fixo|dinheiro }}{% endif %}</dd>
+    </div>
+    <div class="fixo-item">
+      <dt class="fixo-rotulo">Sobra fixa</dt>
+      <dd class="fixo-valor{% if sobra_fixa < 0 %} alerta{% elif sobra_fixa > 0 %} positivo{% endif %}">{{ sobra_fixa|dinheiro }}</dd>
+    </div>
+  </dl>
+</section>
+
+<div class="resumo-grade">
+  <section class="bloco" aria-label="Gasto do mês">
+    <h2 class="rotulo-bloco">Gasto do mês <span class="tag">realizado</span></h2>
+    <p class="valor-grande">{{ gasto_mes|dinheiro }}</p>
+    <p class="nota">O que já saiu, incluindo os fixos pagos. Não somar com o fixo.</p>
+  </section>
+  <section class="bloco" aria-label="Previsto em aberto">
+    <h2 class="rotulo-bloco">Previsto em aberto <span class="tag">só despesas</span></h2>
+    <p class="valor-grande">{{ previsto_aberto|dinheiro }}</p>
+    <p class="nota">Contas de despesa ainda abertas neste mês.</p>
+  </section>
+</div>
 {% endblock %}

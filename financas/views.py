@@ -28,16 +28,22 @@ from django.views.decorators.http import require_POST
 from .forms import (
     CategoriaEdicaoForm,
     CategoriaForm,
+    EntradaFixaForm,
     GastoFixoForm,
     MovimentoRapidoForm,
     PrevistoForm,
     TarefaForm,
 )
-from .gastos_fixos import atualizar_previsto_do_mes, garantir_previstos_do_mes
+from .gastos_fixos import (
+    atualizar_previsto_da_entrada,
+    atualizar_previsto_do_mes,
+    garantir_previstos_do_mes,
+)
 from .models import (
     Categoria,
     ConclusaoTarefa,
     Conta,
+    EntradaFixa,
     GastoFixo,
     Movimento,
     Previsto,
@@ -85,8 +91,8 @@ def _previstos_do_mes(mes, tipo=None):
     O previsto gerado de gasto fixo pertence ao mês da `competencia`; o
     vencimento dele é do mesmo mês por construção, mas quem manda é a
     competência. O previsto avulso não tem competência e pertence ao mês do
-    `vencimento`. `tipo=None` traz despesa e receita; a tela de previstos pede
-    só despesa por enquanto.
+    `vencimento`. `tipo=None` traz despesa e receita; a tela de previstos traz
+    as duas e o total em aberto da tela inicial pede só despesa.
     """
     seguinte = _mes_seguinte(mes)
     consulta = Previsto.objects.filter(
@@ -98,15 +104,25 @@ def _previstos_do_mes(mes, tipo=None):
     return consulta
 
 
+def _mes_do_previsto(previsto):
+    """Mês a que o previsto pertence: o da competência ou, no avulso, o do vencimento."""
+    if previsto.competencia:
+        return previsto.competencia.replace(day=1)
+    return previsto.vencimento.replace(day=1)
+
+
 @login_required
 def inicio(request):
-    """Os três números da tela inicial, calculados a cada leitura (nunca guardados).
+    """Os números da tela inicial, calculados a cada leitura (nunca guardados).
 
-    Leituras decididas em 2026-11-02, registradas no PROGRESS.md:
+    Ordem decidida em 2026-11-22: saldo → "Fixo do mês" → gasto do mês →
+    previsto em aberto. Leituras:
     - Saldo: todas as contas, pela regra do plano (saldos iniciais + receitas − despesas).
+    - Fixo do mês: entra fixo (entradas fixas ativas), sai fixo (gastos fixos
+      ativos) e a sobra. Não se soma ao gasto do mês, que é o realizado.
     - Gasto do mês: despesas do mês corrente, de todas as contas, menos as
       categorias marcadas como fora do gasto (ex.: Investimento).
-    - Previsto em aberto: só despesas abertas (decisão do dono).
+    - Previsto em aberto: só despesas abertas do mês corrente (decisão do dono).
     """
     hoje = timezone.localdate()
 
@@ -132,20 +148,41 @@ def inicio(request):
         or ZERO
     )
 
+    # Decisão do dono de 2026-11-22: o "previsto em aberto" é o do mês corrente
+    # (só despesas). O aberto de um mês anterior fica no mês dele e não soma aqui.
     previsto_aberto = (
-        Previsto.objects.filter(
-            status=Previsto.Status.ABERTO, tipo=TipoValor.DESPESA
-        ).aggregate(total=Sum("valor"))["total"]
+        _previstos_do_mes(hoje.replace(day=1), tipo=TipoValor.DESPESA)
+        .filter(status=Previsto.Status.ABERTO)
+        .aggregate(total=Sum("valor"))["total"]
         or ZERO
     )
+
+    # Bloco "Fixo do mês" (decisão de 2026-11-22): entra fixo vem das entradas
+    # fixas ativas, sai fixo dos gastos fixos ativos e a sobra é a diferença.
+    # Esses números não se somam ao gasto do mês, que é o realizado.
+    entra_fixo = (
+        EntradaFixa.objects.filter(ativo=True).aggregate(total=Sum("valor"))[
+            "total"
+        ]
+        or ZERO
+    )
+    sai_fixo = (
+        GastoFixo.objects.filter(ativo=True).aggregate(total=Sum("valor"))["total"]
+        or ZERO
+    )
+    sobra_fixa = entra_fixo - sai_fixo
 
     return render(
         request,
         "inicio.html",
         {
             "saldo": saldo,
+            "entra_fixo": entra_fixo,
+            "sai_fixo": sai_fixo,
+            "sobra_fixa": sobra_fixa,
             "gasto_mes": gasto_mes,
             "previsto_aberto": previsto_aberto,
+            "hoje": hoje,
         },
     )
 
@@ -306,28 +343,39 @@ def desfazer_movimento(request, pk):
 
 @login_required
 def previstos(request):
-    """Fase 4: gastos fixos mensais, instâncias do mês e previstos avulsos.
+    """Fase 4: gastos fixos mensais e os previstos do mês, em lista única.
 
     Decisão de 2026-11-08: o previsto nasce de um cadastro fixo e cada mês gera
-    a instância daquele mês; o avulso continua como opção secundária. Resolver
-    (check) e desfazer seguem a máquina de estados (par simétrico, G10): o check
-    da tela usa o status ignorado desde 2026-11-20, porque o app não faz
-    transação e quem lança o gasto real é a importação. A tela fecha a lista de
-    fixos com o total mensal dos ativos (2026-11-08).
+    a instância daquele mês; o avulso continua como opção secundária.
+
+    Decisão do dono de 2026-11-22: a tela mostra uma lista única do mês, com a
+    navegação de mês de Lançamentos e Relatório. O check grava `ignorado` e a
+    tela chama esse estado de "Pago" (2026-11-20): o app não faz transação e
+    quem lança o gasto real é a importação. Marcar não cria `Movimento`; a
+    rota `pagar_previsto` continua existindo para pagamento manual fora da tela.
+    A entrada fixa (2026-11-22) entra como previsto de receita na mesma lista;
+    ela não soma no gasto do mês nem no previsto em aberto de despesas.
     """
     garantir_previstos_do_mes()
+    mes = _mes_da_querystring(request)
     conta_padrao = Conta.objects.filter(padrao=True, ativa=True).first()
     tem_categoria_despesa_ativa = Categoria.objects.filter(
         ativa=True, tipo=TipoValor.DESPESA
     ).exists()
+    tem_categoria_receita_ativa = Categoria.objects.filter(
+        ativa=True, tipo=TipoValor.RECEITA
+    ).exists()
     pode_criar = conta_padrao is not None and tem_categoria_despesa_ativa
+    pode_criar_entrada = conta_padrao is not None and tem_categoria_receita_ativa
 
     form_fixo = GastoFixoForm(prefix="fixo") if pode_criar else None
     form = PrevistoForm() if pode_criar else None
+    form_entrada = EntradaFixaForm(prefix="entrada") if pode_criar_entrada else None
 
-    if request.method == "POST" and pode_criar:
+    if request.method == "POST":
         enviou_fixo = "fixo-dia_vencimento" in request.POST
-        if enviou_fixo:
+        enviou_entrada = "entrada-dia_recebimento" in request.POST
+        if enviou_fixo and pode_criar:
             form_fixo = GastoFixoForm(request.POST, prefix="fixo")
             if form_fixo.is_valid():
                 gasto = form_fixo.save(commit=False)
@@ -340,7 +388,20 @@ def previstos(request):
                     f"todo dia {gasto.dia_vencimento}",
                 )
                 return redirect("financas:previstos")
-        else:
+        elif enviou_entrada and pode_criar_entrada:
+            form_entrada = EntradaFixaForm(request.POST, prefix="entrada")
+            if form_entrada.is_valid():
+                entrada = form_entrada.save(commit=False)
+                entrada.conta = conta_padrao
+                entrada.save()
+                garantir_previstos_do_mes()
+                messages.success(
+                    request,
+                    f"Entrada fixa: {entrada.descricao} · "
+                    f"todo dia {entrada.dia_recebimento}",
+                )
+                return redirect("financas:previstos")
+        elif pode_criar:
             form = PrevistoForm(request.POST)
             if form.is_valid():
                 previsto = form.save(commit=False)
@@ -354,6 +415,15 @@ def previstos(request):
                 )
                 return redirect("financas:previstos")
 
+    entradas_fixas = EntradaFixa.objects.select_related(
+        "categoria", "conta"
+    ).order_by("descricao")
+    total_entradas = (
+        EntradaFixa.objects.filter(ativo=True).aggregate(total=Sum("valor"))[
+            "total"
+        ]
+        or ZERO
+    )
     gastos_fixos = GastoFixo.objects.select_related(
         "categoria", "conta"
     ).order_by("descricao")
@@ -363,19 +433,33 @@ def previstos(request):
         GastoFixo.objects.filter(ativo=True).aggregate(total=Sum("valor"))["total"]
         or ZERO
     )
-    previstos_abertos = (
-        Previsto.objects.filter(
-            status=Previsto.Status.ABERTO, tipo=TipoValor.DESPESA
-        )
-        .select_related("categoria", "conta", "fixo")
+    # Lista única do mês: o aberto e o "Pago" (status `ignorado`) juntos, em
+    # ordem de vencimento (decisão do dono de 2026-11-22). Desde a t3, despesa
+    # (gasto fixo) e receita (entrada fixa) aparecem na mesma lista. O pagamento
+    # manual antigo (`status=pago`, com Movimento) não entra: está em Lançamentos.
+    previstos_do_mes = (
+        _previstos_do_mes(mes)
+        .filter(status__in=[Previsto.Status.ABERTO, Previsto.Status.IGNORADO])
+        .select_related("categoria", "conta", "fixo", "entrada_fixa")
         .order_by("vencimento", "id")
     )
-    previstos_resolvidos = (
-        Previsto.objects.filter(
-            status=Previsto.Status.IGNORADO, tipo=TipoValor.DESPESA
-        )
-        .select_related("categoria", "conta", "fixo")
-        .order_by("-vencimento", "id")
+    # Total do mês (direção A, 2026-11-25): só despesas, para o "falta pagar"
+    # não somar a receita. O "pago" aqui é o status `ignorado` da tela. A lista
+    # avaliada também alimenta o template, sem uma segunda consulta.
+    lista_previstos = list(previstos_do_mes)
+    abertas = [
+        previsto
+        for previsto in lista_previstos
+        if previsto.tipo == TipoValor.DESPESA
+        and previsto.status == Previsto.Status.ABERTO
+    ]
+    total_aberto = sum((previsto.valor for previsto in abertas), ZERO)
+    qtd_aberta = len(abertas)
+    qtd_paga = sum(
+        1
+        for previsto in lista_previstos
+        if previsto.tipo == TipoValor.DESPESA
+        and previsto.status == Previsto.Status.IGNORADO
     )
 
     return render(
@@ -384,12 +468,22 @@ def previstos(request):
         {
             "form": form,
             "form_fixo": form_fixo,
+            "form_entrada": form_entrada,
+            "entradas_fixas": entradas_fixas,
+            "total_entradas": total_entradas,
             "gastos_fixos": gastos_fixos,
             "total_fixos": total_fixos,
-            "previstos": previstos_abertos,
-            "resolvidos": previstos_resolvidos,
+            "previstos": previstos_do_mes,
+            "total_aberto": total_aberto,
+            "qtd_aberta": qtd_aberta,
+            "qtd_paga": qtd_paga,
+            "hoje": timezone.localdate(),
             "conta_padrao": conta_padrao,
             "tem_categoria_despesa_ativa": tem_categoria_despesa_ativa,
+            "tem_categoria_receita_ativa": tem_categoria_receita_ativa,
+            "mes_atual": mes,
+            "mes_anterior": _mes_anterior(mes),
+            "mes_seguinte": _mes_seguinte(mes),
         },
     )
 
@@ -416,6 +510,34 @@ def editar_gasto_fixo(request, pk):
         request,
         "editar_gasto_fixo.html",
         {"form": form, "gasto": gasto},
+    )
+
+
+@login_required
+def editar_entrada_fixa(request, pk):
+    """Edita o cadastro da entrada fixa (decisão de 2026-11-22).
+
+    O previsto de receita do mês corrente, se ainda aberto, acompanha descrição,
+    valor, dia, categoria e conta. Mês marcado como "Pago" (`ignorado`) não
+    muda. Desativar para de gerar os meses seguintes; reativar volta a gerar do
+    mês corrente em diante.
+    """
+    entrada = get_object_or_404(EntradaFixa, pk=pk)
+    form = EntradaFixaForm(
+        request.POST or None, instance=entrada, prefix="entrada"
+    )
+    if request.method == "POST" and form.is_valid():
+        entrada = form.save()
+        atualizar_previsto_da_entrada(entrada)
+        messages.success(
+            request, f"Entrada fixa atualizada: {entrada.descricao}"
+        )
+        return redirect("financas:previstos")
+
+    return render(
+        request,
+        "editar_entrada_fixa.html",
+        {"form": form, "entrada": entrada},
     )
 
 
@@ -515,26 +637,26 @@ def pagar_previsto(request, pk):
 @require_POST
 @transaction.atomic
 def ignorar_previsto(request, pk):
-    """Tira um previsto em aberto da lista sem criar movimento (2026-11-08).
+    """Marca o previsto do mês como "Pago" sem criar movimento (2026-11-08).
 
-    É a ação do check "resolver" da tela (2026-11-20): o app não faz transação,
-    então o gasto real entra pela importação. O status continua "ignorado" no
-    banco e a lista mostra "Resolvidos". Par simétrico de `reabrir_previsto`
-    (G10) e idempotente.
+    Decisão do dono de 2026-11-22: o check da tela chama esse estado de "Pago",
+    mas no banco ele continua `ignorado` (sem migration). O app não faz
+    transação, então o gasto real entra pela importação; marcar não cria
+    `Movimento`. Par simétrico de `reabrir_previsto` (G10) e idempotente.
     """
     previsto = get_object_or_404(Previsto.objects.select_for_update(), pk=pk)
     if previsto.status == Previsto.Status.IGNORADO:
-        messages.info(request, "Este previsto já está resolvido.")
+        messages.info(request, "Este previsto já está pago.")
     elif previsto.status != Previsto.Status.ABERTO:
-        messages.error(request, "Só um previsto em aberto pode ser resolvido.")
+        messages.error(request, "Só um previsto em aberto pode ser marcado como pago.")
     else:
         previsto.status = Previsto.Status.IGNORADO
         previsto.save(update_fields=["status"])
         messages.success(
             request,
-            f"Resolvido: {previsto.descricao} · {dinheiro(previsto.valor)}",
+            f"Pago: {previsto.descricao} · {dinheiro(previsto.valor)}",
         )
-    return redirect("financas:previstos")
+    return redirect(_url_do_mes("financas:previstos", _mes_do_previsto(previsto)))
 
 
 @login_required
@@ -558,7 +680,7 @@ def reabrir_previsto(request, pk):
             request,
             f"De volta aos abertos: {previsto.descricao} · {dinheiro(previsto.valor)}",
         )
-    return redirect("financas:previstos")
+    return redirect(_url_do_mes("financas:previstos", _mes_do_previsto(previsto)))
 
 
 @login_required
